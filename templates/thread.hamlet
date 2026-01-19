@@ -1,0 +1,28 @@
+<div .w-64 .p-4>
+    <nav>
+        <a href=@{BoardsR} .block .p-2>Home
+        <a href=@{BoardR (threadBoard thread)} .block .p-2>#{boardName board}
+<div .flex-1 .p-4>
+    <h1>#{threadTitle thread}
+    <div .mb-4>#{threadContent thread}
+    <div .mb-4>By user #{show (threadAuthor thread)} | #{show (threadCreatedAt thread)}
+    <h2>Posts
+    $if P.null posts
+        <p>No posts yet
+    $else
+        <div .space-y-4>
+            $forall Entity pId p <- posts
+                <div .bg-gray-100 .p-4 .rounded>
+                    <p>#{postContent p}
+                    <div .text-xs .text-gray-500>By user #{show (postAuthor p)} | #{show (postCreatedAt p)}
+    $maybe _ <- maybeAuth
+        <form method=get action=@{NewPostR threadId} .mt-4>
+            <button type="submit" .bg-blue-500 .text-white .px-4 .py-2 .rounded>Add Post
+    $nothing
+        <p>Login to add posts
+<div .w-64 .p-4>
+    $maybe _ <- maybeAuth
+        <a href=@{AuthR LogoutR} .block>Logout
+    $nothing
+        <a href=@{AuthR LoginR} .block>Login
+        <a href=@{RegisterR} .block>Register

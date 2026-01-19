@@ -1,0 +1,13 @@
+<div .w-64 .p-4>
+    <nav>
+        <a href=@{BoardsR} .block .p-2>Home
+        $forall Entity boardId board <- boards
+            <a href=@{BoardR boardId} .block .p-2>#{boardName board}
+<div .flex-1 .p-4>
+    <h1>Select a Forum
+<div .w-64 .p-4>
+    $maybe _ <- maybeAuth
+        <a href=@{AuthR LogoutR} .block>Logout
+    $nothing
+        <a href=@{AuthR LoginR} .block>Login
+        <a href=@{RegisterR} .block>Register

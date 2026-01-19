@@ -3,6 +3,7 @@
 -- In addition, you can configure a number of different aspects of Yesod
 -- by overriding methods in the Yesod typeclass. That instance is
 -- declared in the Foundation.hs file.
+{-# LANGUAGE CPP, TemplateHaskell, RecordWildCards, OverloadedStrings #-}
 module Settings where
 
 import ClassyPrelude.Yesod
@@ -108,7 +109,7 @@ configSettingsYmlBS = $(embedFile configSettingsYml)
 
 -- | @config/settings.yml@, parsed to a @Value@.
 configSettingsYmlValue :: Value
-configSettingsYmlValue = either throw id $ decodeEither' configSettingsYmlBS
+configSettingsYmlValue = either throw Prelude.id $ decodeEither' configSettingsYmlBS
 
 -- | A version of @AppSettings@ parsed at compile time from @config/settings.yml@.
 compileTimeAppSettings :: AppSettings
