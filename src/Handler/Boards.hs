@@ -12,4 +12,4 @@ getBoardsR = do
     maybeAuth <- maybeAuthId
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum - Home"
-        toWidget $ preEscapedText $ T.pack "<h1>Boards</h1>"
+        $(widgetFile "boards")

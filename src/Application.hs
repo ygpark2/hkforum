@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE TemplateHaskell, ViewPatterns, RecordWildCards #-}
 module Application
@@ -13,7 +14,10 @@ module Application
     , db
     ) where
 
-import Control.Monad.Logger                 (liftLoc, runLoggingT)
+import Control.Monad                      (void, when)
+import Control.Monad.IO.Class               (liftIO)
+import Control.Monad.Logger                 (LoggingT, liftLoc, runLoggingT)
+import Crypto.BCrypt                        (fastBcryptHashingPolicy, hashPasswordUsingPolicy)
 import Database.Persist.Sqlite              (createSqlitePool, runSqlPool,
                                              sqlDatabase, sqlPoolSize)
 import Import hiding ((.), (++))
@@ -77,10 +81,27 @@ makeFoundation appSettings = do
         (sqlPoolSize $ appDatabaseConf appSettings)
 
     -- Perform database migration using our application's logging settings.
-    runLoggingT (runSqlPool (runMigration migrateAll) pool) logFunc
+    runLoggingT (runSqlPool (runMigration migrateAll >> seedDefaults) pool) logFunc
 
     -- Return the foundation
     return $ mkFoundation pool
+
+seedDefaults :: SqlPersistT (LoggingT IO) ()
+seedDefaults = do
+    void $ insertBy $ Board "general"
+    seedAdmin
+
+seedAdmin :: SqlPersistT (LoggingT IO) ()
+seedAdmin = do
+    mUser <- getBy $ UniqueUser "ygpark2"
+    case mUser of
+        Just _ -> return ()
+        Nothing -> do
+            hashed <- liftIO $ hashPasswordUsingPolicy fastBcryptHashingPolicy (encodeUtf8 "1234")
+            case hashed of
+                Just h -> void $ insert $ User "ygpark2" (Just $ decodeUtf8 h)
+                Nothing -> return ()
+
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and
 -- applying some additional middlewares.

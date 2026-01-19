@@ -1,0 +1,18 @@
+<div class="min-h-[80vh] flex items-center justify-center">
+  <div class="w-full max-w-md space-y-6 rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-xl shadow-slate-900/10">
+    <div class="space-y-1">
+      <p class="text-xs uppercase tracking-[0.4em] text-slate-400">HKForum</p>
+      <h1 class="text-3xl font-semibold text-slate-900">#{pageTitle pc}</h1>
+      <p class="text-sm text-slate-500">Log in to post threads, reply, and follow discussions.</p>
+    </div>
+
+    $maybe msg <- mmsg
+      <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">#{msg}</div>
+
+    ^{pageBody pc}
+
+    <div class="text-xs uppercase tracking-[0.3em] text-slate-400">
+      Need an account? <a href=@{RegisterR} class="font-semibold text-slate-900 hover:text-slate-600">Create one</a>
+    </div>
+  </div>
+</div>
