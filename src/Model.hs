@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell, TypeFamilies, GADTs, DerivingStrategies, GeneralizedNewtypeDeriving, StandaloneDeriving, UndecidableInstances, DataKinds, FlexibleInstances, MultiParamTypeClasses, TypeOperators #-}
 module Model where
 
 import ClassyPrelude.Yesod

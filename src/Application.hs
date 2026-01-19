@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE TemplateHaskell, ViewPatterns, RecordWildCards #-}
 module Application
     ( getApplicationDev
     , appMain
@@ -15,7 +16,8 @@ module Application
 import Control.Monad.Logger                 (liftLoc, runLoggingT)
 import Database.Persist.Sqlite              (createSqlitePool, runSqlPool,
                                              sqlDatabase, sqlPoolSize)
-import Import
+import Import hiding ((.), (++))
+import qualified Prelude as P
 import Language.Haskell.TH.Syntax           (qLocation)
 import Network.Wai.Handler.Warp             (Settings, defaultSettings,
                                              defaultShouldDisplayException,
@@ -31,7 +33,12 @@ import System.Log.FastLogger                (defaultBufSize, newStdoutLoggerSet,
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
 import Handler.Common
-import Handler.Home
+import Handler.Boards
+import Handler.Board
+import Handler.NewThread
+import Handler.NewPost
+import Handler.Register
+import Handler.Thread
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the
@@ -106,7 +113,7 @@ warpSettings foundation =
             $(qLocation >>= liftLoc)
             "yesod"
             LevelError
-            (toLogStr $ "Exception from Warp: " ++ show e))
+            (toLogStr $ "Exception from Warp: " P.++ show e))
       defaultSettings
 
 -- | For yesod devel, return the Warp settings and WAI Application.
@@ -171,4 +178,4 @@ handler h = getAppSettings >>= makeFoundation >>= flip unsafeHandler h
 
 -- | Run DB queries
 db :: ReaderT SqlBackend (HandlerT App IO) a -> IO a
-db = handler . runDB
+db = handler P.. runDB

@@ -1,0 +1,30 @@
+<div .w-64 .p-4>
+    <nav>
+        <a href=@{BoardsR} .block .p-2>Home
+        $forall Entity bId b <- boards
+            $if bId == boardId
+                <a href=@{BoardR bId} .block .p-2 .bg-gray-800>#{boardName b}
+            $else
+                <a href=@{BoardR bId} .block .p-2>#{boardName b}
+<div .flex-1 .p-4>
+    <h1>#{boardName board}
+    <form method=post enctype="multipart/form-data" .bg-gray-800 .p-4 .rounded .mb-4>
+        <input type="text" name="title" placeholder="Thread Title" .w-full .bg-gray-700 .text-white .p-2 .rounded .mb-2 required>
+        <textarea name="content" placeholder="Thread Content" .w-full .bg-gray-700 .text-white .p-2 .rounded .mb-2 rows="4" required></textarea>
+        <button type="submit" .bg-blue-500 .text-white .px-4 .py-2 .rounded>Create Thread
+    $if P.null threads
+        <p>No threads yet
+    $else
+        <div .space-y-4>
+            $forall Entity tId t <- threads
+                <div .bg-white .p-4 .rounded-lg .shadow .hover:shadow-md .transition-shadow>
+                    <h3 .text-lg .font-semibold .mb-2>
+                        <a href=@{ThreadR tId} .text-blue-600 .hover:text-blue-800>#{threadTitle t}
+                    <p .text-gray-700 .text-sm .mb-2>#{P.take 100 (threadContent t) P.++ "..."}
+                    <div .text-xs .text-gray-500>By user #{show (threadAuthor t)} | #{show (threadCreatedAt t)}
+<div .w-64 .p-4>
+    $maybe _ <- maybeAuth
+        <a href=@{AuthR LogoutR} .block>Logout
+    $nothing
+        <a href=@{AuthR LoginR} .block>Login
+        <a href=@{RegisterR} .block>Register

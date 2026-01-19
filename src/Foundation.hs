@@ -1,10 +1,17 @@
+{-# LANGUAGE TemplateHaskell, QuasiQuotes, OverloadedStrings, MultiParamTypeClasses, TypeFamilies, GADTs, ViewPatterns #-}
 module Foundation where
 
-import Import.NoFoundation
-import Database.Persist.Sql (ConnectionPool, runSqlPool)
+import Import.NoFoundation hiding ((.), (++))
+import qualified Prelude as P
+import Database.Persist.Sql (ConnectionPool, runSqlPool, toSqlKey)
+import qualified Data.Text as T
+import Text.Read (readMaybe)
 import Text.Hamlet          (hamletFile)
 import Text.Jasmine         (minifym)
+import Yesod.Auth
 import Yesod.Auth.BrowserId (authBrowserId)
+import Yesod.Auth.Dummy      (authDummy)
+import Yesod.Auth.HashDB     (authHashDB, setPassword, HashDBUser(..))
 import Yesod.Auth.Message   (AuthMessage (InvalidLogin))
 import Yesod.Default.Util   (addStaticContentExternal)
 import Yesod.Core.Types     (Logger)
@@ -46,28 +53,13 @@ type Form x = Html -> MForm (HandlerT App IO) (FormResult x, Widget)
 instance Yesod App where
     -- Controls the base of generated URLs. For more information on modifying,
     -- see: https://github.com/yesodweb/yesod/wiki/Overriding-approot
-    approot = ApprootMaster $ appRoot . appSettings
+    approot = ApprootMaster $ appRoot P.. appSettings
 
     -- Store session data on the client in encrypted cookies,
     -- default session idle timeout is 120 minutes
     makeSessionBackend _ = Just <$> defaultClientSessionBackend
         120    -- timeout in minutes
         "config/client_session_key.aes"
-
-    defaultLayout widget = do
-        master <- getYesod
-        mmsg <- getMessage
-
-        -- We break up the default layout into two components:
-        -- default-layout is the contents of the body tag, and
-        -- default-layout-wrapper is the entire page. Since the final
-        -- value passed to hamletToRepHtml cannot be a widget, this allows
-        -- you to use normal widget features in default-layout.
-
-        pc <- widgetToPageContent $ do
-            addStylesheet $ StaticR css_bootstrap_css
-            $(widgetFile "default-layout")
-        withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
     -- The page to be redirected to when authentication is required.
     authRoute _ = Just $ AuthR LoginR
@@ -90,22 +82,15 @@ instance Yesod App where
             minifym
             genFileName
             staticDir
-            (StaticR . flip StaticRoute [])
+            (StaticR P.. flip StaticRoute [])
             ext
             mime
             content
       where
         -- Generate a unique filename based on the content itself
-        genFileName lbs = "autogen-" ++ base64md5 lbs
+        genFileName lbs = "autogen-" P.++ base64md5 lbs
 
-    -- What messages should be logged. The following includes all messages when
-    -- in development, and warnings and errors in production.
-    shouldLog app _source level =
-        appShouldLogAll (appSettings app)
-            || level == LevelWarn
-            || level == LevelError
-
-    makeLogger = return . appLogger
+    makeLogger = return P.. appLogger
 
 -- How to run database actions.
 instance YesodPersist App where
@@ -118,26 +103,19 @@ instance YesodPersistRunner App where
 
 instance YesodAuth App where
     type AuthId App = UserId
-
-    -- Where to send a user after successful login
-    loginDest _ = HomeR
-    -- Where to send a user after logout
-    logoutDest _ = HomeR
-    -- Override the above two destinations when a Referer: header is present
+    loginDest _ = BoardsR
+    logoutDest _ = BoardsR
     redirectToReferer _ = True
+    authHttpManager = getYesod >>= return P.. getHttpManager
+    authPlugins _ = [authHashDB (Just P.. UniqueUser)]
 
-    authenticate creds = runDB $ do
-        x <- getBy $ UniqueUser $ credsIdent creds
-        return $ case x of
-            Just (Entity uid _) -> Authenticated uid
-            Nothing -> UserError InvalidLogin
+instance YesodAuthPersist App where
+    type AuthEntity App = User
 
-    -- You can add other plugins like BrowserID, email or OAuth here
-    authPlugins _ = [authBrowserId def]
+instance HashDBUser User where
+    userPasswordHash = userPassword
+    setPasswordHash p u = u { userPassword = Just p }
 
-    authHttpManager = getHttpManager
-
-instance YesodAuthPersist App
 
 -- This instance is required to use forms. You can modify renderMessage to
 -- achieve customized and internationalized form validation messages.
