@@ -69,6 +69,8 @@ executables:
     dependencies:
       - base
       - hkforum
+      - foreign-store >=0.2 && <0.3
+      - warp >=3.4.9 && <3.5
     ghc-options: -threaded -O2 -rtsopts -with-rtsopts=-N
     when:
       - condition: flag(library-only)

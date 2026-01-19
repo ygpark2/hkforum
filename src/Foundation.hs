@@ -14,6 +14,7 @@ import Yesod.Auth.Dummy      (authDummy)
 import Yesod.Auth.HashDB     (authHashDB, setPassword, HashDBUser(..))
 import Yesod.Auth.Message   (AuthMessage (InvalidLogin))
 import Yesod.Default.Util   (addStaticContentExternal)
+import Yesod.Core            (getCurrentRoute)
 import Yesod.Core.Types     (Logger)
 import qualified Yesod.Core.Unsafe as Unsafe
 

@@ -5,12 +5,17 @@ import Import
 import Crypto.BCrypt
 import Text.Blaze (preEscapedText)
 
-getRegisterR :: Handler Html
-getRegisterR = do
-    (widget, enctype) <- generateFormPost registerForm
+renderRegister :: Widget -> Enctype -> Handler Html
+renderRegister widget enctype = do
+    mmsg <- getMessage
     defaultLayout $ do
         setTitle $ preEscapedText "Register"
         $(widgetFile "register")
+
+getRegisterR :: Handler Html
+getRegisterR = do
+    (widget, enctype) <- generateFormPost registerForm
+    renderRegister widget enctype
 
 postRegisterR :: Handler Html
 postRegisterR = do
@@ -32,12 +37,8 @@ postRegisterR = do
                             redirect RegisterR
                 Just _ -> do
                       setMessage "Username already exists."
-                      defaultLayout $ do
-                          setTitle $ preEscapedText "Register"
-                          $(widgetFile "register")
-        _ -> defaultLayout $ do
-            setTitle $ preEscapedText "Register"
-            $(widgetFile "register")
+                      renderRegister widget enctype
+        _ -> renderRegister widget enctype
 
 registerForm :: Form (Text, Text)
 registerForm = renderDivs $ (,)
