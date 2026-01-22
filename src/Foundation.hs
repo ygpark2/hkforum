@@ -57,6 +57,13 @@ instance Yesod App where
     -- see: https://github.com/yesodweb/yesod/wiki/Overriding-approot
     approot = ApprootMaster $ appRoot P.. appSettings
 
+    defaultLayout widget = do
+        master <- getYesod
+        mmsg <- getMessage
+        pc <- widgetToPageContent $ do
+            $(widgetFile "default-layout")
+        withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
+
     -- Store session data on the client in encrypted cookies,
     -- default session idle timeout is 120 minutes
     makeSessionBackend _ = Just <$> defaultClientSessionBackend

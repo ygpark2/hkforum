@@ -29,6 +29,8 @@ import Network.Wai.Middleware.RequestLogger (Destination (Logger),
                                              IPAddrSource (..),
                                              OutputFormat (..), destination,
                                              mkRequestLogger, outputFormat)
+import System.Directory                    (createDirectoryIfMissing)
+import System.FilePath                     (takeDirectory)
 import System.Log.FastLogger                (defaultBufSize, newStdoutLoggerSet,
                                              toLogStr)
 
@@ -72,6 +74,11 @@ makeFoundation appSettings = do
         -- https://ocharles.org.uk/blog/posts/2014-12-04-record-wildcards.html
         tempFoundation = mkFoundation $ error "connPool forced in tempFoundation"
         logFunc = messageLoggerSource tempFoundation appLogger
+
+    let dbPath = unpack $ sqlDatabase $ appDatabaseConf appSettings
+        dbDir = takeDirectory dbPath
+    when (dbDir /= "." && dbDir /= "") $
+        createDirectoryIfMissing True dbDir
 
     -- Create the database connection pool
     pool <- flip runLoggingT logFunc $ createSqlitePool

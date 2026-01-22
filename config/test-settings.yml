@@ -1,2 +1,2 @@
 database:
-  database: hkforum_test.sqlite3
+  database: data/hkforum_test.sqlite3
