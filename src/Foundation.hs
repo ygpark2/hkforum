@@ -11,9 +11,10 @@ import Text.Jasmine         (minifym)
 import Yesod.Auth
 import Yesod.Auth.BrowserId (authBrowserId)
 import Yesod.Auth.Dummy      (authDummy)
-import Yesod.Auth.HashDB     (authHashDB, setPassword, HashDBUser(..))
-import Yesod.Auth.Message   (AuthMessage (InvalidLogin))
+import Yesod.Auth.HashDB     (HashDBUser(..))
+import Auth.HashDBLog        (authHashDBLog)
 import Yesod.Default.Util   (addStaticContentExternal)
+
 import Yesod.Core            (getCurrentRoute)
 import Yesod.Core.Types     (Logger)
 import qualified Yesod.Core.Unsafe as Unsafe
@@ -108,7 +109,7 @@ instance YesodAuth App where
     logoutDest _ = BoardsR
     redirectToReferer _ = True
     authHttpManager = getYesod >>= return P.. getHttpManager
-    authPlugins _ = [authHashDB (Just P.. UniqueUser)]
+    authPlugins _ = [authHashDBLog (Just P.. UniqueUser)]
 
 instance YesodAuthPersist App where
     type AuthEntity App = User
