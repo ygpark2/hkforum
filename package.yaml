@@ -27,6 +27,7 @@ library:
     - yesod-auth-hashdb >=1.7.1 && <1.8
     - yesod-static >=1.6.0 && <1.7
     - yesod-form >=1.7.0 && <1.8
+    - yesod-persistent >=1.6.0 && <1.7
     - classy-prelude >=1.5.0 && <1.6
     - classy-prelude-conduit >=1.5.0 && <1.6
     - classy-prelude-yesod >=1.5.0 && <1.6
@@ -86,7 +87,7 @@ tests:
     dependencies:
       - base
       - hkforum
-      - yesod-test >=1.4.4 && <1.5
+      - yesod-test
       - yesod-core
       - yesod
       - persistent
@@ -95,6 +96,6 @@ tests:
       - monad-logger
       - shakespeare
       - transformers
-      - hspec >=2.10.10 && <2.11
+      - hspec
       - classy-prelude
       - classy-prelude-yesod

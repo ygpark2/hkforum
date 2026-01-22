@@ -1,28 +1,61 @@
-<div .w-64 .p-4>
-    <nav>
-        <a href=@{BoardsR} .block .p-2>Home
-        <a href=@{BoardR (threadBoard thread)} .block .p-2>#{boardName board}
-<div .flex-1 .p-4>
-    <h1>#{threadTitle thread}
-    <div .mb-4>#{threadContent thread}
-    <div .mb-4>By user #{show (threadAuthor thread)} | #{show (threadCreatedAt thread)}
-    <h2>Posts
-    $if P.null posts
-        <p>No posts yet
-    $else
-        <div .space-y-4>
-            $forall Entity pId p <- posts
-                <div .bg-gray-100 .p-4 .rounded>
-                    <p>#{postContent p}
-                    <div .text-xs .text-gray-500>By user #{show (postAuthor p)} | #{show (postCreatedAt p)}
+<div class="grid gap-6 lg:grid-cols-[260px,1fr,260px]">
+  <aside class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-4 sticky top-8">
+    <div>
+      <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Boards</p>
+      <p class="text-lg font-semibold text-slate-900">Community hubs</p>
+    </div>
+    <nav class="space-y-2 text-sm font-medium">
+      <a href=@{BoardsR} class="block px-3 py-2 rounded-lg bg-slate-900 text-white transition hover:bg-slate-800">Home</a>
+      <a href=@{BoardR (threadBoard thread)} class="block px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-50">#{boardName board}</a>
+    </nav>
+  </aside>
+
+  <section class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-6">
+    <div class="space-y-2">
+      <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Thread</p>
+      <h1 class="text-2xl font-bold text-slate-900">#{threadTitle thread}</h1>
+      <p class="text-sm text-slate-500">By user #{show (threadAuthor thread)} · #{show (threadCreatedAt thread)}</p>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 text-sm text-slate-600">#{threadContent thread}</div>
+
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-slate-900">Posts</h2>
+        <span class="text-xs uppercase tracking-[0.3em] text-slate-400">#{P.length posts} total</span>
+      </div>
+      $if P.null posts
+        <p class="text-sm text-slate-500">No posts yet. Start the first reply.</p>
+      $else
+        <div class="space-y-4">
+          $forall Entity pId p <- posts
+            <article class="rounded-2xl border border-slate-200 bg-white p-4">
+              <p class="text-sm text-slate-600">#{postContent p}</p>
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-400 mt-2">By user #{show (postAuthor p)} · #{show (postCreatedAt p)}</p>
+        </div>
+    </div>
+
+    <div>
+      $maybe _ <- maybeAuth
+        <form method=get action=@{NewPostR threadId}>
+          <button type="submit" class="w-full rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-3 text-center text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:from-slate-800 hover:to-slate-600">Write a reply</button>
+      $nothing
+        <p class="text-sm text-slate-500">Login to add posts.</p>
+    </div>
+  </section>
+
+  <aside class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-4 sticky top-8">
+    <div>
+      <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Access</p>
+      <p class="text-lg font-semibold text-slate-900">Login &amp; register</p>
+    </div>
     $maybe _ <- maybeAuth
-        <form method=get action=@{NewPostR threadId} .mt-4>
-            <button type="submit" .bg-blue-500 .text-white .px-4 .py-2 .rounded>Add Post
+      <p class="text-sm text-slate-500">Welcome back!</p>
+      <a href=@{AuthR LogoutR} class="block rounded-xl bg-slate-900 px-3 py-2 text-center text-sm font-semibold text-white transition hover:bg-slate-800">Logout</a>
     $nothing
-        <p>Login to add posts
-<div .w-64 .p-4>
-    $maybe _ <- maybeAuth
-        <a href=@{AuthR LogoutR} .block>Logout
-    $nothing
-        <a href=@{AuthR LoginR} .block>Login
-        <a href=@{RegisterR} .block>Register
+      <a href=@{AuthR LoginR} class="block rounded-xl border border-slate-900 px-3 py-2 text-center text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white">Login</a>
+      <a href=@{RegisterR} class="block rounded-xl border border-slate-900 px-3 py-2 text-center text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white">Register</a>
+    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Tip</p>
+    <p class="text-sm text-slate-500">Be kind, stay on topic, share value.</p>
+  </aside>
+</div>
