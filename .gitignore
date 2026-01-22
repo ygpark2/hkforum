@@ -1,4 +1,6 @@
+
 .opencode/
+.codex/
 .hsenv*
 .stack-work/
 .cabal-sandbox

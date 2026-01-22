@@ -1,4 +1,4 @@
-<div class="grid gap-6 lg:grid-cols-[260px,1fr,260px]">
+<div class="grid gap-6 lg:grid-cols-[260px_1fr_260px]">
   <aside class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-4 sticky top-8">
     <div>
       <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Boards</p>

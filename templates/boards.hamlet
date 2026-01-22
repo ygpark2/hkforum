@@ -1,4 +1,4 @@
-<div class="grid gap-6 lg:grid-cols-[260px,1fr,260px]">
+<div class="grid gap-6 lg:grid-cols-[260px_1fr_260px]">
   <aside class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-4 sticky top-8">
     <div>
       <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Boards
@@ -7,13 +7,11 @@
       <a href=@{BoardsR} class="block px-3 py-2 rounded-lg bg-slate-900 text-white transition hover:bg-slate-800">Home
       $forall Entity boardId board <- boards
         <a href=@{BoardR boardId} class="block px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-50">#{boardName board}
-
   <section class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-6">
     <div class="space-y-2">
       <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Home
       <h1 class="text-2xl font-bold text-slate-900">Select a forum
       <p class="text-sm text-slate-500">Choose a board to start a thread or explore recent discussions.
-
     <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 space-y-4">
       <div class="space-y-1">
         <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Write
@@ -26,16 +24,15 @@
             <select id="board" name="boardId" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
               $forall Entity boardId board <- boards
                 <option value=#{fromSqlKey boardId}>#{boardName board}
-            <div class="space-y-1">
-              <label for="title" class="text-sm font-semibold text-slate-700">Thread title
-              <input id="title" name="title" type="text" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="What's on your mind?" />
-            <div class="space-y-1">
-              <label for="content" class="text-sm font-semibold text-slate-700">Content
-              <textarea id="content" name="content" rows="5" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="Share something useful, honest, or funny.">
-            <button type="submit" class="w-full rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-3 text-center text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:from-slate-800 hover:to-slate-600">Post thread
+          <div class="space-y-1">
+            <label for="title" class="text-sm font-semibold text-slate-700">Thread title
+            <input id="title" name="title" type="text" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="What's on your mind?">
+          <div class="space-y-1">
+            <label for="content" class="text-sm font-semibold text-slate-700">Content
+            <textarea id="content" name="content" rows="5" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="Share something useful, honest, or funny.">
+          <button type="submit" class="w-full rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-3 text-center text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:from-slate-800 hover:to-slate-600">Post thread
       $nothing
         <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">Login to start a thread.
-
     <div class="space-y-4">
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold text-slate-900">Latest threads
@@ -53,7 +50,6 @@
                 #{T.take 180 (threadContent thread)}
                 $if T.length (threadContent thread) > 180
                   …
-
     <div class="space-y-4">
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold text-slate-900">Forums
@@ -63,7 +59,6 @@
           <a href=@{BoardR boardId} class="block rounded-2xl border border-slate-200 bg-white px-4 py-4 transition hover:border-slate-900 hover:bg-slate-50">
             <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Forum
             <p class="text-lg font-semibold text-slate-900">#{boardName board}
-
   <aside class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-4 sticky top-8">
     <div>
       <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Access
