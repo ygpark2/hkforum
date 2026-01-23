@@ -1,4 +1,0 @@
-<h1>New Post</h1>
-<form method=post enctype=#{enctype}>
-    ^{widget}
-    <button>Submit</button>

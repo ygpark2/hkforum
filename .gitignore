@@ -5,6 +5,7 @@
 .stack-work/
 .cabal-sandbox
 .DS_Store
+.env
 
 dist*
 static/tmp/
@@ -23,4 +24,3 @@ data/
 *.cabal
 *.swp
 *.keter
-

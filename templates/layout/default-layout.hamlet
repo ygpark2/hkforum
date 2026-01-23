@@ -1,0 +1,4 @@
+$maybe msg <- mmsg
+  <div id="alert-message" class="mb-4 rounded-xl border border-slate-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 shadow-sm">
+    #{msg}
+^{widget}

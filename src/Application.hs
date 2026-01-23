@@ -15,11 +15,11 @@ module Application
     ) where
 
 import Control.Monad.Logger                 (LoggingT, liftLoc, runLoggingT)
-import Crypto.BCrypt                        (fastBcryptHashingPolicy, hashPasswordUsingPolicy)
 import Database.Persist.Sqlite              (createSqlitePool, runSqlPool,
                                              sqlDatabase, sqlPoolSize)
 import Import hiding ((.), (++))
 import qualified Prelude as P
+import Yesod.Auth.HashDB                    (setPassword)
 import Language.Haskell.TH.Syntax           (qLocation)
 import Network.Wai.Handler.Warp             (Settings, defaultSettings,
                                              defaultShouldDisplayException,
@@ -29,7 +29,10 @@ import Network.Wai.Middleware.RequestLogger (Destination (Logger),
                                              IPAddrSource (..),
                                              OutputFormat (..), destination,
                                              mkRequestLogger, outputFormat)
-import System.Directory                    (createDirectoryIfMissing)
+import qualified Data.Text as T
+import System.Directory                    (createDirectoryIfMissing, doesFileExist,
+                                             makeAbsolute)
+import System.Environment                  (setEnv)
 import System.FilePath                     (takeDirectory)
 import System.Log.FastLogger                (defaultBufSize, newStdoutLoggerSet,
                                              toLogStr)
@@ -37,12 +40,16 @@ import System.Log.FastLogger                (defaultBufSize, newStdoutLoggerSet,
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
 import Handler.Common
-import Handler.Boards
-import Handler.Board
-import Handler.NewThread
-import Handler.NewPost
-import Handler.Register
-import Handler.Thread
+import Handler.Forum.Boards
+import Handler.Forum.Board
+import Handler.Forum.Comment
+import Handler.Forum.Post
+import Handler.Upload
+import Handler.Register hiding (normalizeBcryptHash)
+import Handler.Forum.Thread
+import Handler.Admin
+import Handler.Profile
+import Storage (mkStorage, storageBackendType)
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the
@@ -62,6 +69,8 @@ makeFoundation appSettings = do
     appStatic <-
         (if appMutableStatic appSettings then staticDevel else static)
         (appStaticDir appSettings)
+    appStorage <- mkStorage appSettings
+    let appStorageBackendType = storageBackendType appStorage
 
     -- We need a log function to create a connection pool. We need a connection
     -- pool to create our foundation. And we need our foundation to get a
@@ -75,15 +84,19 @@ makeFoundation appSettings = do
         tempFoundation = mkFoundation $ error "connPool forced in tempFoundation"
         logFunc = messageLoggerSource tempFoundation appLogger
 
-    let dbPath = unpack $ sqlDatabase $ appDatabaseConf appSettings
-        dbDir = takeDirectory dbPath
+    let rawDbPath = unpack $ sqlDatabase $ appDatabaseConf appSettings
+    absDbPath <- makeAbsolute rawDbPath
+    let dbDir = takeDirectory absDbPath
+        dbConf = (appDatabaseConf appSettings) { sqlDatabase = pack absDbPath }
     when (dbDir /= "." && dbDir /= "") $
         createDirectoryIfMissing True dbDir
+    flip runLoggingT logFunc $
+        $(logInfo) $ "Using SQLite database at: " <> pack absDbPath
 
     -- Create the database connection pool
     pool <- flip runLoggingT logFunc $ createSqlitePool
-        (sqlDatabase $ appDatabaseConf appSettings)
-        (sqlPoolSize $ appDatabaseConf appSettings)
+        (sqlDatabase dbConf)
+        (sqlPoolSize dbConf)
 
     -- Perform database migration using our application's logging settings.
     runLoggingT (runSqlPool (runMigration migrateAll >> seedDefaults) pool) logFunc
@@ -93,19 +106,19 @@ makeFoundation appSettings = do
 
 seedDefaults :: SqlPersistT (LoggingT IO) ()
 seedDefaults = do
-    void $ insertBy $ Board "general"
+    void $ insertBy $ Board "general" (Just "General discussion") 0 0 0
+    void $ insertBy $ SiteSetting "thread_preview_chars" "200"
     seedAdmin
 
 seedAdmin :: SqlPersistT (LoggingT IO) ()
 seedAdmin = do
     mUser <- getBy $ UniqueUser "ygpark2"
     case mUser of
-        Just _ -> return ()
+        Just (Entity userId _) -> do
+            update userId [UserRole =. "admin"]
         Nothing -> do
-            hashed <- liftIO $ hashPasswordUsingPolicy fastBcryptHashingPolicy (encodeUtf8 "1234")
-            case hashed of
-                Just h -> void $ insert $ User "ygpark2" (Just $ decodeUtf8 h)
-                Nothing -> return ()
+            user <- liftIO $ setPassword "1234" (User "ygpark2" Nothing "admin" Nothing Nothing)
+            void $ insert user
 
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and
@@ -152,7 +165,9 @@ getApplicationDev = do
     return (wsettings, app)
 
 getAppSettings :: IO AppSettings
-getAppSettings = loadYamlSettings [configSettingsYml] [] useEnv
+getAppSettings = do
+    loadDotenv
+    loadYamlSettings [configSettingsYml] [] useEnv
 
 -- | main function for use by yesod devel
 develMain :: IO ()
@@ -161,6 +176,7 @@ develMain = develMainHelper getApplicationDev
 -- | The @main@ function for an executable running this site.
 appMain :: IO ()
 appMain = do
+    loadDotenv
     -- Get the settings from all relevant sources
     settings <- loadYamlSettingsArgs
         -- fall back to compile-time values, set to [] to require values at runtime
@@ -177,6 +193,29 @@ appMain = do
 
     -- Run the application with Warp
     runSettings (warpSettings foundation) app
+
+loadDotenv :: IO ()
+loadDotenv = do
+    exists <- doesFileExist ".env"
+    when exists $ do
+        contents <- readFile ".env"
+        forM_ (T.lines $ decodeUtf8 contents) $ \rawLine -> do
+            let line = T.strip rawLine
+            when (not (T.null line) && T.head line /= '#') $ do
+                let line' =
+                        if "export " `T.isPrefixOf` line
+                            then T.drop 7 line
+                            else line
+                    (key, rest) = T.breakOn "=" line'
+                    value = T.drop 1 rest
+                when (not (T.null key) && not (T.null rest)) $
+                    setEnv (T.unpack key) (T.unpack $ stripQuotes $ T.strip value)
+  where
+    stripQuotes s =
+        case T.uncons s of
+            Just ('"', xs) | not (T.null xs) && T.last xs == '"' -> T.init xs
+            Just ('\'', xs) | not (T.null xs) && T.last xs == '\'' -> T.init xs
+            _ -> s
 
 
 --------------------------------------------------------------

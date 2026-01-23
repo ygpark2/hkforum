@@ -1,0 +1,10 @@
+<div class="max-w-6xl mx-auto admin-layout">
+  <aside class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-2">
+    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Admin
+    <nav class="space-y-2 text-sm font-medium">
+      <a href=@{AdminBoardsR} class="block rounded-lg px-3 py-2 #{menuClass "boards"}">Boards
+      <a href=@{AdminUsersR} class="block rounded-lg px-3 py-2 #{menuClass "users"}">Users
+      <a href=@{AdminSettingsR} class="block rounded-lg px-3 py-2 #{menuClass "settings"}">Settings
+      <a href=@{AdminAdsR} class="block rounded-lg px-3 py-2 #{menuClass "ads"}">Ads
+  <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    ^{adminBody}

@@ -7,6 +7,21 @@
 /boards BoardsR GET POST
 /board/#BoardId BoardR GET POST
 /thread/#ThreadId ThreadR GET
-/new-thread/#BoardId NewThreadR GET POST
-/new-post/#ThreadId NewPostR GET POST
+/thread/#ThreadId/post ThreadPostR POST
+/post/#PostId/comment PostCommentR POST
+/post/#PostId/edit PostEditR POST
+/post/#PostId/delete PostDeleteR POST
+/comment/#CommentId/edit CommentEditR POST
+/comment/#CommentId/delete CommentDeleteR POST
 /register RegisterR GET POST
+/profile ProfileR GET POST
+/upload UploadR POST
+/files/#Text FileR GET
+/admin AdminR GET
+/admin/boards AdminBoardsR GET POST
+/admin/boards/#BoardId AdminBoardR POST
+/admin/users AdminUsersR GET POST
+/admin/users/#UserId AdminUserR POST
+/admin/settings AdminSettingsR GET POST
+/admin/ads AdminAdsR GET POST
+/admin/ads/#AdId AdminAdR POST

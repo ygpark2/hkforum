@@ -16,6 +16,28 @@ rebuild:
 start:
 	@stack run hkforum
 
+.PHONY: dev-start
+dev-start:
+	# @stack exec -- yesod devel
+	@stack build --flag hkforum:dev && stack exec hkforum
+
+.PHONY: start-bg
+start-bg:
+	@nohup stack run hkforum > ./hkforum.log 2>&1 & echo $$! > ./hkforum.pid
+
+.PHONY: stop
+stop:
+	@if [ -f ./hkforum.pid ]; then \
+		kill $$(cat ./hkforum.pid) || true; \
+		rm -f ./hkforum.pid; \
+	else \
+		echo "No hkforum.pid found."; \
+	fi
+
+.PHONY: clean
+clean:
+	@rm ./data/*.sqlite*
+
 .PHONY: restart
 restart:
 	$(MAKE) rebuild && $(MAKE) start
