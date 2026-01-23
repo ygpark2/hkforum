@@ -1,6 +1,9 @@
 User
     ident Text
     password Text Maybe
+    role Text default='user'
+    name Text Maybe
+    description Text Maybe
     UniqueUser ident
     deriving Typeable
 Email
@@ -11,6 +14,10 @@ Email
 
 Board
     name Text
+    description Text Maybe
+    threadCount Int default=0
+    postCount Int default=0
+    commentCount Int default=0
     UniqueBoard name
     deriving Typeable
 
@@ -27,6 +34,39 @@ Post
     content Text
     author UserId
     thread ThreadId
+    createdAt UTCTime
+    updatedAt UTCTime
+    deriving Typeable
+
+Comment
+    content Text
+    author UserId
+    post PostId
+    createdAt UTCTime
+    deriving Typeable
+
+Upload
+    ownerId UserId
+    storageKey Text
+    originalName Text
+    contentType Text Maybe
+    sizeBytes Int Maybe
+    createdAt UTCTime
+    deriving Typeable
+
+SiteSetting
+    key Text
+    value Text
+    UniqueSiteSetting key
+    deriving Typeable
+
+Ad
+    title Text
+    body Text
+    link Text Maybe
+    isActive Bool
+    position Text default='sidebar-right'
+    sortOrder Int default=0
     createdAt UTCTime
     updatedAt UTCTime
     deriving Typeable

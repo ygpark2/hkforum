@@ -45,6 +45,8 @@ library:
     - wai-extra >=3.1.18 && <3.2
     - yaml >=0.11.11 && <0.12
     - http-conduit >=2.3.9 && <2.4
+    - yesod-auth-oauth2 >=0.7.4.0 && <0.8
+    - uri-bytestring >=0.4.0.1 && <0.5
     - directory >=1.3.8 && <1.4
     - warp >=3.4.9 && <3.5
     - data-default
@@ -56,12 +58,15 @@ library:
     - fast-logger >=3.2.6 && <3.3
     - wai-logger >=2.5.0 && <2.6
     - file-embed
+    - filepath
     - safe
     - unordered-containers
     - containers
     - vector
     - time
     - bcrypt >=0.0.11 && <0.1
+    - uuid
+    - process
 
 executables:
   hkforum:

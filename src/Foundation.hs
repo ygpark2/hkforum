@@ -9,11 +9,11 @@ import Text.Read (readMaybe)
 import Text.Hamlet          (hamletFile)
 import Text.Jasmine         (minifym)
 import Yesod.Auth
-import Yesod.Auth.BrowserId (authBrowserId)
-import Yesod.Auth.Dummy      (authDummy)
-import Yesod.Auth.HashDB     (HashDBUser(..))
-import Auth.HashDBLog        (authHashDBLog)
+import Yesod.Auth.HashDB     (HashDBUser(..), authHashDB)
+import Yesod.Auth.OAuth2.Google (oauth2Google)
+import Auth.OAuth2Providers  (oauth2Kakao, oauth2Naver)
 import Yesod.Default.Util   (addStaticContentExternal)
+import Storage              (Storage, StorageBackendType(..))
 
 import Yesod.Core            (getCurrentRoute)
 import Yesod.Core.Types     (Logger)
@@ -29,6 +29,8 @@ data App = App
     , appConnPool    :: ConnectionPool -- ^ Database connection pool.
     , appHttpManager :: Manager
     , appLogger      :: Logger
+    , appStorage     :: Storage App
+    , appStorageBackendType :: StorageBackendType
     }
 
 instance HasHttpManager App where
@@ -61,8 +63,8 @@ instance Yesod App where
         master <- getYesod
         mmsg <- getMessage
         pc <- widgetToPageContent $ do
-            $(widgetFile "default-layout")
-        withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
+            $(widgetFile "layout/default-layout")
+        withUrlRenderer $(hamletFile "templates/layout/default-layout-wrapper.hamlet")
 
     -- Store session data on the client in encrypted cookies,
     -- default session idle timeout is 120 minutes
@@ -77,6 +79,20 @@ instance Yesod App where
     isAuthorized (AuthR _) _ = return Authorized
     isAuthorized FaviconR _ = return Authorized
     isAuthorized RobotsR _ = return Authorized
+    isAuthorized ProfileR _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    -- Admin-only routes.
+    isAuthorized AdminR _ = isAdmin
+    isAuthorized AdminBoardsR _ = isAdmin
+    isAuthorized (AdminBoardR _) _ = isAdmin
+    isAuthorized AdminUsersR _ = isAdmin
+    isAuthorized (AdminUserR _) _ = isAdmin
+    isAuthorized AdminSettingsR _ = isAdmin
+    isAuthorized AdminAdsR _ = isAdmin
+    isAuthorized (AdminAdR _) _ = isAdmin
     -- Default to Authorized for now.
     isAuthorized _ _ = return Authorized
 
@@ -114,9 +130,29 @@ instance YesodAuth App where
     type AuthId App = UserId
     loginDest _ = BoardsR
     logoutDest _ = BoardsR
-    redirectToReferer _ = True
+    redirectToReferer _ = False
     authHttpManager = getYesod >>= return P.. getHttpManager
-    authPlugins _ = [authHashDBLog (Just P.. UniqueUser)]
+    authPlugins app =
+        [authHashDB (Just P.. UniqueUser)]
+        P.++ oauthPlugin oauth2Google appGoogleClientId appGoogleClientSecret
+        P.++ oauthPlugin oauth2Kakao appKakaoClientId appKakaoClientSecret
+        P.++ oauthPlugin oauth2Naver appNaverClientId appNaverClientSecret
+      where
+        settings = appSettings app
+        oauthPlugin plugin getId getSecret =
+            case (getId settings, getSecret settings) of
+                (Just clientId, Just clientSecret) -> [plugin clientId clientSecret]
+                _ -> []
+
+    authenticate creds = liftHandler $ runDB $ do
+        let ident =
+                if credsPlugin creds == "hashdb"
+                    then credsIdent creds
+                    else credsPlugin creds <> ":" <> credsIdent creds
+        mUser <- getBy $ UniqueUser ident
+        case mUser of
+            Just (Entity userId _) -> return $ Authenticated userId
+            Nothing -> Authenticated <$> insert (User ident Nothing "user" Nothing Nothing)
 
 instance YesodAuthPersist App where
     type AuthEntity App = User
@@ -124,6 +160,20 @@ instance YesodAuthPersist App where
 instance HashDBUser User where
     userPasswordHash = userPassword
     setPasswordHash p u = u { userPassword = Just p }
+
+isAdmin :: Handler AuthResult
+isAdmin = do
+    mUserId <- maybeAuthId
+    case mUserId of
+        Nothing -> return AuthenticationRequired
+        Just userId -> do
+            mUser <- runDB $ get userId
+            case mUser of
+                Nothing -> return AuthenticationRequired
+                Just user ->
+                    if userRole user == "admin"
+                        then return Authorized
+                        else return $ Unauthorized "Admin only"
 
 
 -- This instance is required to use forms. You can modify renderMessage to

@@ -53,6 +53,20 @@ data AppSettings = AppSettings
     -- ^ Copyright text to appear in the footer of the page
     , appAnalytics              :: Maybe Text
     -- ^ Google Analytics code
+    , appStorageBackend         :: Text
+    , appStorageLocalRootDir    :: FilePath
+    , appStorageLocalPublicBase :: Text
+    , appStorageS3Bucket        :: Maybe Text
+    , appStorageS3Region        :: Maybe Text
+    , appStorageS3Endpoint      :: Maybe Text
+    , appStorageS3ForcePathStyle :: Bool
+    , appStorageS3PublicBase    :: Maybe Text
+    , appGoogleClientId         :: Maybe Text
+    , appGoogleClientSecret     :: Maybe Text
+    , appKakaoClientId          :: Maybe Text
+    , appKakaoClientSecret      :: Maybe Text
+    , appNaverClientId          :: Maybe Text
+    , appNaverClientSecret      :: Maybe Text
     }
 
 instance FromJSON AppSettings where
@@ -78,6 +92,27 @@ instance FromJSON AppSettings where
 
         appCopyright              <- o .: "copyright"
         appAnalytics              <- o .:? "analytics"
+
+        storage                   <- o .:? "storage" .!= mempty
+        appStorageBackend         <- storage .:? "backend" .!= "local"
+        storageLocal              <- storage .:? "local" .!= mempty
+        appStorageLocalRootDir    <- storageLocal .:? "rootDir" .!= "data/uploads"
+        appStorageLocalPublicBase <- storageLocal .:? "publicBaseUrl" .!= "/files"
+
+        storageS3                 <- storage .:? "s3" .!= mempty
+        appStorageS3Bucket        <- storageS3 .:? "bucket"
+        appStorageS3Region        <- storageS3 .:? "region"
+        appStorageS3Endpoint      <- storageS3 .:? "endpoint"
+        appStorageS3ForcePathStyle <- storageS3 .:? "forcePathStyle" .!= True
+        appStorageS3PublicBase    <- storageS3 .:? "publicBaseUrl"
+
+        oauth2                    <- o .:? "oauth2" .!= mempty
+        appGoogleClientId         <- oauth2 .:? "google-client-id"
+        appGoogleClientSecret     <- oauth2 .:? "google-client-secret"
+        appKakaoClientId          <- oauth2 .:? "kakao-client-id"
+        appKakaoClientSecret      <- oauth2 .:? "kakao-client-secret"
+        appNaverClientId          <- oauth2 .:? "naver-client-id"
+        appNaverClientSecret      <- oauth2 .:? "naver-client-secret"
 
         return AppSettings {..}
 
