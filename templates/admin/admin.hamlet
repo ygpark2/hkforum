@@ -2,14 +2,13 @@
 <p class="mt-2 text-sm text-slate-600">Manage boards, users, settings, and ads.</p>
 <div class="mt-6 grid gap-4 sm:grid-cols-2">
   <a href=@{AdminBoardsR} class="block rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-slate-900 transition hover:border-slate-300 hover:bg-white">
-    <div class="text-lg font-medium">Boards</div>
-    <div class="text-sm text-slate-500">Create, rename, delete boards</div>
+    <span class="block text-lg font-medium">Boards</span>
+    <span class="block text-sm text-slate-500">Create, rename, delete boards</span>
   <a href=@{AdminUsersR} class="block rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-slate-900 transition hover:border-slate-300 hover:bg-white">
-    <div class="text-lg font-medium">Users</div>
-    <div class="text-sm text-slate-500">Create, update, delete users</div>
+    <span class="block text-lg font-medium">Users</span>
   <a href=@{AdminSettingsR} class="block rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-slate-900 transition hover:border-slate-300 hover:bg-white">
-    <div class="text-lg font-medium">Settings</div>
-    <div class="text-sm text-slate-500">Manage site settings</div>
+    <span class="block text-lg font-medium">Settings</span>
+    <span class="block text-sm text-slate-500">Manage site settings</span>
   <a href=@{AdminAdsR} class="block rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-slate-900 transition hover:border-slate-300 hover:bg-white">
-    <div class="text-lg font-medium">Ads</div>
-    <div class="text-sm text-slate-500">Manage right sidebar ads</div>
+    <span class="block text-lg font-medium">Ads</span>
+    <span class="block text-sm text-slate-500">Manage right sidebar ads</span>

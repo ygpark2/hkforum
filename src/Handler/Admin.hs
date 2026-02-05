@@ -2,14 +2,22 @@
 module Handler.Admin
     ( getAdminR
     , getAdminBoardsR
+    , getAdminBoardNewR
+    , getAdminBoardR
     , postAdminBoardsR
     , postAdminBoardR
     , getAdminUsersR
+    , getAdminUserNewR
+    , getAdminUserR
     , postAdminUsersR
     , postAdminUserR
     , getAdminSettingsR
+    , getAdminSettingNewR
+    , getAdminSettingR
     , postAdminSettingsR
     , getAdminAdsR
+    , getAdminAdNewR
+    , getAdminAdR
     , postAdminAdsR
     , postAdminAdR
     ) where
@@ -42,6 +50,39 @@ getAdminBoardsR = do
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Boards"
         let adminBody = $(widgetFile "admin/admin-boards")
+            activeKey = ("boards" :: Text)
+            menuClass key =
+                if key == activeKey
+                    then ("bg-slate-900 text-white" :: Text)
+                    else ("text-slate-600 hover:bg-slate-50 hover:text-slate-900" :: Text)
+        $(widgetFile "layout/admin-layout")
+
+getAdminBoardNewR :: Handler Html
+getAdminBoardNewR = do
+    req <- getRequest
+    let mCsrfToken = reqToken req
+        mBoard = (Nothing :: Maybe (Entity Board))
+        isNew = True
+    defaultLayout $ do
+        setTitle $ preEscapedText "Admin - New Board"
+        let adminBody = $(widgetFile "admin/admin-board-detail")
+            activeKey = ("boards" :: Text)
+            menuClass key =
+                if key == activeKey
+                    then ("bg-slate-900 text-white" :: Text)
+                    else ("text-slate-600 hover:bg-slate-50 hover:text-slate-900" :: Text)
+        $(widgetFile "layout/admin-layout")
+
+getAdminBoardR :: BoardId -> Handler Html
+getAdminBoardR boardId = do
+    board <- runDB $ get404 boardId
+    req <- getRequest
+    let mCsrfToken = reqToken req
+        mBoard = Just (Entity boardId board)
+        isNew = False
+    defaultLayout $ do
+        setTitle $ preEscapedText "Admin - Edit Board"
+        let adminBody = $(widgetFile "admin/admin-board-detail")
             activeKey = ("boards" :: Text)
             menuClass key =
                 if key == activeKey
@@ -107,14 +148,84 @@ getAdminUsersR = do
                     else ("text-slate-600 hover:bg-slate-50 hover:text-slate-900" :: Text)
         $(widgetFile "layout/admin-layout")
 
+getAdminUserNewR :: Handler Html
+getAdminUserNewR = do
+    req <- getRequest
+    let mCsrfToken = reqToken req
+        mUser = (Nothing :: Maybe (Entity User))
+        isNew = True
+    defaultLayout $ do
+        setTitle $ preEscapedText "Admin - New User"
+        let adminBody = $(widgetFile "admin/admin-user-detail")
+            activeKey = ("users" :: Text)
+            menuClass key =
+                if key == activeKey
+                    then ("bg-slate-900 text-white" :: Text)
+                    else ("text-slate-600 hover:bg-slate-50 hover:text-slate-900" :: Text)
+        $(widgetFile "layout/admin-layout")
+
+getAdminUserR :: UserId -> Handler Html
+getAdminUserR userId = do
+    user <- runDB $ get404 userId
+    req <- getRequest
+    let mCsrfToken = reqToken req
+        mUser = Just (Entity userId user)
+        isNew = False
+    defaultLayout $ do
+        setTitle $ preEscapedText "Admin - Edit User"
+        let adminBody = $(widgetFile "admin/admin-user-detail")
+            activeKey = ("users" :: Text)
+            menuClass key =
+                if key == activeKey
+                    then ("bg-slate-900 text-white" :: Text)
+                    else ("text-slate-600 hover:bg-slate-50 hover:text-slate-900" :: Text)
+        $(widgetFile "layout/admin-layout")
+
 getAdminSettingsR :: Handler Html
 getAdminSettingsR = do
     settings <- runDB $ selectList [] [Asc SiteSettingKey]
+    mSiteTitle <- runDB $ getBy $ UniqueSiteSetting "site_title"
+    mSiteSubtitle <- runDB $ getBy $ UniqueSiteSetting "site_subtitle"
     req <- getRequest
     let mCsrfToken = reqToken req
+        siteTitleValue = maybe "HKForum" (siteSettingValue P.. entityVal) mSiteTitle
+        siteSubtitleValue = maybe "x.com inspired discussion hub" (siteSettingValue P.. entityVal) mSiteSubtitle
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Settings"
         let adminBody = $(widgetFile "admin/admin-settings")
+            activeKey = ("settings" :: Text)
+            menuClass key =
+                if key == activeKey
+                    then ("bg-slate-900 text-white" :: Text)
+                    else ("text-slate-600 hover:bg-slate-50 hover:text-slate-900" :: Text)
+        $(widgetFile "layout/admin-layout")
+
+getAdminSettingNewR :: Handler Html
+getAdminSettingNewR = do
+    req <- getRequest
+    let mCsrfToken = reqToken req
+        mSetting = (Nothing :: Maybe (Entity SiteSetting))
+        isNew = True
+    defaultLayout $ do
+        setTitle $ preEscapedText "Admin - New Setting"
+        let adminBody = $(widgetFile "admin/admin-setting-detail")
+            activeKey = ("settings" :: Text)
+            menuClass key =
+                if key == activeKey
+                    then ("bg-slate-900 text-white" :: Text)
+                    else ("text-slate-600 hover:bg-slate-50 hover:text-slate-900" :: Text)
+        $(widgetFile "layout/admin-layout")
+
+getAdminSettingR :: SiteSettingId -> Handler Html
+getAdminSettingR settingId = do
+    setting <- runDB $ get404 settingId
+    req <- getRequest
+    let mCsrfToken = reqToken req
+        mSetting = Just (Entity settingId setting)
+        isNew = False
+    defaultLayout $ do
+        setTitle $ preEscapedText "Admin - Edit Setting"
+        let adminBody = $(widgetFile "admin/admin-setting-detail")
             activeKey = ("settings" :: Text)
             menuClass key =
                 if key == activeKey
@@ -130,6 +241,39 @@ getAdminAdsR = do
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Ads"
         let adminBody = $(widgetFile "admin/admin-ads")
+            activeKey = ("ads" :: Text)
+            menuClass key =
+                if key == activeKey
+                    then ("bg-slate-900 text-white" :: Text)
+                    else ("text-slate-600 hover:bg-slate-50 hover:text-slate-900" :: Text)
+        $(widgetFile "layout/admin-layout")
+
+getAdminAdNewR :: Handler Html
+getAdminAdNewR = do
+    req <- getRequest
+    let mCsrfToken = reqToken req
+        mAd = (Nothing :: Maybe (Entity Ad))
+        isNew = True
+    defaultLayout $ do
+        setTitle $ preEscapedText "Admin - New Ad"
+        let adminBody = $(widgetFile "admin/admin-ad-detail")
+            activeKey = ("ads" :: Text)
+            menuClass key =
+                if key == activeKey
+                    then ("bg-slate-900 text-white" :: Text)
+                    else ("text-slate-600 hover:bg-slate-50 hover:text-slate-900" :: Text)
+        $(widgetFile "layout/admin-layout")
+
+getAdminAdR :: AdId -> Handler Html
+getAdminAdR adId = do
+    ad <- runDB $ get404 adId
+    req <- getRequest
+    let mCsrfToken = reqToken req
+        mAd = Just (Entity adId ad)
+        isNew = False
+    defaultLayout $ do
+        setTitle $ preEscapedText "Admin - Edit Ad"
+        let adminBody = $(widgetFile "admin/admin-ad-detail")
             activeKey = ("ads" :: Text)
             menuClass key =
                 if key == activeKey
@@ -204,6 +348,13 @@ postAdminSettingsR :: Handler Html
 postAdminSettingsR = do
     action <- runInputPost $ ireq textField "action"
     case action of
+        "site-identity" -> do
+            title <- runInputPost $ ireq textField "site_title"
+            subtitle <- runInputPost $ ireq textField "site_subtitle"
+            _ <- runDB $ upsert (SiteSetting "site_title" title) [SiteSettingValue =. title]
+            _ <- runDB $ upsert (SiteSetting "site_subtitle" subtitle) [SiteSettingValue =. subtitle]
+            setMessage "Site identity updated."
+            redirect AdminSettingsR
         "upsert" -> do
             key <- runInputPost $ ireq textField "key"
             value <- runInputPost $ ireq textField "value"

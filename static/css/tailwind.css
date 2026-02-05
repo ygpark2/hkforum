@@ -34,12 +34,12 @@
 .admin-form-col-half{width:100%}
 .admin-form-col-third{width:100%}
 .admin-form-label{display:block;text-transform:uppercase;letter-spacing:.1em;color:#374151;font-size:.75rem;font-weight:700;margin-bottom:.5rem}
-.admin-form-input{appearance:none;display:block;width:100%;background:#e5e7eb;color:#374151;border:1px solid #e5e7eb;border-radius:.5rem;padding:.75rem 1rem;line-height:1.25;outline:none}
+.admin-form-input{appearance:none;display:block;width:100%;background:#fff;color:#374151;border:1px solid #e5e7eb;border-radius:.5rem;padding:.75rem 1rem;line-height:1.25;outline:none}
 .admin-form-input:focus{background:#fff;border-color:#6b7280}
-.admin-form-textarea{appearance:none;display:block;width:100%;background:#e5e7eb;color:#374151;border:1px solid #e5e7eb;border-radius:.5rem;padding:.75rem 1rem;line-height:1.25;outline:none;resize:vertical}
+.admin-form-textarea{appearance:none;display:block;width:100%;background:#fff;color:#374151;border:1px solid #e5e7eb;border-radius:.5rem;padding:.75rem 1rem;line-height:1.25;outline:none;resize:vertical}
 .admin-form-textarea:focus{background:#fff;border-color:#6b7280}
 .admin-form-select-wrap{position:relative}
-.admin-form-select{display:block;appearance:none;width:100%;background:#e5e7eb;border:1px solid #e5e7eb;color:#374151;padding:.75rem 2rem .75rem 1rem;border-radius:.5rem;line-height:1.25;outline:none}
+.admin-form-select{display:block;appearance:none;width:100%;background:#fff;border:1px solid #e5e7eb;color:#374151;padding:.75rem 2rem .75rem 1rem;border-radius:.5rem;line-height:1.25;outline:none}
 .admin-form-select:focus{background:#fff;border-color:#6b7280}
 @media (min-width: 768px){
   .admin-form-col-half{width:50%;margin-bottom:0}
