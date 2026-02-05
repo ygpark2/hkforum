@@ -62,6 +62,10 @@ instance Yesod App where
     defaultLayout widget = do
         master <- getYesod
         mmsg <- getMessage
+        mSiteTitle <- runDB $ getBy $ UniqueSiteSetting "site_title"
+        mSiteSubtitle <- runDB $ getBy $ UniqueSiteSetting "site_subtitle"
+        let siteTitle = maybe "HKForum" (siteSettingValue P.. entityVal) mSiteTitle
+            siteSubtitle = maybe "x.com inspired discussion hub" (siteSettingValue P.. entityVal) mSiteSubtitle
         pc <- widgetToPageContent $ do
             $(widgetFile "layout/default-layout")
         withUrlRenderer $(hamletFile "templates/layout/default-layout-wrapper.hamlet")
@@ -87,11 +91,16 @@ instance Yesod App where
     -- Admin-only routes.
     isAuthorized AdminR _ = isAdmin
     isAuthorized AdminBoardsR _ = isAdmin
+    isAuthorized AdminBoardNewR _ = isAdmin
     isAuthorized (AdminBoardR _) _ = isAdmin
     isAuthorized AdminUsersR _ = isAdmin
+    isAuthorized AdminUserNewR _ = isAdmin
     isAuthorized (AdminUserR _) _ = isAdmin
     isAuthorized AdminSettingsR _ = isAdmin
+    isAuthorized AdminSettingNewR _ = isAdmin
+    isAuthorized (AdminSettingR _) _ = isAdmin
     isAuthorized AdminAdsR _ = isAdmin
+    isAuthorized AdminAdNewR _ = isAdmin
     isAuthorized (AdminAdR _) _ = isAdmin
     -- Default to Authorized for now.
     isAuthorized _ _ = return Authorized

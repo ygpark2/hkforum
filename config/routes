@@ -19,9 +19,14 @@
 /files/#Text FileR GET
 /admin AdminR GET
 /admin/boards AdminBoardsR GET POST
-/admin/boards/#BoardId AdminBoardR POST
+/admin/boards/new AdminBoardNewR GET
+/admin/boards/#BoardId/view AdminBoardR GET POST
 /admin/users AdminUsersR GET POST
-/admin/users/#UserId AdminUserR POST
+/admin/users/new AdminUserNewR GET
+/admin/users/#UserId/view AdminUserR GET POST
 /admin/settings AdminSettingsR GET POST
+/admin/settings/new AdminSettingNewR GET
+/admin/settings/#SiteSettingId/view AdminSettingR GET
 /admin/ads AdminAdsR GET POST
-/admin/ads/#AdId AdminAdR POST
+/admin/ads/new AdminAdNewR GET
+/admin/ads/#AdId/view AdminAdR GET POST
