@@ -20,15 +20,28 @@ module Handler.Admin
     , getAdminAdR
     , postAdminAdsR
     , postAdminAdR
+    , getAdminModerationR
+    , postAdminModerationActionR
+    , getAdminModerationLogsR
     ) where
 
 import Import
-import Prelude hiding (null)
 import qualified Prelude as P
 import Data.Time (getCurrentTime)
 import Text.Blaze (preEscapedText)
 import Yesod.Auth.HashDB (setPassword)
 import qualified Data.Text as T
+import qualified Data.Map.Strict as Map
+import Data.Time (defaultTimeLocale, formatTime)
+import qualified Data.List as L
+import Data.Maybe (fromMaybe)
+import qualified Data.Text.Encoding as TextEncoding
+import Data.ByteString.Builder (toLazyByteString)
+import qualified Data.ByteString.Lazy as LBS
+import Data.Int (Int64)
+import Network.HTTP.Types.URI (renderQueryText)
+import Database.Persist.Sql (fromSqlKey, toSqlKey)
+import Text.Read (readMaybe)
 
 getAdminR :: Handler Html
 getAdminR = do
@@ -280,6 +293,330 @@ getAdminAdR adId = do
                     then ("bg-slate-900 text-white" :: Text)
                     else ("text-slate-600 hover:bg-slate-50 hover:text-slate-900" :: Text)
         $(widgetFile "layout/admin-layout")
+
+getAdminModerationR :: Handler Html
+getAdminModerationR = do
+    req <- getRequest
+    let mCsrfToken = reqToken req
+    q <- fromMaybe "" <$> lookupGetParam "q"
+    userQuery <- fromMaybe "" <$> lookupGetParam "user"
+    typeQuery <- fromMaybe "" <$> lookupGetParam "type"
+    pageParam <- lookupGetParam "page"
+    perPageParam <- lookupGetParam "per_page"
+    threadFlags <- runDB $ selectList [] [Desc ThreadFlagCreatedAt]
+    threadBlocks <- runDB $ selectList [] [Desc ThreadBlockCreatedAt]
+    postFlags <- runDB $ selectList [] [Desc PostFlagCreatedAt]
+    postBlocks <- runDB $ selectList [] [Desc PostBlockCreatedAt]
+
+    let userIds =
+            L.nub $
+                map (threadFlagUser . entityVal) threadFlags
+                    P.++ map (threadBlockUser . entityVal) threadBlocks
+                    P.++ map (postFlagUser . entityVal) postFlags
+                    P.++ map (postBlockUser . entityVal) postBlocks
+        threadIds =
+            L.nub $
+                map (threadFlagThread . entityVal) threadFlags
+                    P.++ map (threadBlockThread . entityVal) threadBlocks
+        postIds =
+            L.nub $
+                map (postFlagPost . entityVal) postFlags
+                    P.++ map (postBlockPost . entityVal) postBlocks
+
+    users <- if P.null userIds
+        then pure []
+        else runDB $ selectList [UserId <-. userIds] []
+    threads <- if P.null threadIds
+        then pure []
+        else runDB $ selectList [ThreadId <-. threadIds] []
+    posts <- if P.null postIds
+        then pure []
+        else runDB $ selectList [PostId <-. postIds] []
+
+    let userMap = Map.fromList $ map (\(Entity uid u) -> (uid, userIdent u)) users
+        threadMap = Map.fromList $ map (\(Entity tid t) -> (tid, t)) threads
+        postMap = Map.fromList $ map (\(Entity pid p) -> (pid, p)) posts
+        postThreadIds = L.nub $ map (postThread . entityVal) posts
+    postThreads <- if P.null postThreadIds
+        then pure []
+        else runDB $ selectList [ThreadId <-. postThreadIds] []
+    let postThreadMap = Map.fromList $ map (\(Entity tid t) -> (tid, t)) postThreads
+        userName uid = Map.findWithDefault ("Unknown" :: Text) uid userMap
+        threadTitleFor tid = maybe ("Unknown" :: Text) threadTitle (Map.lookup tid threadMap)
+        postThreadTitle pid =
+            case Map.lookup pid postMap of
+                Nothing -> ("Unknown" :: Text)
+                Just p ->
+                    maybe ("Unknown" :: Text) threadTitle (Map.lookup (postThread p) postThreadMap)
+        postPreview = buildPreview 160 . postContent
+        flagThreads =
+            map
+                (\(Entity fid f) ->
+                    ( fid
+                    , userName (threadFlagUser f)
+                    , threadTitleFor (threadFlagThread f)
+                    , formatTime defaultTimeLocale "%F %R" (threadFlagCreatedAt f)
+                    )
+                )
+                threadFlags
+        blockThreads =
+            map
+                (\(Entity bid f) ->
+                    ( bid
+                    , userName (threadBlockUser f)
+                    , threadTitleFor (threadBlockThread f)
+                    , formatTime defaultTimeLocale "%F %R" (threadBlockCreatedAt f)
+                    )
+                )
+                threadBlocks
+        flagPosts =
+            map
+                (\(Entity fid f) ->
+                    let pid = postFlagPost f
+                        preview = maybe ("Unknown" :: Text) postPreview (Map.lookup pid postMap)
+                    in ( fid
+                       , userName (postFlagUser f)
+                       , postThreadTitle pid
+                       , preview
+                       , formatTime defaultTimeLocale "%F %R" (postFlagCreatedAt f)
+                       )
+                )
+                postFlags
+        blockPosts =
+            map
+                (\(Entity bid f) ->
+                    let pid = postBlockPost f
+                        preview = maybe ("Unknown" :: Text) postPreview (Map.lookup pid postMap)
+                    in ( bid
+                       , userName (postBlockUser f)
+                       , postThreadTitle pid
+                       , preview
+                       , formatTime defaultTimeLocale "%F %R" (postBlockCreatedAt f)
+                       )
+                )
+                postBlocks
+
+    let page = max 1 $ fromMaybe 1 (pageParam >>= (\t -> readMaybe (T.unpack t)))
+        perPageRaw = fromMaybe 10 (perPageParam >>= (\t -> readMaybe (T.unpack t)))
+        perPage = max 5 (min 50 perPageRaw)
+    let qLower = T.toLower q
+        userLower = T.toLower userQuery
+        typeLower = T.toLower typeQuery
+        matchesText txt = T.null qLower || T.isInfixOf qLower (T.toLower txt)
+        matchesUser txt = T.null userLower || T.isInfixOf userLower (T.toLower txt)
+        matchesType key = T.null typeLower || typeLower == key
+        applyFiltersThread rows =
+            P.filter (\(_, u, t, _) -> matchesUser u && matchesText t) rows
+        applyFiltersPost rows =
+            P.filter (\(_, u, t, p, _) -> matchesUser u && (matchesText t || matchesText p)) rows
+        flagThreadsFiltered =
+            if matchesType "thread-flag" then applyFiltersThread flagThreads else []
+        blockThreadsFiltered =
+            if matchesType "thread-block" then applyFiltersThread blockThreads else []
+        flagPostsFiltered =
+            if matchesType "post-flag" then applyFiltersPost flagPosts else []
+        blockPostsFiltered =
+            if matchesType "post-block" then applyFiltersPost blockPosts else []
+        paginate rows =
+            let total = length rows
+                totalPages = max 1 $ ceiling (fromIntegral total / (fromIntegral perPage :: Double))
+                start = (page - 1) * perPage
+                pageRows = take perPage (drop start rows)
+            in (pageRows, totalPages)
+        (flagThreadsPage, flagThreadsPages) = paginate flagThreadsFiltered
+        (blockThreadsPage, blockThreadsPages) = paginate blockThreadsFiltered
+        (flagPostsPage, flagPostsPages) = paginate flagPostsFiltered
+        (blockPostsPage, blockPostsPages) = paginate blockPostsFiltered
+        listTypeOptions :: [(Text, Text)]
+        listTypeOptions =
+            [ ("", "All")
+            , ("thread-flag", "Thread Flags")
+            , ("thread-block", "Thread Blocks")
+            , ("post-flag", "Post Flags")
+            , ("post-block", "Post Blocks")
+            ]
+        baseParams =
+            [ ("q", if T.null q then Nothing else Just q)
+            , ("user", if T.null userQuery then Nothing else Just userQuery)
+            , ("type", if T.null typeQuery then Nothing else Just typeQuery)
+            , ("per_page", Just (T.pack (show perPage)))
+            ]
+        queryBase =
+            TextEncoding.decodeUtf8
+                $ LBS.toStrict
+                $ toLazyByteString
+                $ renderQueryText True baseParams
+        pagePrefix =
+            if T.null queryBase
+                then "?page="
+                else queryBase <> "&page="
+        pageText = T.pack (show page)
+    defaultLayout $ do
+        setTitle $ preEscapedText "Admin - Moderation"
+        let adminBody = $(widgetFile "admin/admin-moderation")
+            activeKey = ("moderation" :: Text)
+            menuClass key =
+                if key == activeKey
+                    then ("bg-slate-900 text-white" :: Text)
+                    else ("text-slate-600 hover:bg-slate-50 hover:text-slate-900" :: Text)
+        $(widgetFile "layout/admin-layout")
+
+getAdminModerationLogsR :: Handler Html
+getAdminModerationLogsR = do
+    q <- fromMaybe "" <$> lookupGetParam "q"
+    userQuery <- fromMaybe "" <$> lookupGetParam "user"
+    typeQuery <- fromMaybe "" <$> lookupGetParam "type"
+    pageParam <- lookupGetParam "page"
+    perPageParam <- lookupGetParam "per_page"
+    let page = max 1 $ fromMaybe 1 (pageParam >>= (\t -> readMaybe (T.unpack t)))
+        perPageRaw = fromMaybe 20 (perPageParam >>= (\t -> readMaybe (T.unpack t)))
+        perPage = max 5 (min 50 perPageRaw)
+        qLower = T.toLower q
+        userLower = T.toLower userQuery
+        typeLower = T.toLower typeQuery
+        matchesText txt = T.null qLower || T.isInfixOf qLower (T.toLower txt)
+        matchesUser txt = T.null userLower || T.isInfixOf userLower (T.toLower txt)
+        matchesType key = T.null typeLower || typeLower == key
+
+    logs <- runDB $ selectList [] [Desc ModerationLogCreatedAt]
+    let actorIds = L.nub $ map (moderationLogActor . entityVal) logs
+    users <- if P.null actorIds
+        then pure []
+        else runDB $ selectList [UserId <-. actorIds] []
+    let userMap = Map.fromList $ map (\(Entity uid u) -> (uid, userIdent u)) users
+        actorName uid = Map.findWithDefault ("Unknown" :: Text) uid userMap
+        filteredLogs =
+            P.filter
+                (\(Entity _ l) ->
+                    matchesUser (actorName (moderationLogActor l))
+                        && matchesType (moderationLogTargetType l)
+                        && (matchesText (moderationLogTargetId l) || matchesText (moderationLogAction l))
+                )
+                logs
+        postIds =
+            L.nub
+                [ toSqlKey pid
+                | Entity _ l <- filteredLogs
+                , moderationLogTargetType l `elem` ["post-flag", "post-block"]
+                , Just pid <- [readMaybe (T.unpack (moderationLogTargetId l)) :: Maybe Int64]
+                ]
+    postsById <- if P.null postIds
+        then pure []
+        else runDB $ selectList [PostId <-. postIds] []
+    let postThreadMap = Map.fromList $ map (\(Entity pid p) -> (pid, postThread p)) postsById
+        total = length filteredLogs
+        totalPages = max 1 $ ceiling (fromIntegral total / (fromIntegral perPage :: Double))
+        start = (page - 1) * perPage
+        pageLogs = take perPage (drop start filteredLogs)
+        logRows =
+            map
+                (\(Entity _ l) ->
+                    let targetType = moderationLogTargetType l
+                        targetId = moderationLogTargetId l
+                        route =
+                            case (targetType, readMaybe (T.unpack targetId) :: Maybe Int64) of
+                                ("thread-flag", Just tid) -> Just (ThreadR (toSqlKey tid))
+                                ("thread-block", Just tid) -> Just (ThreadR (toSqlKey tid))
+                                ("post-flag", Just pid) ->
+                                    Map.lookup (toSqlKey pid) postThreadMap >>= \tid -> Just (ThreadR tid)
+                                ("post-block", Just pid) ->
+                                    Map.lookup (toSqlKey pid) postThreadMap >>= \tid -> Just (ThreadR tid)
+                                _ -> Nothing
+                    in ( targetType
+                       , targetId
+                       , moderationLogAction l
+                       , actorName (moderationLogActor l)
+                       , formatTime defaultTimeLocale "%F %R" (moderationLogCreatedAt l)
+                       , route
+                       )
+                )
+                pageLogs
+        listTypeOptions :: [(Text, Text)]
+        listTypeOptions =
+            [ ("", "All")
+            , ("thread-flag", "Thread Flags")
+            , ("thread-block", "Thread Blocks")
+            , ("post-flag", "Post Flags")
+            , ("post-block", "Post Blocks")
+            ]
+        baseParams =
+            [ ("q", if T.null q then Nothing else Just q)
+            , ("user", if T.null userQuery then Nothing else Just userQuery)
+            , ("type", if T.null typeQuery then Nothing else Just typeQuery)
+            , ("per_page", Just (T.pack (show perPage)))
+            ]
+        queryBase =
+            TextEncoding.decodeUtf8
+                $ LBS.toStrict
+                $ toLazyByteString
+                $ renderQueryText True baseParams
+        pagePrefix =
+            if T.null queryBase
+                then "?page="
+                else queryBase <> "&page="
+        pageText = T.pack (show page)
+
+    defaultLayout $ do
+        setTitle $ preEscapedText "Admin - Moderation Logs"
+        let adminBody = $(widgetFile "admin/admin-moderation-logs")
+            activeKey = ("moderation-logs" :: Text)
+            menuClass key =
+                if key == activeKey
+                    then ("bg-slate-900 text-white" :: Text)
+                    else ("text-slate-600 hover:bg-slate-50 hover:text-slate-900" :: Text)
+        $(widgetFile "layout/admin-layout")
+
+postAdminModerationActionR :: Handler Html
+postAdminModerationActionR = do
+    action <- runInputPost $ ireq textField "action"
+    actor <- requireAuthId
+    now <- liftIO getCurrentTime
+    case action of
+        "thread-flag-delete" -> do
+            flagId <- runInputPost $ ireq hiddenField "id"
+            mFlag <- runDB $ get flagId
+            runDB $ delete flagId
+            let targetId = maybe "unknown" (T.pack . show . fromSqlKey . threadFlagThread) mFlag
+            runDB $ insert_ $ ModerationLog actor "thread-flag" targetId "delete" now
+            setMessage "Thread flag removed."
+        "thread-block-delete" -> do
+            blockId <- runInputPost $ ireq hiddenField "id"
+            mBlock <- runDB $ get blockId
+            runDB $ delete blockId
+            let targetId = maybe "unknown" (T.pack . show . fromSqlKey . threadBlockThread) mBlock
+            runDB $ insert_ $ ModerationLog actor "thread-block" targetId "delete" now
+            setMessage "Thread block removed."
+        "post-flag-delete" -> do
+            flagId <- runInputPost $ ireq hiddenField "id"
+            mFlag <- runDB $ get flagId
+            runDB $ delete flagId
+            let targetId = maybe "unknown" (T.pack . show . fromSqlKey . postFlagPost) mFlag
+            runDB $ insert_ $ ModerationLog actor "post-flag" targetId "delete" now
+            setMessage "Post flag removed."
+        "post-block-delete" -> do
+            blockId <- runInputPost $ ireq hiddenField "id"
+            mBlock <- runDB $ get blockId
+            runDB $ delete blockId
+            let targetId = maybe "unknown" (T.pack . show . fromSqlKey . postBlockPost) mBlock
+            runDB $ insert_ $ ModerationLog actor "post-block" targetId "delete" now
+            setMessage "Post block removed."
+        _ -> setMessage "Unknown action."
+    redirect AdminModerationR
+
+buildPreview :: Int -> Text -> Text
+buildPreview n raw =
+    let plain = stripTags raw
+        trimmed = T.take n plain
+    in if T.length plain > n then trimmed <> "…" else trimmed
+
+stripTags :: Text -> Text
+stripTags = T.pack . go False . T.unpack
+  where
+    go _ [] = []
+    go True ('>':xs) = go False xs
+    go True (_:xs) = go True xs
+    go False ('<':xs) = go True xs
+    go False (x:xs) = x : go False xs
 
 postAdminUsersR :: Handler Html
 postAdminUsersR = do

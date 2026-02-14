@@ -1,134 +1,67 @@
-<div class="grid gap-6 lg:grid-cols-[260px_1fr_260px]">
-  <aside class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-4 sticky top-8">
-    <div>
-      <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Boards
-      <p class="text-lg font-semibold text-slate-900">Community hubs
-    <nav class="space-y-2 text-sm font-medium">
-      <a href=@{BoardsR} class="block px-3 py-2 rounded-lg bg-slate-900 text-white transition hover:bg-slate-800">Home
-      $forall Entity boardId board <- boards
-        <a href=@{BoardR boardId} class="block px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-50">#{boardName board}
-  <section class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-6">
-    $maybe tok <- mCsrfToken
-      <input type=hidden id="csrf-token" value=#{tok} data-csrf-param=#{defaultCsrfParamName}>
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div class="space-y-2">
-        <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Home
-        <h1 class="text-2xl font-bold text-slate-900">Select a forum
-        <p class="text-sm text-slate-500">Choose a board to start a thread or explore recent discussions.
-      $maybe _ <- maybeAuthValue
-        <button type="button" data-open="thread-modal" class="rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-slate-800">Post
-      $nothing
-        <a href=@{AuthR LoginR} class="rounded-lg border border-slate-900 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-900 transition hover:bg-slate-900 hover:text-white">Post
-
-    $maybe _ <- maybeAuthValue
-      <dialog id="thread-modal" data-modal="thread-modal" class="w-[min(90vw,252rem)] max-w-[90vw] rounded-2xl p-0 backdrop:bg-slate-900/40" style="position:fixed;inset:0;margin:auto;">
-        <div class="rounded-2xl bg-white p-6 shadow-xl">
-          <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-slate-900">New thread
-            <button type="button" data-close="thread-modal" class="rounded-xl border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-900 hover:text-slate-900">Close
-          <form method=post action=@{BoardsR} class="mt-4 space-y-4">
-            $maybe tok <- mCsrfToken
-              <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
-            <div class="space-y-1">
-              <label for="board" class="text-sm font-semibold text-slate-700">Forum
-              <select id="board" name="boardId" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
-                $forall Entity boardId board <- boards
-                  <option value=#{fromSqlKey boardId}>#{boardName board}
-            <div class="space-y-1">
-              <label for="title" class="text-sm font-semibold text-slate-700">Thread title
-              <input id="title" name="title" type="text" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="What's on your mind?">
-            <div class="space-y-1">
-              <label for="content" class="text-sm font-semibold text-slate-700">Content
-              <div data-editor-toolbar="thread" class="flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
-                <button type="button" data-action="bold" class="rounded-lg border border-slate-200 px-2 py-1">Bold
-                <button type="button" data-action="italic" class="rounded-lg border border-slate-200 px-2 py-1">Italic
-                <button type="button" data-action="underline" class="rounded-lg border border-slate-200 px-2 py-1">Underline
-                <button type="button" data-action="strike" class="rounded-lg border border-slate-200 px-2 py-1">Strike
-                <button type="button" data-action="code" class="rounded-lg border border-slate-200 px-2 py-1">Code
-                <button type="button" data-action="codeBlock" class="rounded-lg border border-slate-200 px-2 py-1">Code block
-                <button type="button" data-action="blockquote" class="rounded-lg border border-slate-200 px-2 py-1">Quote
-                <button type="button" data-action="paragraph" class="rounded-lg border border-slate-200 px-2 py-1">P
-                <button type="button" data-action="h1" class="rounded-lg border border-slate-200 px-2 py-1">H1
-                <button type="button" data-action="h2" class="rounded-lg border border-slate-200 px-2 py-1">H2
-                <button type="button" data-action="h3" class="rounded-lg border border-slate-200 px-2 py-1">H3
-                <button type="button" data-action="bulletList" class="rounded-lg border border-slate-200 px-2 py-1">Bullets
-                <button type="button" data-action="orderedList" class="rounded-lg border border-slate-200 px-2 py-1">Numbered
-                <button type="button" data-action="taskList" class="rounded-lg border border-slate-200 px-2 py-1">Tasks
-                <button type="button" data-action="hr" class="rounded-lg border border-slate-200 px-2 py-1">HR
-                <button type="button" data-action="alignLeft" class="rounded-lg border border-slate-200 px-2 py-1">Left
-                <button type="button" data-action="alignCenter" class="rounded-lg border border-slate-200 px-2 py-1">Center
-                <button type="button" data-action="alignRight" class="rounded-lg border border-slate-200 px-2 py-1">Right
-                <button type="button" data-action="alignJustify" class="rounded-lg border border-slate-200 px-2 py-1">Justify
-                <button type="button" data-action="link" class="rounded-lg border border-slate-200 px-2 py-1">Link
-                <button type="button" data-action="unlink" class="rounded-lg border border-slate-200 px-2 py-1">Unlink
-                <button type="button" data-action="highlight" class="rounded-lg border border-slate-200 px-2 py-1">Highlight
-                <button type="button" data-action="subscript" class="rounded-lg border border-slate-200 px-2 py-1">Sub
-                <button type="button" data-action="superscript" class="rounded-lg border border-slate-200 px-2 py-1">Super
-                <button type="button" data-action="table" class="rounded-lg border border-slate-200 px-2 py-1">Table
-                <button type="button" data-action="undo" class="rounded-lg border border-slate-200 px-2 py-1">Undo
-                <button type="button" data-action="redo" class="rounded-lg border border-slate-200 px-2 py-1">Redo
-                <label class="flex items-center gap-2 rounded-lg border border-slate-200 px-2 py-1">
-                  <span>Text</span>
-                  <input type="color" data-action="textColor" class="h-5 w-5 border-none bg-transparent p-0">
-                <label class="flex items-center gap-2 rounded-lg border border-slate-200 px-2 py-1">
-                  <span>BG</span>
-                  <input type="color" data-action="highlightColor" class="h-5 w-5 border-none bg-transparent p-0">
-                <button type="button" data-action="image" class="rounded-lg border border-slate-200 px-2 py-1">Image
-                <button type="button" data-action="clear" class="rounded-lg border border-slate-200 px-2 py-1">Clear
-                <input type="file" accept="image/*" data-editor-image="thread" class="hidden">
-              <input type="hidden" name="content" data-editor-input="thread">
-              <div data-editor-id="thread" class="min-h-[220px] rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
-            <div class="flex justify-end gap-2 pt-1">
-              <button type="submit" class="rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-2 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:from-slate-800 hover:to-slate-600">Post thread
-              <button type="button" data-close="thread-modal" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-900 hover:text-slate-900">Cancel
-    $nothing
-      <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">Login to start a thread.
-
-    <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-900">Latest threads
-        <span class="text-xs uppercase tracking-[0.3em] text-slate-400">#{P.length threads} total
-      $if P.null threads
-        <p class="text-sm text-slate-500">No threads yet. Start the first one!
-      $else
-        <div class="space-y-4">
-          $forall Entity threadId thread <- threads
-            <article class="group relative rounded-2xl border border-slate-200 bg-white p-4 pb-8 transition hover:border-slate-900 hover:bg-slate-50">
-              <header class="space-y-1">
-                <a href=@{ThreadR threadId} class="text-lg font-semibold text-slate-900 transition hover:text-slate-700">#{threadTitle thread}
-              <div class="text-sm text-slate-600">
-                #{previewText thread}
-              <p class="absolute bottom-3 right-4 text-[0.65rem] uppercase tracking-[0.3em] text-slate-500">By user #{authorName (threadAuthor thread)} · #{show (threadCreatedAt thread)}
-    <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-900">Forums
-        <span class="text-xs uppercase tracking-[0.3em] text-slate-400">#{P.length boards} total
-      <div class="space-y-3">
-        $forall Entity boardId board <- boards
-          <a href=@{BoardR boardId} class="block rounded-2xl border border-slate-200 bg-white px-4 py-4 transition hover:border-slate-900 hover:bg-slate-50">
-            <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Forum
-            <p class="text-lg font-semibold text-slate-900">#{boardName board}
-  <aside class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-4 sticky top-8">
-    <div>
-      <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Access
-      <p class="text-lg font-semibold text-slate-900">Login &amp; register
-    $maybe _ <- maybeAuthValue
-      <p class="text-sm text-slate-500">Welcome back!
-      $if isAdminUser
-        <a href=@{AdminR} class="block rounded-xl border border-slate-900 px-3 py-2 text-center text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white">Admin
-      <a href=@{ProfileR} class="block rounded-xl border border-slate-900 px-3 py-2 text-center text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white">Edit profile
-      <a href=@{AuthR LogoutR} class="block rounded-xl bg-slate-900 px-3 py-2 text-center text-sm font-semibold text-white transition hover:bg-slate-800">Logout
-    $nothing
-      <a href=@{AuthR LoginR} class="block rounded-xl border border-slate-900 px-3 py-2 text-center text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white">Login
-      <a href=@{RegisterR} class="block rounded-xl border border-slate-900 px-3 py-2 text-center text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white">Register
-    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Tip
-    <p class="text-sm text-slate-500">Pick a forum to write or explore what others shared.
-    $if not (null ads)
-      <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Sponsored
-      <div class="space-y-3">
-        $forall Entity _ ad <- ads
-          <div class="rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700">
-            <p class="font-semibold text-slate-900">#{adTitle ad}
-            <p class="text-sm text-slate-600">#{adBody ad}
-            $maybe link <- adLink ad
-              <a href=#{link} class="text-xs uppercase tracking-[0.2em] text-slate-500 hover:text-slate-900">Visit
+<div .feed>
+  $maybe tok <- mCsrfToken
+    <input type=hidden id="csrf-token" value=#{tok} data-csrf-param=#{defaultCsrfParamName}>
+  <ul .feed-list>
+    <li .feed-list__item .feed-list__item--header>
+      <div .feed-header>Home
+    $if P.null threadsForFeed
+      <li .feed-list__item>
+        <div .feed-empty>No threads yet. Start the first one!
+    $else
+      $forall Entity threadId thread <- threadsForFeed
+        <li .feed-list__item .feed-list__item--thread .feed-list__item--root data-href=@{ThreadR threadId} data-thread-id=#{toPathPiece threadId}>
+          <div .feed-item>
+            <div .feed-item__avatar>#{authorInitial (threadAuthor thread)}
+            <div .feed-item__meta>
+              <span .feed-item__name>#{authorName (threadAuthor thread)}
+              <span .feed-item__handle>@#{authorHandle (threadAuthor thread)}
+              <span .feed-item__time>#{relativeTime (threadCreatedAt thread)}
+            <details .feed-menu>
+              <summary .feed-menu__toggle>…
+              <div .feed-menu__panel>
+                <button type="button" data-copy-link=@{ThreadR threadId} .feed-menu__item>Copy link
+                <button type="button" data-action-url=@{ThreadMuteR threadId} data-action-type="thread-mute" data-thread-id=#{toPathPiece threadId} .feed-menu__item>Not watching
+                <button type="button" data-action-url=@{ThreadFlagR threadId} data-action-type="thread-flag" data-thread-id=#{toPathPiece threadId} .feed-menu__item>Flag
+                <button type="button" data-action-url=@{ThreadBlockR threadId} data-action-type="thread-block" data-thread-id=#{toPathPiece threadId} .feed-menu__item>Block
+            <div .feed-item__body>#{threadTitle thread}
+        $maybe (count, firstPostE, lastPostE) <- postMetaFor threadId
+          $with firstPost <- entityVal firstPostE
+            <li .feed-list__item .feed-list__item--post .feed-list__item--continuation data-href=@{ThreadR threadId} data-thread-id=#{toPathPiece threadId} data-post-id=#{toPathPiece (entityKey firstPostE)}>
+              <div .feed-item>
+                <div .feed-item__avatar>#{authorInitial (postAuthor firstPost)}
+                <div .feed-item__meta>
+                  <span .feed-item__name>#{authorName (postAuthor firstPost)}
+                  <span .feed-item__handle>@#{authorHandle (postAuthor firstPost)}
+                  <span .feed-item__time>#{relativeTime (postCreatedAt firstPost)}
+                <details .feed-menu>
+                  <summary .feed-menu__toggle>…
+                  <div .feed-menu__panel>
+                    <button type="button" data-copy-link=@{ThreadR threadId} .feed-menu__item>Copy link
+                    <button type="button" data-action-url=@{ThreadMuteR threadId} data-action-type="thread-mute" data-thread-id=#{toPathPiece threadId} .feed-menu__item>Not watching
+                    <button type="button" data-action-url=@{PostFlagR (entityKey firstPostE)} data-action-type="post-flag" data-thread-id=#{toPathPiece threadId} data-post-id=#{toPathPiece (entityKey firstPostE)} .feed-menu__item>Flag
+                    <button type="button" data-action-url=@{PostBlockR (entityKey firstPostE)} data-action-type="post-block" data-thread-id=#{toPathPiece threadId} data-post-id=#{toPathPiece (entityKey firstPostE)} .feed-menu__item>Block
+                <div .feed-item__body>#{postPreview firstPost}
+          $if count > 1
+            $if count > 2
+              <li .feed-list__item .feed-list__item--post .feed-list__item--continuation data-href=@{ThreadR threadId} data-thread-id=#{toPathPiece threadId}>
+                <div .feed-item .feed-item--simple>
+                  <div .feed-item__body>Show more replies (#{count - 2})
+            $with lastPost <- entityVal lastPostE
+              <li .feed-list__item .feed-list__item--post .feed-list__item--continuation data-href=@{ThreadR threadId} data-thread-id=#{toPathPiece threadId} data-post-id=#{toPathPiece (entityKey lastPostE)}>
+                <div .feed-item>
+                  <div .feed-item__avatar>#{authorInitial (postAuthor lastPost)}
+                  <div .feed-item__meta>
+                    <span .feed-item__name>#{authorName (postAuthor lastPost)}
+                    <span .feed-item__handle>@#{authorHandle (postAuthor lastPost)}
+                    <span .feed-item__time>#{relativeTime (postCreatedAt lastPost)}
+                  <details .feed-menu>
+                    <summary .feed-menu__toggle>…
+                    <div .feed-menu__panel>
+                      <button type="button" data-copy-link=@{ThreadR threadId} .feed-menu__item>Copy link
+                      <button type="button" data-action-url=@{ThreadMuteR threadId} data-action-type="thread-mute" data-thread-id=#{toPathPiece threadId} .feed-menu__item>Not watching
+                      <button type="button" data-action-url=@{PostFlagR (entityKey lastPostE)} data-action-type="post-flag" data-thread-id=#{toPathPiece threadId} data-post-id=#{toPathPiece (entityKey lastPostE)} .feed-menu__item>Flag
+                      <button type="button" data-action-url=@{PostBlockR (entityKey lastPostE)} data-action-type="post-block" data-thread-id=#{toPathPiece threadId} data-post-id=#{toPathPiece (entityKey lastPostE)} .feed-menu__item>Block
+                  <div .feed-item__body>#{postPreview lastPost}
+        $nothing
+          <li .feed-list__item .feed-list__item--post>
+            <span .thread-card__empty>No replies yet.

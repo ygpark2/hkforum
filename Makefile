@@ -14,16 +14,16 @@ rebuild:
 
 .PHONY: start
 start:
-	@stack run hkforum
+	@PORT=3004 APPROOT=http://localhost:3004 stack run hkforum
 
 .PHONY: dev-start
 dev-start:
 	# @stack exec -- yesod devel
-	@stack build --flag hkforum:dev && stack exec hkforum
+	@PORT=3004 APPROOT=http://localhost:3004 stack build --flag hkforum:dev && PORT=3004 APPROOT=http://localhost:3004 stack exec hkforum
 
 .PHONY: start-bg
 start-bg:
-	@nohup stack run hkforum > ./hkforum.log 2>&1 & echo $$! > ./hkforum.pid
+	@nohup PORT=3004 APPROOT=http://localhost:3004 stack run hkforum > ./hkforum.log 2>&1 & echo $$! > ./hkforum.pid
 
 .PHONY: stop
 stop:
