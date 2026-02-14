@@ -1,5 +1,12 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Handler.Forum.Post (postThreadPostR, postPostEditR, postPostDeleteR) where
+module Handler.Forum.Post
+    ( postThreadPostR
+    , postPostEditR
+    , postPostDeleteR
+    , postPostBlockR
+    , postPostFlagR
+    ) where
 
 import Import
 import qualified Data.Text as T
@@ -51,3 +58,25 @@ postPostDeleteR postId = do
                 , BoardCommentCount -=. commentCount
                 ]
             redirect $ ThreadR (postThread post)
+
+postPostBlockR :: PostId -> Handler Value
+postPostBlockR postId = do
+    userId <- requireAuthId
+    now <- liftIO getCurrentTime
+    existing <- runDB $ getBy $ UniquePostBlock userId postId
+    case existing of
+        Nothing -> do
+            runDB $ insert_ $ PostBlock userId postId now
+            returnJson $ object ["message" .= ("Blocked post" :: Text)]
+        Just _ -> returnJson $ object ["message" .= ("Already blocked" :: Text)]
+
+postPostFlagR :: PostId -> Handler Value
+postPostFlagR postId = do
+    userId <- requireAuthId
+    now <- liftIO getCurrentTime
+    existing <- runDB $ getBy $ UniquePostFlag userId postId
+    case existing of
+        Nothing -> do
+            runDB $ insert_ $ PostFlag userId postId now
+            returnJson $ object ["message" .= ("Flagged post" :: Text)]
+        Just _ -> returnJson $ object ["message" .= ("Already flagged" :: Text)]

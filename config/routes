@@ -7,10 +7,15 @@
 /boards BoardsR GET POST
 /board/#BoardId BoardR GET POST
 /thread/#ThreadId ThreadR GET
+/thread/#ThreadId/mute ThreadMuteR POST
+/thread/#ThreadId/block ThreadBlockR POST
+/thread/#ThreadId/flag ThreadFlagR POST
 /thread/#ThreadId/post ThreadPostR POST
 /post/#PostId/comment PostCommentR POST
 /post/#PostId/edit PostEditR POST
 /post/#PostId/delete PostDeleteR POST
+/post/#PostId/block PostBlockR POST
+/post/#PostId/flag PostFlagR POST
 /comment/#CommentId/edit CommentEditR POST
 /comment/#CommentId/delete CommentDeleteR POST
 /register RegisterR GET POST
@@ -30,3 +35,6 @@
 /admin/ads AdminAdsR GET POST
 /admin/ads/new AdminAdNewR GET
 /admin/ads/#AdId/view AdminAdR GET POST
+/admin/moderation AdminModerationR GET
+/admin/moderation/action AdminModerationActionR POST
+/admin/moderation/logs AdminModerationLogsR GET

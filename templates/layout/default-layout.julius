@@ -1,9 +1,114 @@
 document.addEventListener('DOMContentLoaded', () => {
   const alertEl = document.getElementById('alert-message');
   if (!alertEl) return;
+  const message = alertEl.textContent.trim();
+  if (message) showToast(message, 'success');
+  alertEl.remove();
+});
+
+document.addEventListener('click', (event) => {
+  const target = event.target.closest('[data-copy-link]');
+  if (!target) return;
+  event.preventDefault();
+  const url = target.getAttribute('data-copy-link');
+  if (!url) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url)
+      .then(() => showToast('Link copied'))
+      .catch(() => {});
+  }
+});
+
+document.addEventListener('click', (event) => {
+  const openMenu = event.target.closest('details.feed-menu[open]');
+  if (openMenu) return;
+  document.querySelectorAll('details.feed-menu[open]').forEach((menu) => {
+    menu.removeAttribute('open');
+  });
+});
+
+document.addEventListener('click', (event) => {
+  const target = event.target.closest('[data-action-url]');
+  if (!target) return;
+  event.preventDefault();
+  const url = target.getAttribute('data-action-url');
+  if (!url) return;
+  const csrfEl = document.getElementById('csrf-token');
+  const csrfParam = csrfEl?.dataset?.csrfParam;
+  const csrfToken = csrfEl?.value;
+  const formData = new FormData();
+  if (csrfParam && csrfToken) {
+    formData.append(csrfParam, csrfToken);
+  }
+  fetch(url, {
+    method: 'POST',
+    body: formData,
+    credentials: 'same-origin',
+  })
+    .then((res) =>
+      res
+        .json()
+        .then((data) => ({ ok: res.ok, data }))
+        .catch(() => ({ ok: res.ok, data: { message: 'Done' } }))
+    )
+    .then(({ ok, data }) => {
+      const message = data && data.message ? data.message : 'Done';
+      showToast(message, ok ? 'success' : 'error');
+      if (ok) handleActionSuccess(target, data);
+    })
+    .catch(() => showToast('Action failed', 'error'))
+    .finally(() => {
+      const menu = target.closest('details.feed-menu');
+      if (menu) menu.removeAttribute('open');
+    });
+});
+
+function showToast(message) {
+  const containerId = 'toast-container';
+  let container = document.getElementById(containerId);
+  if (!container) {
+    container = document.createElement('div');
+    container.id = containerId;
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  const variant = arguments.length > 1 ? arguments[1] : 'info';
+  toast.className = `toast toast--${variant}`;
+  const icon = variant === 'success' ? '✓' : variant === 'error' ? '⚠' : '•';
+  toast.innerHTML = `<span class=\"toast__icon\">${icon}</span><span>${message}</span>`;
+  container.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.classList.add('toast--show');
+  });
   setTimeout(() => {
-    alertEl.style.transition = 'opacity 200ms ease';
-    alertEl.style.opacity = '0';
-    setTimeout(() => alertEl.remove(), 220);
-  }, 1000);
+    toast.classList.add('toast--hide');
+    setTimeout(() => toast.remove(), 200);
+  }, 1800);
+}
+
+function handleActionSuccess(target, data) {
+  const actionType = target.getAttribute('data-action-type');
+  if (!actionType) return;
+  const threadId = target.getAttribute('data-thread-id');
+  const postId = target.getAttribute('data-post-id');
+  if (actionType === 'thread-mute' || actionType === 'thread-block') {
+    if (!threadId) return;
+    if (actionType === 'thread-mute' && data && data.state === 'unmuted') return;
+    document.querySelectorAll(`[data-thread-id=\"${threadId}\"]`).forEach((el) => el.remove());
+  }
+  if (actionType === 'post-block') {
+    if (!postId) return;
+    const item = document.querySelector(`[data-post-id=\"${postId}\"]`);
+    if (item) item.remove();
+  }
+}
+
+document.addEventListener('click', (event) => {
+  const actionEl = event.target.closest('[data-action-url],[data-copy-link],details.feed-menu,summary.feed-menu__toggle');
+  if (actionEl) return;
+  const item = event.target.closest('[data-href]');
+  if (!item) return;
+  const url = item.getAttribute('data-href');
+  if (url) window.location.href = url;
 });

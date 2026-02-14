@@ -45,6 +45,49 @@ Comment
     createdAt UTCTime
     deriving Typeable
 
+ThreadMute
+    user UserId
+    thread ThreadId
+    createdAt UTCTime
+    UniqueThreadMute user thread
+    deriving Typeable
+
+ThreadBlock
+    user UserId
+    thread ThreadId
+    createdAt UTCTime
+    UniqueThreadBlock user thread
+    deriving Typeable
+
+ThreadFlag
+    user UserId
+    thread ThreadId
+    createdAt UTCTime
+    UniqueThreadFlag user thread
+    deriving Typeable
+
+PostBlock
+    user UserId
+    post PostId
+    createdAt UTCTime
+    UniquePostBlock user post
+    deriving Typeable
+
+PostFlag
+    user UserId
+    post PostId
+    createdAt UTCTime
+    UniquePostFlag user post
+    deriving Typeable
+
+ModerationLog
+    actor UserId
+    targetType Text
+    targetId Text
+    action Text
+    createdAt UTCTime
+    deriving Typeable
+
 Upload
     ownerId UserId
     storageKey Text

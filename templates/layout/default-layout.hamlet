@@ -1,4 +1,66 @@
 $maybe msg <- mmsg
   <div id="alert-message" class="mb-4 rounded-xl border border-slate-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 shadow-sm">
     #{msg}
-^{widget}
+$if showSidebarLayout
+  <div .boards-layout>
+    <aside .sidebar-left>
+      <div .logo>
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M18 18c6 0 10 4 14 8s8 8 14 8 10-4 10-10" fill="none" stroke="#ef4444" stroke-width="6" stroke-linecap="round">
+          <path d="M18 46c6 0 10-4 14-8s8-8 14-8 10 4 10 10" fill="none" stroke="#3b82f6" stroke-width="6" stroke-linecap="round">
+      <nav .nav-primary>
+        <a href=@{BoardsR} .nav-link .is-active>
+          <span .nav-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 11l9-8 9 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 22V12h6v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          Home
+        <a href=@{BoardsR} .nav-link>
+          <span .nav-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 21h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 21V7h12v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21V3h6v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          Companies
+        <a href=@{BoardsR} .nav-link>
+          <span .nav-icon>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 2v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 2v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 10h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          Jobs
+      <div .boards-block>
+        <p .boards-title>Boards
+        <div .boards-list>
+          $forall Entity boardId board <- layoutBoards
+            <a href=@{BoardR boardId} .boards-link>#{boardName board}
+    <div .feed-shell>
+      ^{widget}
+    <aside .sidebar-right>
+      <div .card>
+        <div .card-title>New to HKForum?
+        <div .card-sub>Sign up now to share your dev profile
+        $maybe _ <- layoutMaybeAuth
+          <a href=@{ProfileR} .card-button>Profile
+        $nothing
+          <a href=@{AuthR LoginR} .card-button>Log in
+        <div .card-foot>By signing up, you agree to the Terms of Service and Privacy Policy.
+      <div .card>
+        <div .card-title>Companies
+        <div .company-list>
+          $forall Entity boardId board <- layoutBoards
+            <div .company-item>
+              <div .company-avatar>
+              <div .company-body>
+                <div .company-name>#{boardName board}
+                <div .company-meta>0 stars
+              <button .company-save type=button>Save
+        <a href=@{BoardsR} .card-link>Show more
+      <div .sidebar-foot>
+        <span>Built by HKForum
+        <span>Terms
+        <span>Privacy
+      <a href=@{AdminR} .sidebar-cta>For Companies
+$else
+  ^{widget}

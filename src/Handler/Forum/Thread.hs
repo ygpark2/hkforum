@@ -1,5 +1,11 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Handler.Forum.Thread (getThreadR) where
+module Handler.Forum.Thread
+    ( getThreadR
+    , postThreadMuteR
+    , postThreadBlockR
+    , postThreadFlagR
+    ) where
 
 import Import
 import qualified Data.List as L
@@ -44,3 +50,44 @@ getThreadR threadId = do
     defaultLayout $ do
         setTitle $ preEscapedText $ threadTitle thread <> T.pack " - HKForum"
         $(widgetFile "forum/thread")
+
+postThreadMuteR :: ThreadId -> Handler Value
+postThreadMuteR threadId = do
+    userId <- requireAuthId
+    existing <- runDB $ getBy $ UniqueThreadMute userId threadId
+    case existing of
+        Nothing -> do
+            now <- liftIO getCurrentTime
+            runDB $ insert_ $ ThreadMute userId threadId now
+            returnJson $ object
+                [ "message" .= ("Muted" :: Text)
+                , "state" .= ("muted" :: Text)
+                ]
+        Just (Entity muteId _) -> do
+            runDB $ delete muteId
+            returnJson $ object
+                [ "message" .= ("Unmuted" :: Text)
+                , "state" .= ("unmuted" :: Text)
+                ]
+
+postThreadBlockR :: ThreadId -> Handler Value
+postThreadBlockR threadId = do
+    userId <- requireAuthId
+    now <- liftIO getCurrentTime
+    existing <- runDB $ getBy $ UniqueThreadBlock userId threadId
+    case existing of
+        Nothing -> do
+            runDB $ insert_ $ ThreadBlock userId threadId now
+            returnJson $ object ["message" .= ("Blocked thread" :: Text)]
+        Just _ -> returnJson $ object ["message" .= ("Already blocked" :: Text)]
+
+postThreadFlagR :: ThreadId -> Handler Value
+postThreadFlagR threadId = do
+    userId <- requireAuthId
+    now <- liftIO getCurrentTime
+    existing <- runDB $ getBy $ UniqueThreadFlag userId threadId
+    case existing of
+        Nothing -> do
+            runDB $ insert_ $ ThreadFlag userId threadId now
+            returnJson $ object ["message" .= ("Flagged thread" :: Text)]
+        Just _ -> returnJson $ object ["message" .= ("Already flagged" :: Text)]

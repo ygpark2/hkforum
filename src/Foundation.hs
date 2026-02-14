@@ -66,6 +66,28 @@ instance Yesod App where
         mSiteSubtitle <- runDB $ getBy $ UniqueSiteSetting "site_subtitle"
         let siteTitle = maybe "HKForum" (siteSettingValue P.. entityVal) mSiteTitle
             siteSubtitle = maybe "x.com inspired discussion hub" (siteSettingValue P.. entityVal) mSiteSubtitle
+        mRoute <- getCurrentRoute
+        let showSidebarLayout = case mRoute of
+                Just AdminR -> False
+                Just AdminBoardsR -> False
+                Just AdminBoardNewR -> False
+                Just (AdminBoardR _) -> False
+                Just AdminUsersR -> False
+                Just AdminUserNewR -> False
+                Just (AdminUserR _) -> False
+                Just AdminSettingsR -> False
+                Just AdminSettingNewR -> False
+                Just (AdminSettingR _) -> False
+                Just AdminAdsR -> False
+                Just AdminAdNewR -> False
+                Just (AdminAdR _) -> False
+                _ -> True
+        layoutBoards <- if showSidebarLayout
+            then runDB $ selectList [] [Asc BoardName]
+            else pure []
+        layoutMaybeAuth <- if showSidebarLayout
+            then maybeAuthId
+            else pure Nothing
         pc <- widgetToPageContent $ do
             $(widgetFile "layout/default-layout")
         withUrlRenderer $(hamletFile "templates/layout/default-layout-wrapper.hamlet")
@@ -102,6 +124,9 @@ instance Yesod App where
     isAuthorized AdminAdsR _ = isAdmin
     isAuthorized AdminAdNewR _ = isAdmin
     isAuthorized (AdminAdR _) _ = isAdmin
+    isAuthorized AdminModerationR _ = isAdmin
+    isAuthorized AdminModerationActionR _ = isAdmin
+    isAuthorized AdminModerationLogsR _ = isAdmin
     -- Default to Authorized for now.
     isAuthorized _ _ = return Authorized
 
