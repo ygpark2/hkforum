@@ -4,10 +4,13 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/boards BoardsR GET POST
+/home HomeR GET POST
+/boards BoardsR GET
+/bookmarks BookmarksR GET
 /board/#BoardId BoardR GET POST
 /thread/#ThreadId ThreadR GET
 /thread/#ThreadId/mute ThreadMuteR POST
+/thread/#ThreadId/bookmark ThreadBookmarkR POST
 /thread/#ThreadId/block ThreadBlockR POST
 /thread/#ThreadId/flag ThreadFlagR POST
 /thread/#ThreadId/post ThreadPostR POST

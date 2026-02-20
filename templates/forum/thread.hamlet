@@ -4,7 +4,7 @@
       <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Boards
       <p class="text-lg font-semibold text-slate-900">Community hubs
     <nav class="space-y-2 text-sm font-medium">
-      <a href=@{BoardsR} class="block px-3 py-2 rounded-lg bg-slate-900 text-white transition hover:bg-slate-800">Home
+      <a href=@{HomeR} class="block px-3 py-2 rounded-lg bg-slate-900 text-white transition hover:bg-slate-800">Home
       <a href=@{BoardR (threadBoard thread)} class="block px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-50">#{boardName board}
 
   <section class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-6">
@@ -15,7 +15,7 @@
       <h1 class="text-2xl font-bold text-slate-900">#{threadTitle thread}
       <p class="text-sm text-slate-500">By user #{authorName (threadAuthor thread)} · #{show (threadCreatedAt thread)}
 
-    <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 text-sm text-slate-600">^{preEscapedToMarkup (threadContent thread)}
+    <div class="forum-content-wrap rounded-2xl border border-slate-200 bg-slate-50/60 p-4 text-sm text-slate-600">^{preEscapedToMarkup (threadContent thread)}
 
     <div class="space-y-4">
       <div class="flex items-center justify-between">
@@ -96,7 +96,7 @@
                         <div class="flex justify-end gap-2 pt-1">
                           <button type="submit" class="rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-2 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:from-slate-800 hover:to-slate-600">Save
                           <button type="button" data-close="post-edit-#{toPathPiece pId}" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-900 hover:text-slate-900">Cancel
-              <div class="text-sm text-slate-600">^{preEscapedToMarkup (postContent p)}
+              <div class="forum-content-wrap text-sm text-slate-600">^{preEscapedToMarkup (postContent p)}
               <p class="absolute bottom-3 right-4 text-[0.65rem] uppercase tracking-[0.3em] text-slate-400">By user #{authorName (postAuthor p)} · #{show (postCreatedAt p)}
               $with postComments <- commentsFor pId
                 <div class="mt-4 space-y-3">
@@ -178,7 +178,7 @@
                                     <div class="flex justify-end gap-2 pt-1">
                                       <button type="submit" class="rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-2 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:from-slate-800 hover:to-slate-600">Save
                                       <button type="button" data-close="comment-edit-#{toPathPiece cId}" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-900 hover:text-slate-900">Cancel
-                          <div>^{preEscapedToMarkup (commentContent c)}
+                          <div class="forum-content-wrap text-sm text-slate-600">^{preEscapedToMarkup (commentContent c)}
                           <p class="absolute bottom-2 right-3 text-[0.6rem] uppercase tracking-[0.3em] text-slate-400">By user #{authorName (commentAuthor c)} · #{show (commentCreatedAt c)}
                 $maybe _ <- maybeAuth
                   $with modalKey <- toPathPiece pId

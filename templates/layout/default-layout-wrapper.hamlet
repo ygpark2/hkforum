@@ -11,11 +11,11 @@ $newline never
     ^{pageHead pc}
 
     <link rel="stylesheet" href=@{StaticR css_tailwind_css}>
-  <body class="bg-slate-50 text-slate-900">
+  <body class="bg-[#eceeee] text-slate-900">
     <div class="min-h-screen flex flex-col">
       <main class="flex-1">
-        <div class="max-w-6xl mx-auto px-4 py-3">
+        <div class="mx-auto w-full max-w-[1216px] px-2 py-3 md:px-3">
           ^{pageBody pc}
-      <footer class="bg-slate-900 text-white">
-        <div class="max-w-6xl mx-auto px-4 py-6 text-sm text-center">
+      <footer class="text-slate-500">
+        <div class="mx-auto w-full max-w-[1216px] px-2 py-4 text-xs text-center md:px-3">
           #{appCopyright $ appSettings master}

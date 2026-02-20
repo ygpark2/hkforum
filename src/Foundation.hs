@@ -67,6 +67,8 @@ instance Yesod App where
         let siteTitle = maybe "HKForum" (siteSettingValue P.. entityVal) mSiteTitle
             siteSubtitle = maybe "x.com inspired discussion hub" (siteSettingValue P.. entityVal) mSiteSubtitle
         mRoute <- getCurrentRoute
+        req <- getRequest
+        let layoutCsrfToken = reqToken req
         let showSidebarLayout = case mRoute of
                 Just AdminR -> False
                 Just AdminBoardsR -> False
@@ -88,6 +90,16 @@ instance Yesod App where
         layoutMaybeAuth <- if showSidebarLayout
             then maybeAuthId
             else pure Nothing
+        layoutViewer <- if showSidebarLayout
+            then case layoutMaybeAuth of
+                Nothing -> pure Nothing
+                Just viewerId -> runDB $ get viewerId
+            else pure Nothing
+        layoutSuggestedUsers <- if showSidebarLayout
+            then case layoutMaybeAuth of
+                Nothing -> runDB $ selectList [] [Asc UserIdent, LimitTo 5]
+                Just viewerId -> runDB $ selectList [UserId !=. viewerId] [Asc UserIdent, LimitTo 5]
+            else pure []
         pc <- widgetToPageContent $ do
             $(widgetFile "layout/default-layout")
         withUrlRenderer $(hamletFile "templates/layout/default-layout-wrapper.hamlet")
@@ -105,7 +117,17 @@ instance Yesod App where
     isAuthorized (AuthR _) _ = return Authorized
     isAuthorized FaviconR _ = return Authorized
     isAuthorized RobotsR _ = return Authorized
+    isAuthorized BookmarksR _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
     isAuthorized ProfileR _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized (ThreadBookmarkR _) _ = do
         mUserId <- maybeAuthId
         case mUserId of
             Nothing -> return AuthenticationRequired
@@ -162,8 +184,8 @@ instance YesodPersistRunner App where
 
 instance YesodAuth App where
     type AuthId App = UserId
-    loginDest _ = BoardsR
-    logoutDest _ = BoardsR
+    loginDest _ = HomeR
+    logoutDest _ = HomeR
     redirectToReferer _ = False
     authHttpManager = getYesod >>= return P.. getHttpManager
     authPlugins app =

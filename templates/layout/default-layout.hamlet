@@ -2,65 +2,206 @@ $maybe msg <- mmsg
   <div id="alert-message" class="mb-4 rounded-xl border border-slate-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 shadow-sm">
     #{msg}
 $if showSidebarLayout
-  <div .boards-layout>
-    <aside .sidebar-left>
-      <div .logo>
-        <svg viewBox="0 0 64 64" aria-hidden="true">
-          <path d="M18 18c6 0 10 4 14 8s8 8 14 8 10-4 10-10" fill="none" stroke="#ef4444" stroke-width="6" stroke-linecap="round">
-          <path d="M18 46c6 0 10-4 14-8s8-8 14-8 10 4 10 10" fill="none" stroke="#3b82f6" stroke-width="6" stroke-linecap="round">
-      <nav .nav-primary>
-        <a href=@{BoardsR} .nav-link .is-active>
-          <span .nav-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M3 11l9-8 9 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 22V12h6v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          Home
-        <a href=@{BoardsR} .nav-link>
-          <span .nav-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M3 21h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M6 21V7h12v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 21V3h6v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          Companies
-        <a href=@{BoardsR} .nav-link>
-          <span .nav-icon>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="3" y="4" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M16 2v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 2v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 10h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          Jobs
-      <div .boards-block>
-        <p .boards-title>Boards
-        <div .boards-list>
-          $forall Entity boardId board <- layoutBoards
-            <a href=@{BoardR boardId} .boards-link>#{boardName board}
-    <div .feed-shell>
-      ^{widget}
-    <aside .sidebar-right>
-      <div .card>
-        <div .card-title>New to HKForum?
-        <div .card-sub>Sign up now to share your dev profile
+  <div class="grid min-h-[calc(100vh-7rem)] grid-cols-1 overflow-hidden rounded-xl border border-slate-200 bg-[#f4f5f6] min-[1000px]:h-[calc(100vh-2.5rem)] min-[1000px]:grid-cols-[280px_minmax(0,1fr)_280px]">
+    <aside class="border-b border-slate-200 bg-[#f4f5f6] px-6 py-6 min-[1000px]:h-full min-[1000px]:overflow-y-auto min-[1000px]:border-b-0 min-[1000px]:border-r">
+      <div class="flex h-full flex-col">
+        <a href=@{HomeR} class="mx-auto mb-6 inline-flex items-center justify-center">
+          <svg viewBox="0 0 64 40" class="h-8 w-14" aria-label="logo">
+            <path d="M10 14c0 9 6 16 14 16 5 0 8-2 12-7 4 5 7 7 12 7 8 0 14-7 14-16" fill="none" stroke="#3b82f6" stroke-width="6" stroke-linecap="round">
+            <path d="M10 14c0 9 6 16 14 16" fill="none" stroke="#ec4899" stroke-width="6" stroke-linecap="round">
+        <nav class="mx-auto w-full max-w-[186px] space-y-1.5">
+          <a href=@{HomeR} class="flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-[16px] font-semibold text-slate-900 shadow-sm">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 11l9-7 9 7">
+              <path d="M9 21V12h6v9">
+            <span>Home
+          <a href=@{BoardsR} class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium text-slate-700 transition hover:bg-white hover:text-slate-900">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 21h18">
+              <path d="M5 21V9h5v12">
+              <path d="M14 21V5h5v16">
+            <span>Boards
+          <a href=@{BoardsR} class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium text-slate-700 transition hover:bg-white hover:text-slate-900">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="6" width="18" height="14" rx="2">
+              <path d="M8 6V4h8v2">
+            <span>Jobs
+          <a href=@{BoardsR} class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium text-slate-700 transition hover:bg-white hover:text-slate-900">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 6h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H8l-4 3v-3H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z">
+            <span>Chats
+          <a href=@{BoardsR} class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium text-slate-700 transition hover:bg-white hover:text-slate-900">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5">
+              <path d="M10 19a2 2 0 0 0 4 0">
+            <span>Notifications
+          <a href=@{BookmarksR} class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium text-slate-700 transition hover:bg-white hover:text-slate-900">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1z">
+            <span>Bookmarks
+          $maybe _ <- layoutMaybeAuth
+            <a href=@{ProfileR} class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium text-slate-700 transition hover:bg-white hover:text-slate-900">
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="8" r="4">
+                <path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6">
+              <span>Profile
+          $nothing
+            <a href=@{AuthR LoginR} class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium text-slate-700 transition hover:bg-white hover:text-slate-900">
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="8" r="4">
+                <path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6">
+              <span>Profile
+          $maybe _ <- layoutMaybeAuth
+            <a href=@{ProfileR} class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium text-slate-700 transition hover:bg-white hover:text-slate-900">
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z">
+                <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1 1 0 0 1 0 1.4l-1 1a1 1 0 0 1-1.4 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1 1 0 0 1-1.4 0l-1-1a1 1 0 0 1 0-1.4l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a1 1 0 0 1-1-1v-1.5a1 1 0 0 1 1-1h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 1.4 0l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a1 1 0 0 1 1-1h1.5a1 1 0 0 1 1 1v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a1 1 0 0 1 1.4 0l1 1a1 1 0 0 1 0 1.4l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a1 1 0 0 1 1 1v1.5a1 1 0 0 1-1 1h-.2a1 1 0 0 0-.9.6Z">
+              <span>Settings
+          $nothing
+            <a href=@{AuthR LoginR} class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium text-slate-700 transition hover:bg-white hover:text-slate-900">
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z">
+                <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1 1 0 0 1 0 1.4l-1 1a1 1 0 0 1-1.4 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1 1 0 0 1-1.4 0l-1-1a1 1 0 0 1 0-1.4l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a1 1 0 0 1-1-1v-1.5a1 1 0 0 1 1-1h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 1.4 0l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a1 1 0 0 1 1-1h1.5a1 1 0 0 1 1 1v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a1 1 0 0 1 1.4 0l1 1a1 1 0 0 1 0 1.4l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a1 1 0 0 1 1 1v1.5a1 1 0 0 1-1 1h-.2a1 1 0 0 0-.9.6Z">
+              <span>Settings
         $maybe _ <- layoutMaybeAuth
-          <a href=@{ProfileR} .card-button>Profile
+          $if P.null layoutBoards
+            <button type=button disabled class="mx-auto mt-5 inline-flex w-full max-w-[170px] cursor-not-allowed items-center justify-center gap-2 rounded-full bg-slate-300 px-5 py-2 text-sm font-semibold text-white">
+              <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14">
+                <path d="M5 12h14">
+              <span>New Post
+          $else
+            <button type=button data-open="global-thread-modal" class="mx-auto mt-5 inline-flex w-full max-w-[170px] items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">
+              <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14">
+                <path d="M5 12h14">
+              <span>New Post
         $nothing
-          <a href=@{AuthR LoginR} .card-button>Log in
-        <div .card-foot>By signing up, you agree to the Terms of Service and Privacy Policy.
-      <div .card>
-        <div .card-title>Companies
-        <div .company-list>
-          $forall Entity boardId board <- layoutBoards
-            <div .company-item>
-              <div .company-avatar>
-              <div .company-body>
-                <div .company-name>#{boardName board}
-                <div .company-meta>0 stars
-              <button .company-save type=button>Save
-        <a href=@{BoardsR} .card-link>Show more
-      <div .sidebar-foot>
-        <span>Built by HKForum
-        <span>Terms
-        <span>Privacy
-      <a href=@{AdminR} .sidebar-cta>For Companies
+          <a href=@{AuthR LoginR} class="mx-auto mt-5 inline-flex w-full max-w-[170px] items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14">
+              <path d="M5 12h14">
+            <span>New Post
+        $maybe viewer <- layoutViewer
+          <details class="profile-menu mx-auto mt-auto w-full max-w-[170px]">
+            <summary class="profile-menu__summary flex w-full list-none items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-left">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
+                #{T.toUpper (T.take 1 (userIdent viewer))}
+              <div class="min-w-0 flex-1">
+                $maybe name <- userName viewer
+                  <div class="truncate text-sm font-semibold text-slate-900">#{name}
+                $nothing
+                  <div class="truncate text-sm font-semibold text-slate-900">#{userIdent viewer}
+                <div class="truncate text-xs text-slate-500">@#{userIdent viewer}
+              <span class="text-slate-400">…
+            <div class="profile-menu__panel absolute bottom-[calc(100%+10px)] left-0 z-30 w-[226px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+              <a href=@{ProfileR} class="flex items-center gap-3 border-b border-slate-200 px-4 py-3 text-[16px] font-medium text-slate-800 transition hover:bg-slate-50">
+                <svg viewBox="0 0 24 24" class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="8" r="4">
+                  <path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6">
+                <span>Profile
+              <a href=@{HomeR} data-theme-toggle class="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 text-[16px] font-medium text-slate-800 transition hover:bg-slate-50">
+                <span class="inline-flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2.5" y="6.5" width="19" height="11" rx="5.5">
+                    <circle cx="8" cy="12" r="3.2">
+                  <span>Dark mode
+                <svg viewBox="0 0 24 24" class="h-5 w-5 shrink-0 text-slate-500" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z">
+              <a href=@{ProfileR} class="flex items-center gap-3 border-b border-slate-200 px-4 py-3 text-[16px] font-medium text-slate-800 transition hover:bg-slate-50">
+                <svg viewBox="0 0 24 24" class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z">
+                  <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1 1 0 0 1 0 1.4l-1 1a1 1 0 0 1-1.4 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1 1 0 0 1-1.4 0l-1-1a1 1 0 0 1 0-1.4l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a1 1 0 0 1-1-1v-1.5a1 1 0 0 1 1-1h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 1.4 0l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a1 1 0 0 1 1-1h1.5a1 1 0 0 1 1 1v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a1 1 0 0 1 1.4 0l1 1a1 1 0 0 1 0 1.4l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a1 1 0 0 1 1 1v1.5a1 1 0 0 1-1 1h-.2a1 1 0 0 0-.9.6Z">
+                <span>Settings
+              <a href=@{AuthR LogoutR} class="flex items-center gap-3 px-4 py-3 text-[16px] font-medium text-slate-800 transition hover:bg-slate-50">
+                <svg viewBox="0 0 24 24" class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 6H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h4">
+                  <path d="M16 17l5-5-5-5">
+                  <path d="M21 12H9">
+                <span>Log Out
+        $nothing
+          <a href=@{AuthR LoginR} class="mx-auto mt-auto flex w-full max-w-[170px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-2 transition hover:border-slate-300">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
+              G
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-sm font-semibold text-slate-900">Guest
+              <div class="truncate text-xs text-slate-500">Sign in to personalize
+            <span class="text-slate-400">…
+    <div class="feed-shell min-w-0 border-b border-slate-200 bg-white min-[1000px]:h-full min-[1000px]:overflow-y-auto min-[1000px]:border-b-0 min-[1000px]:border-r">
+      ^{widget}
+    <aside class="bg-[#f4f5f6] p-3 min-[1000px]:h-full min-[1000px]:overflow-y-auto">
+      <div class="mx-auto w-full max-w-[292px] space-y-3">
+        <form method=get action=@{HomeR} class="relative rounded-xl border border-slate-200 bg-white p-2">
+          <svg viewBox="0 0 24 24" class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7">
+            <path d="M21 21l-4.3-4.3">
+          <input type=search name=q data-home-search placeholder="Type '/' to search" class="w-full rounded-lg border border-slate-200 py-2 pl-8 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none">
+        <div class="rounded-xl border border-slate-200 bg-white p-4">
+          <div class="mb-3 text-xl font-semibold text-slate-900">Who to follow
+          <div class="space-y-3.5">
+            $if P.null layoutSuggestedUsers
+              <div class="text-sm text-slate-500">No user suggestion yet.
+            $else
+              $forall Entity _ suggested <- P.take 3 layoutSuggestedUsers
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex min-w-0 items-center gap-2.5">
+                    <div class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
+                      #{T.toUpper (T.take 1 (userIdent suggested))}
+                    <div class="min-w-0">
+                      <div class="truncate text-sm font-semibold text-slate-900">#{userIdent suggested}
+                      <div class="truncate text-xs text-slate-500">@#{T.toLower (userIdent suggested)}
+                  <button type=button class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white">Follow
+          <a href=@{HomeR} class="mt-3 inline-flex text-sm font-semibold text-slate-700 hover:text-slate-900">Show more
+        <div class="rounded-xl border border-slate-200 bg-white p-4">
+          <div class="mb-3 text-xl font-semibold text-slate-900">Boards
+          <div class="space-y-3.5">
+            $if P.null layoutBoards
+              <div class="text-sm text-slate-500">No board found.
+            $else
+              $forall Entity boardId board <- P.take 3 layoutBoards
+                <a href=@{BoardR boardId} class="flex items-center justify-between gap-2 rounded-lg px-1 py-1.5 transition hover:bg-slate-50">
+                  <div class="flex min-w-0 items-center gap-2.5">
+                    <div class="h-9 w-9 rounded-full bg-slate-200">
+                    <div class="min-w-0">
+                      <div class="truncate text-sm font-semibold text-slate-900">#{boardName board}
+                      <div class="truncate text-xs text-slate-500">#{boardThreadCount board} threads
+                  <span class="text-slate-400">☆
+          <a href=@{BoardsR} class="mt-3 inline-flex text-sm font-semibold text-slate-700 hover:text-slate-900">Show more
+        <div class="px-1 text-xs text-slate-500">
+          <span>Built by #{siteTitle}
+          <span class="mx-1">·
+          <span>Terms
+          <span class="mx-1">·
+          <span>Privacy
+          $if siteSubtitle /= ""
+            <div class="mt-1">#{siteSubtitle}
+        <a href=@{BoardsR} class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1z">
+          <span>For Boards
+  $maybe _ <- layoutMaybeAuth
+    $if not (P.null layoutBoards)
+      <dialog id="global-thread-modal" data-modal="global-thread-modal" class="w-[min(90vw,42rem)] max-w-[90vw] rounded-2xl p-0 backdrop:bg-slate-900/40" style="position:fixed;inset:0;margin:auto;">
+        <div class="rounded-2xl bg-white p-6 shadow-xl">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-slate-900">New thread
+            <button type="button" data-close="global-thread-modal" class="rounded-xl border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-900 hover:text-slate-900">Close
+          <form method=post action=@{HomeR} data-global-thread-form class="mt-4 space-y-4">
+            $maybe tok <- layoutCsrfToken
+              <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
+            <div class="space-y-1">
+              <label for="global-board-id" class="text-sm font-semibold text-slate-700">Board
+              <select id="global-board-id" name="boardId" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
+                $forall Entity boardId board <- layoutBoards
+                  <option value=#{toPathPiece boardId}>#{boardName board}
+            <div class="space-y-1">
+              <label for="global-thread-title" class="text-sm font-semibold text-slate-700">Thread title
+              <input id="global-thread-title" name="title" type="text" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="What's on your mind?">
+            <div class="space-y-1">
+              <label for="global-thread-content" class="text-sm font-semibold text-slate-700">Content
+              <textarea id="global-thread-content" name="content" required rows="8" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="Share your thoughts">
+            <div class="flex justify-end gap-2 pt-1">
+              <button type="submit" class="rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-2 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:from-slate-800 hover:to-slate-600">Start thread
+              <button type="button" data-close="global-thread-modal" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-900 hover:text-slate-900">Cancel
 $else
   ^{widget}

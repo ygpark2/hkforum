@@ -3,6 +3,7 @@
 module Handler.Forum.Thread
     ( getThreadR
     , postThreadMuteR
+    , postThreadBookmarkR
     , postThreadBlockR
     , postThreadFlagR
     ) where
@@ -68,6 +69,26 @@ postThreadMuteR threadId = do
             returnJson $ object
                 [ "message" .= ("Unmuted" :: Text)
                 , "state" .= ("unmuted" :: Text)
+                ]
+
+postThreadBookmarkR :: ThreadId -> Handler Value
+postThreadBookmarkR threadId = do
+    userId <- requireAuthId
+    _ <- runDB $ get404 threadId
+    existing <- runDB $ getBy $ UniqueThreadBookmark userId threadId
+    case existing of
+        Nothing -> do
+            now <- liftIO getCurrentTime
+            runDB $ insert_ $ ThreadBookmark userId threadId now
+            returnJson $ object
+                [ "message" .= ("Bookmarked" :: Text)
+                , "state" .= ("bookmarked" :: Text)
+                ]
+        Just (Entity bookmarkId _) -> do
+            runDB $ delete bookmarkId
+            returnJson $ object
+                [ "message" .= ("Bookmark removed" :: Text)
+                , "state" .= ("unbookmarked" :: Text)
                 ]
 
 postThreadBlockR :: ThreadId -> Handler Value

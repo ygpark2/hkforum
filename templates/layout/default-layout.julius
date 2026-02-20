@@ -1,9 +1,69 @@
+const THEME_STORAGE_KEY = 'hkforum-theme';
+
+const applyTheme = (theme) => {
+  document.documentElement.dataset.theme = theme;
+};
+
+const openDialogByKey = (key) => {
+  if (!key) return;
+  const modal = document.querySelector(`[data-modal="${key}"]`);
+  if (!modal || typeof modal.showModal !== 'function') return;
+  if (!modal.open) modal.showModal();
+};
+
+const closeDialogByKey = (key) => {
+  if (!key) return;
+  const modal = document.querySelector(`[data-modal="${key}"]`);
+  if (!modal || typeof modal.close !== 'function') return;
+  if (modal.open) modal.close();
+};
+
+const prepareGlobalThreadModal = () => {
+  const form = document.querySelector('[data-global-thread-form]');
+  if (!form) return;
+  form.reset();
+  const boardSelect = form.querySelector('select[name="boardId"]');
+  if (boardSelect && boardSelect.options.length > 0) {
+    boardSelect.selectedIndex = 0;
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const savedTheme = window.localStorage ? localStorage.getItem(THEME_STORAGE_KEY) : null;
+    if (savedTheme === 'dark' || savedTheme === 'light') {
+      applyTheme(savedTheme);
+    }
+  } catch (_err) {
+    // ignore localStorage errors
+  }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   const alertEl = document.getElementById('alert-message');
   if (!alertEl) return;
   const message = alertEl.textContent.trim();
   if (message) showToast(message, 'success');
   alertEl.remove();
+});
+
+document.addEventListener('click', (event) => {
+  const openTarget = event.target.closest('[data-open]');
+  if (openTarget) {
+    const key = openTarget.getAttribute('data-open');
+    if (key === 'global-thread-modal') {
+      prepareGlobalThreadModal();
+    }
+    openDialogByKey(key);
+    return;
+  }
+
+  const closeTarget = event.target.closest('[data-close]');
+  if (closeTarget) {
+    const key = closeTarget.getAttribute('data-close');
+    closeDialogByKey(key);
+    return;
+  }
 });
 
 document.addEventListener('click', (event) => {
@@ -20,9 +80,28 @@ document.addEventListener('click', (event) => {
 });
 
 document.addEventListener('click', (event) => {
-  const openMenu = event.target.closest('details.feed-menu[open]');
+  const target = event.target.closest('[data-theme-toggle]');
+  if (!target) return;
+  event.preventDefault();
+  const currentTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+  const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  applyTheme(nextTheme);
+  try {
+    if (window.localStorage) {
+      localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    }
+  } catch (_err) {
+    // ignore localStorage errors
+  }
+  showToast(nextTheme === 'dark' ? 'Dark mode enabled' : 'Dark mode disabled', 'success');
+  const menu = target.closest('details.profile-menu');
+  if (menu) menu.removeAttribute('open');
+});
+
+document.addEventListener('click', (event) => {
+  const openMenu = event.target.closest('details.feed-menu[open],details.profile-menu[open]');
   if (openMenu) return;
-  document.querySelectorAll('details.feed-menu[open]').forEach((menu) => {
+  document.querySelectorAll('details.feed-menu[open],details.profile-menu[open]').forEach((menu) => {
     menu.removeAttribute('open');
   });
 });
@@ -102,13 +181,50 @@ function handleActionSuccess(target, data) {
     const item = document.querySelector(`[data-post-id=\"${postId}\"]`);
     if (item) item.remove();
   }
+  if (actionType === 'thread-bookmark') {
+    if (!threadId) return;
+    const isBookmarked = data && data.state === 'bookmarked';
+    document
+      .querySelectorAll(`[data-action-type=\"thread-bookmark\"][data-thread-id=\"${threadId}\"]`)
+      .forEach((button) => updateBookmarkButton(button, isBookmarked));
+    if (!isBookmarked) {
+      document
+        .querySelectorAll(`[data-bookmark-item][data-thread-id=\"${threadId}\"]`)
+        .forEach((item) => item.remove());
+      const feed = document.querySelector('[data-bookmarks-feed]');
+      if (feed && !feed.querySelector('[data-bookmark-item]')) {
+        window.location.reload();
+      }
+    }
+  }
+}
+
+function updateBookmarkButton(button, isBookmarked) {
+  button.setAttribute('data-bookmarked', isBookmarked ? 'true' : 'false');
+  button.classList.remove('text-slate-900', 'text-slate-400', 'hover:text-slate-700');
+  if (isBookmarked) {
+    button.classList.add('text-slate-900');
+  } else {
+    button.classList.add('text-slate-400', 'hover:text-slate-700');
+  }
+  const icon = button.querySelector('svg');
+  if (icon) icon.setAttribute('fill', isBookmarked ? 'currentColor' : 'none');
 }
 
 document.addEventListener('click', (event) => {
-  const actionEl = event.target.closest('[data-action-url],[data-copy-link],details.feed-menu,summary.feed-menu__toggle');
+  const actionEl = event.target.closest('[data-action-url],[data-copy-link],[data-theme-toggle],details.feed-menu,summary.feed-menu__toggle,details.profile-menu,summary.profile-menu__summary');
   if (actionEl) return;
   const item = event.target.closest('[data-href]');
   if (!item) return;
   const url = item.getAttribute('data-href');
   if (url) window.location.href = url;
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  document
+    .querySelectorAll('[data-action-type=\"thread-bookmark\"][data-bookmarked]')
+    .forEach((button) => {
+      const isBookmarked = button.getAttribute('data-bookmarked') === 'true';
+      updateBookmarkButton(button, isBookmarked);
+    });
 });
