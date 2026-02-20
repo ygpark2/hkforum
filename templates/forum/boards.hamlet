@@ -1,67 +1,129 @@
-<div .feed>
+<section class="flex h-full min-h-0 flex-col bg-white">
   $maybe tok <- mCsrfToken
     <input type=hidden id="csrf-token" value=#{tok} data-csrf-param=#{defaultCsrfParamName}>
-  <ul .feed-list>
-    <li .feed-list__item .feed-list__item--header>
-      <div .feed-header>Home
-    $if P.null threadsForFeed
-      <li .feed-list__item>
-        <div .feed-empty>No threads yet. Start the first one!
+
+  <div class="shrink-0 border-b border-slate-200 px-4 pt-2.5">
+    <nav class="flex items-center gap-6 text-[15px]">
+      $if activeTab == "unread"
+        <a href=@{HomeR}?tab=unread class="border-b-2 border-slate-900 pb-2.5 font-semibold text-slate-900">Unread
+      $else
+        <a href=@{HomeR}?tab=unread class="pb-2.5 font-medium text-slate-500 transition hover:text-slate-900">Unread
+      $if activeTab == "everything"
+        <a href=@{HomeR}?tab=everything class="border-b-2 border-slate-900 pb-2.5 font-semibold text-slate-900">Everything
+      $else
+        <a href=@{HomeR}?tab=everything class="pb-2.5 font-medium text-slate-500 transition hover:text-slate-900">Everything
+      $if activeTab == "trends"
+        <a href=@{HomeR}?tab=trends class="border-b-2 border-slate-900 pb-2.5 font-semibold text-slate-900">Trends
+      $else
+        <a href=@{HomeR}?tab=trends class="pb-2.5 font-medium text-slate-500 transition hover:text-slate-900">Trends
+      $if activeTab == "following"
+        <a href=@{HomeR}?tab=following class="border-b-2 border-slate-900 pb-2.5 font-semibold text-slate-900">Following
+      $else
+        <a href=@{HomeR}?tab=following class="pb-2.5 font-medium text-slate-500 transition hover:text-slate-900">Following
+      $if activeTab == "interests"
+        <a href=@{HomeR}?tab=interests class="border-b-2 border-slate-900 pb-2.5 font-semibold text-slate-900">Interests
+      $else
+        <a href=@{HomeR}?tab=interests class="pb-2.5 font-medium text-slate-500 transition hover:text-slate-900">Interests
+      <button type=button class="ml-auto pb-2.5 text-slate-500 transition hover:text-slate-900" aria-label="settings">
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z">
+          <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1 1 0 0 1 0 1.4l-1 1a1 1 0 0 1-1.4 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1 1 0 0 1-1.4 0l-1-1a1 1 0 0 1 0-1.4l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a1 1 0 0 1-1-1v-1.5a1 1 0 0 1 1-1h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 1.4 0l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a1 1 0 0 1 1-1h1.5a1 1 0 0 1 1 1v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a1 1 0 0 1 1.4 0l1 1a1 1 0 0 1 0 1.4l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a1 1 0 0 1 1 1v1.5a1 1 0 0 1-1 1h-.2a1 1 0 0 0-.9.6Z">
+      <button type=button class="pb-2.5 text-slate-500 transition hover:text-slate-900" aria-label="add">
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14">
+          <path d="M5 12h14">
+
+  <div class="shrink-0 border-b border-slate-200 px-4 py-3.5">
+    $maybe _ <- maybeAuthValue
+      <form method=post action=@{HomeR} class="space-y-3">
+        $maybe tok <- mCsrfToken
+          <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
+        <div class="flex items-start gap-3">
+          <div class="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
+            Y
+          <textarea name=content rows=2 required placeholder="Start typing..." class="w-full resize-none rounded-xl bg-slate-100 px-3 py-2 text-base font-medium text-slate-700 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300">
+        <div class="flex items-center justify-end gap-2 pl-12">
+          <select name=boardId data-quick-board required class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300">
+            $forall Entity boardId board <- boards
+              <option value=#{toPathPiece boardId}>#{boardName board}
+          <button type=submit class="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-slate-800">Post
+    $nothing
+      <div class="pl-12 text-sm text-slate-500">
+        Please <a href=@{AuthR LoginR} class="font-semibold text-slate-700 underline hover:text-slate-900">login</a> to post.
+
+  <div class="min-h-0 flex-1 overflow-y-auto no-scrollbar">
+    $if P.null tabThreads
+      <div class="flex h-full flex-col items-center justify-center px-6 text-center">
+        <svg viewBox="0 0 24 24" class="h-6 w-6 text-slate-400" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 3l1.6 3.3L17 8l-3.4 1.7L12 13l-1.6-3.3L7 8l3.4-1.7L12 3z">
+          <path d="M5 14l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z">
+        <h2 class="mt-3 text-[34px] font-bold tracking-tight text-slate-900">#{tabTitle}
+        <p class="mt-2 text-lg text-slate-500">#{tabSubtitle}
     $else
-      $forall Entity threadId thread <- threadsForFeed
-        <li .feed-list__item .feed-list__item--thread .feed-list__item--root data-href=@{ThreadR threadId} data-thread-id=#{toPathPiece threadId}>
-          <div .feed-item>
-            <div .feed-item__avatar>#{authorInitial (threadAuthor thread)}
-            <div .feed-item__meta>
-              <span .feed-item__name>#{authorName (threadAuthor thread)}
-              <span .feed-item__handle>@#{authorHandle (threadAuthor thread)}
-              <span .feed-item__time>#{relativeTime (threadCreatedAt thread)}
-            <details .feed-menu>
-              <summary .feed-menu__toggle>…
-              <div .feed-menu__panel>
-                <button type="button" data-copy-link=@{ThreadR threadId} .feed-menu__item>Copy link
-                <button type="button" data-action-url=@{ThreadMuteR threadId} data-action-type="thread-mute" data-thread-id=#{toPathPiece threadId} .feed-menu__item>Not watching
-                <button type="button" data-action-url=@{ThreadFlagR threadId} data-action-type="thread-flag" data-thread-id=#{toPathPiece threadId} .feed-menu__item>Flag
-                <button type="button" data-action-url=@{ThreadBlockR threadId} data-action-type="thread-block" data-thread-id=#{toPathPiece threadId} .feed-menu__item>Block
-            <div .feed-item__body>#{threadTitle thread}
-        $maybe (count, firstPostE, lastPostE) <- postMetaFor threadId
-          $with firstPost <- entityVal firstPostE
-            <li .feed-list__item .feed-list__item--post .feed-list__item--continuation data-href=@{ThreadR threadId} data-thread-id=#{toPathPiece threadId} data-post-id=#{toPathPiece (entityKey firstPostE)}>
-              <div .feed-item>
-                <div .feed-item__avatar>#{authorInitial (postAuthor firstPost)}
-                <div .feed-item__meta>
-                  <span .feed-item__name>#{authorName (postAuthor firstPost)}
-                  <span .feed-item__handle>@#{authorHandle (postAuthor firstPost)}
-                  <span .feed-item__time>#{relativeTime (postCreatedAt firstPost)}
-                <details .feed-menu>
-                  <summary .feed-menu__toggle>…
-                  <div .feed-menu__panel>
-                    <button type="button" data-copy-link=@{ThreadR threadId} .feed-menu__item>Copy link
-                    <button type="button" data-action-url=@{ThreadMuteR threadId} data-action-type="thread-mute" data-thread-id=#{toPathPiece threadId} .feed-menu__item>Not watching
-                    <button type="button" data-action-url=@{PostFlagR (entityKey firstPostE)} data-action-type="post-flag" data-thread-id=#{toPathPiece threadId} data-post-id=#{toPathPiece (entityKey firstPostE)} .feed-menu__item>Flag
-                    <button type="button" data-action-url=@{PostBlockR (entityKey firstPostE)} data-action-type="post-block" data-thread-id=#{toPathPiece threadId} data-post-id=#{toPathPiece (entityKey firstPostE)} .feed-menu__item>Block
-                <div .feed-item__body>#{postPreview firstPost}
-          $if count > 1
-            $if count > 2
-              <li .feed-list__item .feed-list__item--post .feed-list__item--continuation data-href=@{ThreadR threadId} data-thread-id=#{toPathPiece threadId}>
-                <div .feed-item .feed-item--simple>
-                  <div .feed-item__body>Show more replies (#{count - 2})
-            $with lastPost <- entityVal lastPostE
-              <li .feed-list__item .feed-list__item--post .feed-list__item--continuation data-href=@{ThreadR threadId} data-thread-id=#{toPathPiece threadId} data-post-id=#{toPathPiece (entityKey lastPostE)}>
-                <div .feed-item>
-                  <div .feed-item__avatar>#{authorInitial (postAuthor lastPost)}
-                  <div .feed-item__meta>
-                    <span .feed-item__name>#{authorName (postAuthor lastPost)}
-                    <span .feed-item__handle>@#{authorHandle (postAuthor lastPost)}
-                    <span .feed-item__time>#{relativeTime (postCreatedAt lastPost)}
-                  <details .feed-menu>
-                    <summary .feed-menu__toggle>…
-                    <div .feed-menu__panel>
-                      <button type="button" data-copy-link=@{ThreadR threadId} .feed-menu__item>Copy link
-                      <button type="button" data-action-url=@{ThreadMuteR threadId} data-action-type="thread-mute" data-thread-id=#{toPathPiece threadId} .feed-menu__item>Not watching
-                      <button type="button" data-action-url=@{PostFlagR (entityKey lastPostE)} data-action-type="post-flag" data-thread-id=#{toPathPiece threadId} data-post-id=#{toPathPiece (entityKey lastPostE)} .feed-menu__item>Flag
-                      <button type="button" data-action-url=@{PostBlockR (entityKey lastPostE)} data-action-type="post-block" data-thread-id=#{toPathPiece threadId} data-post-id=#{toPathPiece (entityKey lastPostE)} .feed-menu__item>Block
-                  <div .feed-item__body>#{postPreview lastPost}
-        $nothing
-          <li .feed-list__item .feed-list__item--post>
-            <span .thread-card__empty>No replies yet.
+      <ul class="divide-y divide-slate-200">
+        $forall Entity threadId thread <- P.take 40 tabThreads
+          <li data-thread-id=#{toPathPiece threadId}>
+            <article class="group px-4 py-3.5 transition hover:bg-slate-50">
+              <div class="flex gap-3">
+                <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
+                  #{authorInitial (threadAuthor thread)}
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0">
+                      <div class="truncate text-[15px] leading-tight">
+                        <span class="font-semibold text-slate-900">#{authorName (threadAuthor thread)}
+                        <span class="ml-1 text-slate-500">@#{authorHandle (threadAuthor thread)}
+                        <span class="ml-1 text-slate-400">#{relativeTime (threadCreatedAt thread)}
+                      <span class="mt-1 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">#{boardLabel (threadBoard thread)}
+                    <button type=button class="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="more">
+                      <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor">
+                        <circle cx="6" cy="12" r="1.4">
+                        <circle cx="12" cy="12" r="1.4">
+                        <circle cx="18" cy="12" r="1.4">
+                  <a href=@{ThreadR threadId} class="mt-1 block">
+                    <h3 class="break-all text-base leading-snug text-slate-900">#{threadTitle thread}
+                    <p class="mt-0.5 break-all text-sm text-slate-700">#{threadPreview thread}
+                  <div class="mt-2 flex items-center justify-between text-sm text-slate-500">
+                    <div class="flex items-center gap-5">
+                      <span class="inline-flex items-center gap-1.5">
+                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M21 12a8 8 0 0 1-8 8H6l-3 2 1-4a8 8 0 1 1 17-6z">
+                        #{replyCountFor threadId}
+                      <span class="inline-flex items-center gap-1.5">
+                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="9">
+                          <path d="M8 14s1.5 2 4 2 4-2 4-2">
+                          <circle cx="9" cy="10" r="1">
+                          <circle cx="15" cy="10" r="1">
+                        #{smileCountFor threadId}
+                      <span class="inline-flex items-center gap-1.5">
+                        <svg viewBox="0 0 24 24" class="h-4 w-4 text-rose-500" fill="currentColor">
+                          <path d="M12 21s-6.7-4.4-9.2-7.7C.7 10.7 1.5 6.9 4.7 5.5c2.1-.9 4.3-.3 5.6 1.3 1.3-1.6 3.5-2.2 5.6-1.3 3.2 1.4 4 5.2 1.9 7.8C18.7 16.6 12 21 12 21z">
+                        #{likeCountFor threadId}
+                    $maybe _ <- maybeAuthValue
+                      $if P.elem threadId bookmarkedThreadIds
+                        <button
+                          type=button
+                          data-action-url=@{ThreadBookmarkR threadId}
+                          data-action-type="thread-bookmark"
+                          data-thread-id=#{toPathPiece threadId}
+                          data-bookmarked="true"
+                          class="bookmark-toggle rounded p-1 text-slate-900 transition hover:bg-slate-100"
+                          aria-label="bookmark">
+                          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor" stroke="currentColor" stroke-width="2">
+                            <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1z">
+                      $else
+                        <button
+                          type=button
+                          data-action-url=@{ThreadBookmarkR threadId}
+                          data-action-type="thread-bookmark"
+                          data-thread-id=#{toPathPiece threadId}
+                          data-bookmarked="false"
+                          class="bookmark-toggle rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                          aria-label="bookmark">
+                          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1z">
+                    $nothing
+                      <a href=@{AuthR LoginR} class="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="bookmark">
+                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1z">

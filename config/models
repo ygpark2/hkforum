@@ -52,6 +52,13 @@ ThreadMute
     UniqueThreadMute user thread
     deriving Typeable
 
+ThreadBookmark
+    user UserId
+    thread ThreadId
+    createdAt UTCTime
+    UniqueThreadBookmark user thread
+    deriving Typeable
+
 ThreadBlock
     user UserId
     thread ThreadId
