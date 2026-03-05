@@ -6,19 +6,32 @@
 
 /home HomeR GET POST
 /boards BoardsR GET
+/jobs JobsR GET POST
+/jobs/#JobId/close JobCloseR POST
+/chats ChatsR GET
+/chats/new ChatsNewR GET POST
+/chats/room/#ChatRoomId ChatRoomR GET POST
+/notifications NotificationsR GET
+/notifications/read-all NotificationsReadAllR POST
 /bookmarks BookmarksR GET
+/user/#UserId/follow UserFollowR POST
+/settings SettingsR GET
+/settings/account SettingsAccountR GET
+/settings/connections SettingsConnectionsR GET
+/settings/blocked-accounts SettingsBlockedAccountsR GET
+/settings/security-events SettingsSecurityEventsR GET
+/settings/about SettingsAboutR GET
 /board/#BoardId BoardR GET POST
-/thread/#ThreadId ThreadR GET
-/thread/#ThreadId/mute ThreadMuteR POST
-/thread/#ThreadId/bookmark ThreadBookmarkR POST
-/thread/#ThreadId/block ThreadBlockR POST
-/thread/#ThreadId/flag ThreadFlagR POST
-/thread/#ThreadId/post ThreadPostR POST
+/post/#PostId PostR GET
 /post/#PostId/comment PostCommentR POST
 /post/#PostId/edit PostEditR POST
 /post/#PostId/delete PostDeleteR POST
 /post/#PostId/block PostBlockR POST
 /post/#PostId/flag PostFlagR POST
+/post/#PostId/like PostLikeR POST
+/post/#PostId/react PostReactR POST
+/post/#PostId/bookmark PostBookmarkR POST
+/post/#PostId/watch PostWatchR POST
 /comment/#CommentId/edit CommentEditR POST
 /comment/#CommentId/delete CommentDeleteR POST
 /register RegisterR GET POST

@@ -2,6 +2,15 @@
   display: block;
 }
 
+@media (min-width: 1000px) {
+  .forum-layout-grid {
+    width: calc(100% - 56px);
+    margin-left: auto;
+    margin-right: auto;
+    grid-template-columns: 224px minmax(0, 1fr) 280px;
+  }
+}
+
 .feed-shell .grid > aside {
   display: none;
 }

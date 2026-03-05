@@ -88,7 +88,6 @@ tests:
     main: Spec.hs
     source-dirs:
       - test
-      - src
     ghc-options: -Wall
     dependencies:
       - base

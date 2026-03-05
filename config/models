@@ -15,13 +15,49 @@ Email
 Board
     name Text
     description Text Maybe
-    threadCount Int default=0
     postCount Int default=0
     commentCount Int default=0
     UniqueBoard name
     deriving Typeable
 
-Thread
+Job
+    title Text
+    company Text
+    salary Text Maybe
+    workingHours Text Maybe
+    deadline Day Maybe
+    isClosed Bool default=False
+    experience Text Maybe
+    location Text Maybe
+    employmentType Text Maybe
+    content Text
+    author UserId
+    createdAt UTCTime
+    updatedAt UTCTime
+    deriving Typeable
+
+ChatMessage
+    content Text
+    author UserId
+    createdAt UTCTime
+    deriving Typeable
+
+ChatRoom
+    userA UserId
+    userB UserId
+    createdAt UTCTime
+    updatedAt UTCTime
+    UniqueChatRoomPair userA userB
+    deriving Typeable
+
+DirectMessage
+    room ChatRoomId
+    author UserId
+    content Text
+    createdAt UTCTime
+    deriving Typeable
+
+Post
     title Text
     content Text
     author UserId
@@ -30,47 +66,12 @@ Thread
     updatedAt UTCTime
     deriving Typeable
 
-Post
-    content Text
-    author UserId
-    thread ThreadId
-    createdAt UTCTime
-    updatedAt UTCTime
-    deriving Typeable
-
 Comment
     content Text
     author UserId
     post PostId
+    parentComment CommentId Maybe
     createdAt UTCTime
-    deriving Typeable
-
-ThreadMute
-    user UserId
-    thread ThreadId
-    createdAt UTCTime
-    UniqueThreadMute user thread
-    deriving Typeable
-
-ThreadBookmark
-    user UserId
-    thread ThreadId
-    createdAt UTCTime
-    UniqueThreadBookmark user thread
-    deriving Typeable
-
-ThreadBlock
-    user UserId
-    thread ThreadId
-    createdAt UTCTime
-    UniqueThreadBlock user thread
-    deriving Typeable
-
-ThreadFlag
-    user UserId
-    thread ThreadId
-    createdAt UTCTime
-    UniqueThreadFlag user thread
     deriving Typeable
 
 PostBlock
@@ -85,6 +86,71 @@ PostFlag
     post PostId
     createdAt UTCTime
     UniquePostFlag user post
+    deriving Typeable
+
+PostBookmark
+    user UserId
+    post PostId
+    createdAt UTCTime
+    UniquePostBookmark user post
+    deriving Typeable
+
+PostWatch
+    user UserId
+    post PostId
+    createdAt UTCTime
+    UniquePostWatch user post
+    deriving Typeable
+
+PostLike
+    user UserId
+    post PostId
+    createdAt UTCTime
+    UniquePostLike user post
+    deriving Typeable
+
+PostReaction
+    user UserId
+    post PostId
+    emoji Text
+    createdAt UTCTime
+    UniquePostReaction user post
+    deriving Typeable
+
+PostView
+    post PostId
+    viewer UserId Maybe
+    ipAddress Text Maybe
+    userAgent Text Maybe
+    createdAt UTCTime
+    deriving Typeable
+
+PostTag
+    name Text
+    UniquePostTag name
+    deriving Typeable
+
+PostTagMap
+    post PostId
+    tag PostTagId
+    UniquePostTagMap post tag
+    deriving Typeable
+
+UserFollow
+    follower UserId
+    following UserId
+    createdAt UTCTime
+    UniqueUserFollow follower following
+    deriving Typeable
+
+Notification
+    user UserId
+    actor UserId Maybe
+    kind Text
+    post PostId Maybe
+    comment CommentId Maybe
+    isRead Bool default=False
+    createdAt UTCTime
     deriving Typeable
 
 ModerationLog

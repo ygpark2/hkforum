@@ -1,81 +1,103 @@
-{-# LANGUAGE OverloadedStrings, TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Handler.Forum.Board (getBoardR, postBoardR) where
 
 import Import
-import Data.Time (getCurrentTime)
-import Yesod.Form (fsLabel)
+import Forum.Tag (loadPostTagsMap, parseTagList, syncPostTags)
 import qualified Data.List as L
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 import qualified Data.Text as T
 import Text.Blaze (preEscapedText)
-import Text.Read (readMaybe)
 import qualified Prelude as P
 
 getBoardR :: BoardId -> Handler Html
 getBoardR boardId = do
     board <- runDB $ get404 boardId
-    boards <- runDB $ selectList [] [Asc BoardName]
-    threads <- runDB $ selectList [ThreadBoard ==. boardId] [Desc ThreadCreatedAt]
-    let authorIds = L.nub $ map (threadAuthor . entityVal) threads
+    posts <- runDB $ selectList [PostBoard ==. boardId] [Desc PostCreatedAt]
+    let authorIds = L.nub $ map (postAuthor . entityVal) posts
     users <- if P.null authorIds
-        then return []
+        then pure []
         else runDB $ selectList [UserId <-. authorIds] []
-    let userMap = Map.fromList $ map (\(Entity uid u) -> (uid, userIdent u)) users
+    comments <- if P.null posts
+        then pure []
+        else runDB $ selectList [CommentPost <-. map entityKey posts] []
+    let postIds = map entityKey posts
+    likes <- if P.null postIds
+        then pure []
+        else runDB $ selectList [PostLikePost <-. postIds] []
+    views <- if P.null postIds
+        then pure []
+        else runDB $ selectList [PostViewPost <-. postIds] []
+    tagsByPost <- runDB $ loadPostTagsMap postIds
+    let userMap = Map.fromList $ map (\(Entity uid user) -> (uid, userIdent user)) users
         authorName uid = Map.findWithDefault ("Unknown" :: Text) uid userMap
-    maybeAuth <- maybeAuthId
-    isAdminUser <- case maybeAuth of
-        Nothing -> pure False
-        Just userId -> do
-            mUser <- runDB $ get userId
-            pure $ maybe False (\user -> userRole user == T.pack "admin") mUser
-    ads <- runDB $ selectList [AdIsActive ==. True, AdPosition ==. T.pack "sidebar-right"] [Asc AdSortOrder, Desc AdCreatedAt]
+        commentCountMap =
+            P.foldl'
+                (\acc (Entity _ c) -> Map.insertWith (+) (commentPost c) (1 :: Int) acc)
+                Map.empty
+                comments
+        likeCountMap =
+            P.foldl'
+                (\acc (Entity _ l) -> Map.insertWith (+) (postLikePost l) (1 :: Int) acc)
+                Map.empty
+                likes
+        viewCountMap =
+            P.foldl'
+                (\acc (Entity _ v) -> Map.insertWith (+) (postViewPost v) (1 :: Int) acc)
+                Map.empty
+                views
+        commentCountFor pid = Map.findWithDefault 0 pid commentCountMap
+        likeCountFor pid = Map.findWithDefault 0 pid likeCountMap
+        viewCountFor pid = Map.findWithDefault 0 pid viewCountMap
+        tagsFor pid = Map.findWithDefault [] pid tagsByPost
+    mViewerId <- maybeAuthId
+    bookmarkedRows <- case mViewerId of
+        Nothing -> pure []
+        Just viewerId ->
+            if P.null postIds
+                then pure []
+                else runDB $ selectList [PostBookmarkUser ==. viewerId, PostBookmarkPost <-. postIds] []
+    likedRows <- case mViewerId of
+        Nothing -> pure []
+        Just viewerId ->
+            if P.null postIds
+                then pure []
+                else runDB $ selectList [PostLikeUser ==. viewerId, PostLikePost <-. postIds] []
+    let likeSet = Set.fromList $ map (postLikePost . entityVal) likedRows
+        bookmarkSet = Set.fromList $ map (postBookmarkPost . entityVal) bookmarkedRows
+        isLiked pid = Set.member pid likeSet
+        isBookmarked pid = Set.member pid bookmarkSet
+        likeState pid = if isLiked pid then ("true" :: Text) else "false"
+        likeIcon pid = if isLiked pid then ("♥" :: Text) else "♡"
+        likeLabel pid = if isLiked pid then ("Liked" :: Text) else "Like"
+        bookmarkState pid = if isBookmarked pid then ("true" :: Text) else "false"
     req <- getRequest
     let mCsrfToken = reqToken req
-    previewLimit <- getPreviewLimit
-    let previewText = buildPreview previewLimit . threadContent
     defaultLayout $ do
-        setTitle $ preEscapedText $ boardName board <> T.pack " - HKForum"
+        setTitle $ preEscapedText $ boardName board <> " - HKForum"
         $(widgetFile "forum/board")
 
 postBoardR :: BoardId -> Handler Html
 postBoardR boardId = do
     userId <- requireAuthId
-    board <- runDB $ get404 boardId
-    title <- runInputPost $ ireq textField "title"
-    content <- runInputPost $ ireq textField "content"
+    _ <- runDB $ get404 boardId
+    titleRaw <- runInputPost $ ireq textField "title"
+    mTags <- runInputPost $ iopt textField "tags"
+    contentRaw <- runInputPost $ ireq textField "content"
+    let title = T.strip titleRaw
+        content = T.strip contentRaw
+    when (T.null title) $ invalidArgs ["title is required"]
+    when (T.null content) $ invalidArgs ["content is required"]
     now <- liftIO getCurrentTime
-    _ <- runDB $ insert Thread
-        { threadTitle = title
-        , threadContent = content
-        , threadAuthor = userId
-        , threadBoard = boardId
-        , threadCreatedAt = now
-        , threadUpdatedAt = now
+    postId <- runDB $ insert Post
+        { postTitle = title
+        , postContent = content
+        , postAuthor = userId
+        , postBoard = boardId
+        , postCreatedAt = now
+        , postUpdatedAt = now
         }
-    runDB $ update boardId [BoardThreadCount +=. 1]
+    runDB $ syncPostTags postId (parseTagList mTags)
+    runDB $ update boardId [BoardPostCount +=. 1]
     redirect $ BoardR boardId
-
-getPreviewLimit :: Handler Int
-getPreviewLimit = do
-    mSetting <- runDB $ getBy $ UniqueSiteSetting "thread_preview_chars"
-    case mSetting of
-        Nothing -> pure 200
-        Just (Entity _ s) ->
-            case readMaybe (T.unpack (siteSettingValue s)) of
-                Just n | n > 0 -> pure n
-                _ -> pure 200
-
-buildPreview :: Int -> Text -> Text
-buildPreview n raw =
-    let plain = stripTags raw
-        trimmed = T.take n plain
-    in if T.length plain > n then trimmed <> "…" else trimmed
-
-stripTags :: Text -> Text
-stripTags = T.pack . go False . T.unpack
-  where
-    go _ [] = []
-    go True ('>':xs) = go False xs
-    go True (_:xs) = go True xs
-    go False ('<':xs) = go True xs
-    go False (x:xs) = x : go False xs

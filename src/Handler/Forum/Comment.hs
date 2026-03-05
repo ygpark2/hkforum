@@ -2,24 +2,80 @@
 module Handler.Forum.Comment (postPostCommentR, postCommentEditR, postCommentDeleteR) where
 
 import Import
+import qualified Data.Set as Set
 import qualified Data.Text as T
-import Data.Time (getCurrentTime)
 
 postPostCommentR :: PostId -> Handler Html
 postPostCommentR postId = do
     userId <- requireAuthId
     post <- runDB $ get404 postId
-    content <- runInputPost $ ireq textField "content"
+    mParentCommentId <- runInputPost $ iopt hiddenField "parentCommentId"
+    contentRaw <- runInputPost $ ireq textField "content"
+    let content = T.strip contentRaw
+    when (T.null content) $ invalidArgs ["content is required"]
+    mParentComment <- case mParentCommentId of
+        Nothing -> pure Nothing
+        Just parentCommentId -> do
+            parentComment <- runDB $ get404 parentCommentId
+            when (commentPost parentComment /= postId) $
+                invalidArgs ["parentCommentId is invalid for this post"]
+            pure $ Just (parentCommentId, parentComment)
     now <- liftIO getCurrentTime
-    _ <- runDB $ insert Comment
+    commentId <- runDB $ insert Comment
         { commentContent = content
         , commentAuthor = userId
         , commentPost = postId
+        , commentParentComment = fst <$> mParentComment
         , commentCreatedAt = now
         }
-    thread <- runDB $ get404 (postThread post)
-    runDB $ update (threadBoard thread) [BoardCommentCount +=. 1]
-    redirect $ ThreadR (postThread post)
+    case mParentComment of
+        Just (_, parentComment) ->
+            when (commentAuthor parentComment /= userId) $ do
+                runDB $ insert_ Notification
+                    { notificationUser = commentAuthor parentComment
+                    , notificationActor = Just userId
+                    , notificationKind = "reply"
+                    , notificationPost = Just postId
+                    , notificationComment = Just commentId
+                    , notificationIsRead = False
+                    , notificationCreatedAt = now
+                    }
+        Nothing ->
+            when (postAuthor post /= userId) $ do
+                runDB $ insert_ Notification
+                    { notificationUser = postAuthor post
+                    , notificationActor = Just userId
+                    , notificationKind = "comment"
+                    , notificationPost = Just postId
+                    , notificationComment = Just commentId
+                    , notificationIsRead = False
+                    , notificationCreatedAt = now
+                    }
+    watcherRows <- runDB $ selectList [PostWatchPost ==. postId] []
+    let directRecipient =
+            case mParentComment of
+                Just (_, parentComment) | commentAuthor parentComment /= userId -> Just (commentAuthor parentComment)
+                _ | postAuthor post /= userId -> Just (postAuthor post)
+                _ -> Nothing
+        excludeSet = Set.fromList $ userId : maybeToList directRecipient
+        watcherUserSet = Set.fromList [postWatchUser w | Entity _ w <- watcherRows]
+        watcherRecipients =
+            Set.toList $
+                Set.difference
+                    watcherUserSet
+                    excludeSet
+    forM_ watcherRecipients $ \recipientId ->
+        runDB $ insert_ Notification
+            { notificationUser = recipientId
+            , notificationActor = Just userId
+            , notificationKind = "watch-comment"
+            , notificationPost = Just postId
+            , notificationComment = Just commentId
+            , notificationIsRead = False
+            , notificationCreatedAt = now
+            }
+    runDB $ update (postBoard post) [BoardCommentCount +=. 1]
+    redirect $ PostR postId
 
 postCommentEditR :: CommentId -> Handler Html
 postCommentEditR commentId = do
@@ -28,10 +84,11 @@ postCommentEditR commentId = do
     if commentAuthor comment /= userId
         then permissionDenied (T.pack "Not allowed")
         else do
-            content <- runInputPost $ ireq textField (T.pack "content")
+            contentRaw <- runInputPost $ ireq textField (T.pack "content")
+            let content = T.strip contentRaw
+            when (T.null content) $ invalidArgs ["content is required"]
             runDB $ update commentId [CommentContent =. content]
-            post <- runDB $ get404 (commentPost comment)
-            redirect $ ThreadR (postThread post)
+            redirect $ PostR (commentPost comment)
 
 postCommentDeleteR :: CommentId -> Handler Html
 postCommentDeleteR commentId = do
@@ -41,7 +98,7 @@ postCommentDeleteR commentId = do
         then permissionDenied (T.pack "Not allowed")
         else do
             post <- runDB $ get404 (commentPost comment)
+            runDB $ updateWhere [CommentParentComment ==. Just commentId] [CommentParentComment =. Nothing]
             runDB $ delete commentId
-            thread <- runDB $ get404 (postThread post)
-            runDB $ update (threadBoard thread) [BoardCommentCount -=. 1]
-            redirect $ ThreadR (postThread post)
+            runDB $ update (postBoard post) [BoardCommentCount -=. 1]
+            redirect $ PostR (commentPost comment)

@@ -1,0 +1,20 @@
+<section class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-6">
+  <header class="flex items-center justify-between gap-3">
+    <div>
+      <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Inbox
+      <h1 class="text-2xl font-bold text-slate-900">Notifications
+    <form method=post action=@{NotificationsReadAllR}>
+      $maybe tok <- mCsrfToken
+        <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
+      <button class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-700 hover:border-slate-900 hover:text-slate-900">Mark all read
+
+  $if P.null notifications
+    <p class="text-sm text-slate-500">No notifications yet.
+  $else
+    <div class="space-y-2">
+      $forall Entity _ n <- notifications
+        <article class="rounded-xl border p-3 text-sm" :notificationIsRead n:class="border-slate-200 bg-slate-50/40 text-slate-700" :not (notificationIsRead n):class="border-sky-200 bg-sky-50/40 text-slate-800">
+          <div class="font-semibold">@#{actorLabel (notificationActor n)} #{kindLabel n}
+          <div class="mt-1 text-xs text-slate-500">#{show (notificationCreatedAt n)}
+          $maybe route <- targetRoute n
+            <a href=@{route} class="mt-1 inline-flex text-xs font-semibold text-slate-700 hover:text-slate-900">Open
