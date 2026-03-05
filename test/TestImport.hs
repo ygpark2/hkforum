@@ -1,14 +1,16 @@
+{-# LANGUAGE OverloadedStrings #-}
 module TestImport
     ( module TestImport
     , module X
     ) where
 
 import Application           (makeFoundation)
-import ClassyPrelude         as X
+import ClassyPrelude         as X hiding (delete, deleteBy, Handler)
 import Database.Persist      as X hiding (get)
-import Database.Persist.Sql  (SqlPersistM, SqlBackend, runSqlPersistMPool, rawExecute, rawSql, unSingle, connEscapeName)
+import Database.Persist.Sql  (SqlPersistM, SqlBackend, runSqlPersistMPool, rawExecute, rawSql, unSingle)
 import Foundation            as X
 import Model                 as X
+import qualified Prelude as P
 import Test.Hspec            as X
 import Text.Shakespeare.Text (st)
 import Yesod.Default.Config2 (ignoreEnv, loadAppSettings)
@@ -58,15 +60,15 @@ wipeDB app = do
 
     flip runSqlPersistMPool pool $ do
         tables <- getTables
-        sqlBackend <- ask
-        let queries = map (\t -> "DELETE FROM " ++ (connEscapeName sqlBackend $ DBName t)) tables
+        let quotedName t = "\"" <> t <> "\""
+            queries = P.map (\t -> "DELETE FROM " <> quotedName t) tables
         forM_ queries (\q -> rawExecute q [])
 
 rawConnection :: Text -> IO Sqlite.Connection
 rawConnection t = Sqlite.open t
 
 disableForeignKeys :: Sqlite.Connection -> IO ()
-disableForeignKeys conn = Sqlite.prepare conn "PRAGMA foreign_keys = OFF;" >>= void . Sqlite.step
+disableForeignKeys conn = Sqlite.prepare conn "PRAGMA foreign_keys = OFF;" >>= (\stmt -> void (Sqlite.step stmt))
 
 getTables :: MonadIO m => ReaderT SqlBackend m [Text]
 getTables = do

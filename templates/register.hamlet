@@ -3,7 +3,7 @@
     <div class="space-y-1">
       <p class="text-xs uppercase tracking-widest text-slate-400">HKForum</p>
       <h1 class="text-3xl font-semibold text-slate-900">Create your account</h1>
-      <p class="text-sm text-slate-500">Join the community to start threads, reply, and stay in the loop.</p>
+      <p class="text-sm text-slate-500">Join the community to write posts, reply, and stay in the loop.</p>
     <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
       $maybe msg <- mmsg
         #{msg}

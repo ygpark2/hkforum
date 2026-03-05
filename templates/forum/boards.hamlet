@@ -1,129 +1,244 @@
-<section class="flex h-full min-h-0 flex-col bg-white">
-  $maybe tok <- mCsrfToken
-    <input type=hidden id="csrf-token" value=#{tok} data-csrf-param=#{defaultCsrfParamName}>
+<section class="flex h-full min-h-0 flex-col bg-[#f6f7f8]">
+  <div class="shrink-0 border-b border-slate-200 bg-white px-4 py-2.5">
+    <div class="flex items-center justify-between gap-3">
+      <nav
+        class="flex items-center gap-5 overflow-x-auto whitespace-nowrap text-[15px] font-semibold text-slate-500 no-scrollbar"
+        data-home-tab-nav
+        data-active-tab=#{feedTabParam feedTab}
+        data-active-tag=#{fromMaybe "" mTagFilter}
+        >
+        $forall tab <- feedTabs
+          <a href=@{HomeR}?tab=#{feedTabParam tab} class=#{tabClass tab}>#{feedTabLabel tab}
+        <span data-home-custom-tabs class="contents">
+      <div class="flex items-center gap-1.5">
+        <button type="button" data-open="home-tab-settings-drawer" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-900" aria-label="Edit tab">⚙
+        <button type="button" data-open="home-tab-modal" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-700 transition hover:bg-slate-100 hover:text-slate-900" aria-label="Add tab">+
 
-  <div class="shrink-0 border-b border-slate-200 px-4 pt-2.5">
-    <nav class="flex items-center gap-6 text-[15px]">
-      $if activeTab == "unread"
-        <a href=@{HomeR}?tab=unread class="border-b-2 border-slate-900 pb-2.5 font-semibold text-slate-900">Unread
-      $else
-        <a href=@{HomeR}?tab=unread class="pb-2.5 font-medium text-slate-500 transition hover:text-slate-900">Unread
-      $if activeTab == "everything"
-        <a href=@{HomeR}?tab=everything class="border-b-2 border-slate-900 pb-2.5 font-semibold text-slate-900">Everything
-      $else
-        <a href=@{HomeR}?tab=everything class="pb-2.5 font-medium text-slate-500 transition hover:text-slate-900">Everything
-      $if activeTab == "trends"
-        <a href=@{HomeR}?tab=trends class="border-b-2 border-slate-900 pb-2.5 font-semibold text-slate-900">Trends
-      $else
-        <a href=@{HomeR}?tab=trends class="pb-2.5 font-medium text-slate-500 transition hover:text-slate-900">Trends
-      $if activeTab == "following"
-        <a href=@{HomeR}?tab=following class="border-b-2 border-slate-900 pb-2.5 font-semibold text-slate-900">Following
-      $else
-        <a href=@{HomeR}?tab=following class="pb-2.5 font-medium text-slate-500 transition hover:text-slate-900">Following
-      $if activeTab == "interests"
-        <a href=@{HomeR}?tab=interests class="border-b-2 border-slate-900 pb-2.5 font-semibold text-slate-900">Interests
-      $else
-        <a href=@{HomeR}?tab=interests class="pb-2.5 font-medium text-slate-500 transition hover:text-slate-900">Interests
-      <button type=button class="ml-auto pb-2.5 text-slate-500 transition hover:text-slate-900" aria-label="settings">
-        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z">
-          <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1 1 0 0 1 0 1.4l-1 1a1 1 0 0 1-1.4 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1 1 0 0 1-1.4 0l-1-1a1 1 0 0 1 0-1.4l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a1 1 0 0 1-1-1v-1.5a1 1 0 0 1 1-1h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 1.4 0l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a1 1 0 0 1 1-1h1.5a1 1 0 0 1 1 1v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a1 1 0 0 1 1.4 0l1 1a1 1 0 0 1 0 1.4l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a1 1 0 0 1 1 1v1.5a1 1 0 0 1-1 1h-.2a1 1 0 0 0-.9.6Z">
-      <button type=button class="pb-2.5 text-slate-500 transition hover:text-slate-900" aria-label="add">
-        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 5v14">
-          <path d="M5 12h14">
+  <dialog
+    id="home-tab-settings-drawer"
+    data-modal="home-tab-settings-drawer"
+    data-home-tab-settings-drawer
+    class="h-screen w-screen max-w-none border-0 bg-transparent p-0 backdrop:bg-slate-900/60"
+    style="position:fixed;inset:0;margin:0;"
+    >
+    <div class="flex h-full justify-end">
+      <aside class="h-full w-[min(92vw,420px)] border-l border-slate-200 bg-white">
+        <div class="flex h-full flex-col">
+          <div class="flex items-center justify-between border-b border-slate-200 px-4 py-4">
+            <h2 class="text-[34px] font-semibold text-slate-900">Edit Tab
+            <button type="button" data-close="home-tab-settings-drawer" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">×
+          <div class="min-h-0 flex-1 overflow-y-auto">
+            <div data-home-tab-options>
+              <button type="button" data-home-tab-option="trending" class="flex w-full items-center justify-between border-b border-slate-200 px-4 py-4 text-left text-lg font-semibold text-slate-800 transition hover:bg-slate-50">
+                <span>Trending
+                <span class="inline-flex items-center gap-2 text-sm text-slate-500">
+                  <span data-home-option-value="trending">
+                  <span>⌄
+              <button type="button" data-home-tab-option="unreads" class="flex w-full items-center justify-between border-b border-slate-200 px-4 py-4 text-left text-lg font-semibold text-slate-800 transition hover:bg-slate-50">
+                <span>Unreads
+                <span class="inline-flex items-center gap-2 text-sm text-slate-500">
+                  <span data-home-option-value="unreads">
+                  <span>⌄
+              <button type="button" data-home-tab-option="people" class="flex w-full items-center justify-between border-b border-slate-200 px-4 py-4 text-left text-lg font-semibold text-slate-800 transition hover:bg-slate-50">
+                <span>People
+                <span class="inline-flex items-center gap-2 text-sm text-slate-500">
+                  <span data-home-option-value="people">
+                  <span>⌄
+              <button type="button" data-home-tab-option="programLanguages" class="flex w-full items-center justify-between border-b border-slate-200 px-4 py-4 text-left text-lg font-semibold text-slate-800 transition hover:bg-slate-50">
+                <span>Program Languages
+                <span class="inline-flex items-center gap-2 text-sm text-slate-500">
+                  <span data-home-option-value="programLanguages">
+                  <span>⌄
+              <button type="button" data-home-tab-option="replies" class="flex w-full items-center justify-between border-b border-slate-200 px-4 py-4 text-left text-lg font-semibold text-slate-800 transition hover:bg-slate-50">
+                <span>Replies
+                <span class="inline-flex items-center gap-2 text-sm text-slate-500">
+                  <span class="inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-slate-200 px-1 text-xs text-slate-600" data-home-option-value="replies">0
+                  <span>⌄
+              <button type="button" data-home-tab-option="reactions" class="flex w-full items-center justify-between border-b border-slate-200 px-4 py-4 text-left text-lg font-semibold text-slate-800 transition hover:bg-slate-50">
+                <span>Reactions
+                <span class="inline-flex items-center gap-2 text-sm text-slate-500">
+                  <span data-home-option-value="reactions">
+                  <span>⌄
+              <button type="button" data-home-tab-option="postType" class="flex w-full items-center justify-between border-b border-slate-200 px-4 py-4 text-left text-lg font-semibold text-slate-800 transition hover:bg-slate-50">
+                <span>Post Types
+                <span class="inline-flex items-center gap-2 text-sm text-slate-500">
+                  <span data-home-option-value="postType">
+                  <span>⌄
+              <button type="button" data-home-tab-option="sites" class="flex w-full items-center justify-between border-b border-slate-200 px-4 py-4 text-left text-lg font-semibold text-slate-800 transition hover:bg-slate-50">
+                <span>Sites
+                <span class="inline-flex items-center gap-2 text-sm text-slate-500">
+                  <span data-home-option-value="sites">
+                  <span>⌄
+              <button type="button" data-home-tab-option="contents" class="flex w-full items-center justify-between border-b border-slate-200 px-4 py-4 text-left text-lg font-semibold text-slate-800 transition hover:bg-slate-50">
+                <span>Contents
+                <span class="inline-flex items-center gap-2 text-sm text-slate-500">
+                  <span data-home-option-value="contents">
+                  <span>⌄
+              <button type="button" data-home-tab-option="media" class="flex w-full items-center justify-between border-b border-slate-200 px-4 py-4 text-left text-lg font-semibold text-slate-800 transition hover:bg-slate-50">
+                <span>Media
+                <span class="inline-flex items-center gap-2 text-sm text-slate-500">
+                  <span data-home-option-value="media">
+                  <span>⌄
+            <div class="border-b border-slate-200 px-4 py-4">
+              <label for="home-tab-settings-name" class="mb-2 block text-lg font-semibold text-slate-800">Name
+              <input
+                id="home-tab-settings-name"
+                data-home-tab-settings-name
+                type="text"
+                maxlength="24"
+                class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[22px] text-slate-900 focus:border-slate-900 focus:outline-none"
+                >
+            <button type="button" data-home-tab-copy class="flex w-full items-center gap-2 border-b border-slate-200 px-4 py-4 text-left text-[31px] font-semibold text-slate-800 transition hover:bg-slate-50">
+              <span>⧉
+              <span>Make a copy
+            <button type="button" data-home-tab-delete class="flex w-full items-center gap-2 px-4 py-4 text-left text-[31px] font-semibold text-rose-600 transition hover:bg-rose-50">
+              <span>🗑
+              <span>Delete tab
 
-  <div class="shrink-0 border-b border-slate-200 px-4 py-3.5">
-    $maybe _ <- maybeAuthValue
-      <form method=post action=@{HomeR} class="space-y-3">
-        $maybe tok <- mCsrfToken
-          <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
-        <div class="flex items-start gap-3">
-          <div class="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
-            Y
-          <textarea name=content rows=2 required placeholder="Start typing..." class="w-full resize-none rounded-xl bg-slate-100 px-3 py-2 text-base font-medium text-slate-700 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300">
-        <div class="flex items-center justify-end gap-2 pl-12">
-          <select name=boardId data-quick-board required class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300">
-            $forall Entity boardId board <- boards
-              <option value=#{toPathPiece boardId}>#{boardName board}
-          <button type=submit class="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-slate-800">Post
-    $nothing
-      <div class="pl-12 text-sm text-slate-500">
-        Please <a href=@{AuthR LoginR} class="font-semibold text-slate-700 underline hover:text-slate-900">login</a> to post.
+  <dialog id="home-tab-modal" data-modal="home-tab-modal" class="w-[min(90vw,32rem)] max-w-[90vw] rounded-2xl p-0 backdrop:bg-slate-900/40" style="position:fixed;inset:0;margin:auto;">
+      <div class="rounded-2xl bg-white p-6 shadow-xl">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-slate-900">Add tab
+          <button type="button" data-close="home-tab-modal" class="rounded-xl border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">Close
+        <form data-home-tab-form class="mt-4 space-y-3">
+          <div class="space-y-1">
+            <label class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500" for="home-tab-name">Tab name
+            <input id="home-tab-name" name="name" type="text" required maxlength="24" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900" placeholder="e.g. Haskell">
+          <div class="space-y-1">
+            <label class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500" for="home-tab-tag">Tag filter
+            <input id="home-tab-tag" name="tag" type="text" required maxlength="32" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900" placeholder="e.g. haskell">
+          <p class="text-xs text-slate-500">탭은 브라우저(LocalStorage)에 저장됩니다.
+          <div class="flex justify-end gap-2">
+            <button type="submit" class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-white">Add
+            <button type="button" data-close="home-tab-modal" class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">Cancel
+        <div class="mt-4 border-t border-slate-200 pt-3">
+          <div class="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Custom tabs
+          <div data-home-custom-tab-list class="space-y-2">
+            <p class="text-sm text-slate-500">No custom tabs yet.
 
-  <div class="min-h-0 flex-1 overflow-y-auto no-scrollbar">
-    $if P.null tabThreads
-      <div class="flex h-full flex-col items-center justify-center px-6 text-center">
-        <svg viewBox="0 0 24 24" class="h-6 w-6 text-slate-400" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 3l1.6 3.3L17 8l-3.4 1.7L12 13l-1.6-3.3L7 8l3.4-1.7L12 3z">
-          <path d="M5 14l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z">
-        <h2 class="mt-3 text-[34px] font-bold tracking-tight text-slate-900">#{tabTitle}
-        <p class="mt-2 text-lg text-slate-500">#{tabSubtitle}
+  <div class="min-h-0 flex-1 overflow-y-auto no-scrollbar bg-white">
+    $if P.null posts
+      <div class="flex h-full items-center justify-center px-6 text-center text-slate-500">
+        #{feedEmptyMessage}
     $else
       <ul class="divide-y divide-slate-200">
-        $forall Entity threadId thread <- P.take 40 tabThreads
-          <li data-thread-id=#{toPathPiece threadId}>
-            <article class="group px-4 py-3.5 transition hover:bg-slate-50">
-              <div class="flex gap-3">
-                <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
-                  #{authorInitial (threadAuthor thread)}
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-start justify-between gap-2">
-                    <div class="min-w-0">
-                      <div class="truncate text-[15px] leading-tight">
-                        <span class="font-semibold text-slate-900">#{authorName (threadAuthor thread)}
-                        <span class="ml-1 text-slate-500">@#{authorHandle (threadAuthor thread)}
-                        <span class="ml-1 text-slate-400">#{relativeTime (threadCreatedAt thread)}
-                      <span class="mt-1 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">#{boardLabel (threadBoard thread)}
-                    <button type=button class="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="more">
-                      <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor">
-                        <circle cx="6" cy="12" r="1.4">
-                        <circle cx="12" cy="12" r="1.4">
-                        <circle cx="18" cy="12" r="1.4">
-                  <a href=@{ThreadR threadId} class="mt-1 block">
-                    <h3 class="break-all text-base leading-snug text-slate-900">#{threadTitle thread}
-                    <p class="mt-0.5 break-all text-sm text-slate-700">#{threadPreview thread}
-                  <div class="mt-2 flex items-center justify-between text-sm text-slate-500">
-                    <div class="flex items-center gap-5">
-                      <span class="inline-flex items-center gap-1.5">
-                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M21 12a8 8 0 0 1-8 8H6l-3 2 1-4a8 8 0 1 1 17-6z">
-                        #{replyCountFor threadId}
-                      <span class="inline-flex items-center gap-1.5">
-                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                          <circle cx="12" cy="12" r="9">
-                          <path d="M8 14s1.5 2 4 2 4-2 4-2">
-                          <circle cx="9" cy="10" r="1">
-                          <circle cx="15" cy="10" r="1">
-                        #{smileCountFor threadId}
-                      <span class="inline-flex items-center gap-1.5">
-                        <svg viewBox="0 0 24 24" class="h-4 w-4 text-rose-500" fill="currentColor">
-                          <path d="M12 21s-6.7-4.4-9.2-7.7C.7 10.7 1.5 6.9 4.7 5.5c2.1-.9 4.3-.3 5.6 1.3 1.3-1.6 3.5-2.2 5.6-1.3 3.2 1.4 4 5.2 1.9 7.8C18.7 16.6 12 21 12 21z">
-                        #{likeCountFor threadId}
-                    $maybe _ <- maybeAuthValue
-                      $if P.elem threadId bookmarkedThreadIds
-                        <button
-                          type=button
-                          data-action-url=@{ThreadBookmarkR threadId}
-                          data-action-type="thread-bookmark"
-                          data-thread-id=#{toPathPiece threadId}
-                          data-bookmarked="true"
-                          class="bookmark-toggle rounded p-1 text-slate-900 transition hover:bg-slate-100"
-                          aria-label="bookmark">
-                          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor" stroke="currentColor" stroke-width="2">
-                            <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1z">
-                      $else
-                        <button
-                          type=button
-                          data-action-url=@{ThreadBookmarkR threadId}
-                          data-action-type="thread-bookmark"
-                          data-thread-id=#{toPathPiece threadId}
-                          data-bookmarked="false"
-                          class="bookmark-toggle rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                          aria-label="bookmark">
-                          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1z">
+        $forall Entity postId post <- posts
+          <li class="px-4 py-4" data-post-id=#{toPathPiece postId}>
+            <article>
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex min-w-0 flex-1 gap-3">
+                  <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
+                    #{T.toUpper (T.take 1 (authorName (postAuthor post)))}
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
+                      <span class="font-semibold text-slate-900">#{authorName (postAuthor post)}
+                      <span class="text-slate-500">@#{authorHandle (postAuthor post)}
+                      <span class="text-slate-400">#{relativeTime (postCreatedAt post)}
+                    <a href=@{PostR postId} class="mt-1 block whitespace-pre-wrap break-words text-[17px] leading-7 text-slate-800 hover:text-slate-900">#{postContent post}
+                    $with tags <- tagsFor postId
+                      $if not (P.null tags)
+                        <div class="mt-2 flex flex-wrap gap-1.5">
+                          $forall tag <- P.take 3 tags
+                            <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-600">##{tag}
+                    <div class="mt-2 text-xs text-slate-500">#{boardLabel (postBoard post)}
+                <details class="feed-menu">
+                  <summary class="feed-menu__toggle" aria-label="More">...
+                  <div class="feed-menu__panel">
+                    <button
+                      type="button"
+                      data-copy-link=@{PostR postId}
+                      class="feed-menu__item inline-flex items-center gap-2"
+                      >
+                      <span>🔗
+                      <span>Copy link
+                    $maybe _ <- mViewerId
+                      <button
+                        type="button"
+                        data-action-url=@{PostWatchR postId}
+                        data-action-type="post-watch"
+                        data-post-id=#{toPathPiece postId}
+                        data-watching=#{watchState postId}
+                        class="feed-menu__item inline-flex items-center gap-2"
+                        >
+                        <span data-watch-icon>#{watchIcon postId}
+                        <span data-watch-label>#{watchLabel postId}
+                      <button
+                        type="button"
+                        data-action-url=@{PostFlagR postId}
+                        data-action-type="post-flag"
+                        data-post-id=#{toPathPiece postId}
+                        class="feed-menu__item inline-flex items-center gap-2"
+                        >
+                        <span>⚑
+                        <span>Flag
+                      <button
+                        type="button"
+                        data-action-url=@{PostBlockR postId}
+                        data-action-type="post-block"
+                        data-post-id=#{toPathPiece postId}
+                        class="feed-menu__item inline-flex items-center gap-2"
+                        >
+                        <span>✕
+                        <span>Block
                     $nothing
-                      <a href=@{AuthR LoginR} class="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="bookmark">
-                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1z">
+                      <a href=@{AuthR LoginR} class="feed-menu__item inline-flex items-center gap-2 text-slate-700">
+                        <span>👁
+                        <span>Watch
+                      <a href=@{AuthR LoginR} class="feed-menu__item inline-flex items-center gap-2 text-slate-700">
+                        <span>⚑
+                        <span>Flag
+                      <a href=@{AuthR LoginR} class="feed-menu__item inline-flex items-center gap-2 text-slate-700">
+                        <span>✕
+                        <span>Block
+
+              <div class="mt-3 flex items-center justify-between text-sm">
+                <div class="flex items-center gap-4 text-slate-500">
+                  <a href=@{PostR postId} class="inline-flex items-center gap-1.5 hover:text-slate-700">
+                    <span>💬
+                    <span>#{commentCountFor postId}
+                  $maybe _ <- mViewerId
+                    <div class="relative" data-reaction-wrap>
+                      <button
+                        type="button"
+                        data-reaction-toggle
+                        data-post-id=#{toPathPiece postId}
+                        class="inline-flex items-center gap-1.5 rounded-md px-1 py-0.5 hover:bg-slate-100 hover:text-slate-800"
+                        aria-label="Add reaction"
+                        >
+                        <span>🙂
+                      <div data-reaction-picker data-post-id=#{toPathPiece postId} class="absolute bottom-[calc(100%+10px)] left-0 z-20 hidden min-w-[340px] rounded-full border border-slate-200 bg-white px-2 py-1.5 shadow-lg">
+                        <div class="flex flex-wrap items-center gap-1">
+                          $forall emoji <- reactionEmojiOptions
+                            <button
+                              type="button"
+                              data-action-url=@{PostReactR postId}
+                              data-action-type="post-react"
+                              data-post-id=#{toPathPiece postId}
+                              data-emoji=#{emoji}
+                              class="inline-flex h-8 w-8 items-center justify-center rounded-full text-base transition hover:bg-slate-100"
+                              :viewerReactionFor postId == Just emoji:class="bg-slate-900 text-white hover:bg-slate-800"
+                              >
+                              #{emoji}
+                  $nothing
+                    <a href=@{AuthR LoginR} class="inline-flex items-center gap-1.5 rounded-md px-1 py-0.5 hover:bg-slate-100 hover:text-slate-800">🙂
+                  <div data-reaction-summary data-post-id=#{toPathPiece postId} class="flex items-center gap-1.5">
+                    $forall (emoji, count) <- reactionSummaryFor postId
+                      <span class="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-sm text-slate-700">
+                        <span>#{emoji}
+                        <span>#{count}
+                $maybe _ <- mViewerId
+                  <button
+                    type="button"
+                    data-action-url=@{PostBookmarkR postId}
+                    data-action-type="post-bookmark"
+                    data-post-id=#{toPathPiece postId}
+                    data-bookmarked=#{bookmarkState postId}
+                    class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                    aria-label="Bookmark"
+                    >
+                    <svg data-bookmark-icon viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1z" fill="none">
+                $nothing
+                  <span class="inline-flex h-7 w-7 items-center justify-center text-slate-400" aria-label="Bookmark">
+                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1z" fill="none">

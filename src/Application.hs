@@ -42,13 +42,17 @@ import System.Log.FastLogger                (defaultBufSize, newStdoutLoggerSet,
 import Handler.Common
 import Handler.Forum.Boards
 import Handler.Forum.Home
+import Handler.Forum.Jobs
+import Handler.Forum.Chats
+import Handler.Forum.Notifications
 import Handler.Forum.Bookmarks
+import Handler.Forum.Settings
+import Handler.Forum.User
 import Handler.Forum.Board
 import Handler.Forum.Comment
 import Handler.Forum.Post
 import Handler.Upload
-import Handler.Register hiding (normalizeBcryptHash)
-import Handler.Forum.Thread
+import Handler.Register
 import Handler.Admin
 import Handler.Profile
 import Storage (mkStorage, storageBackendType)
@@ -108,8 +112,7 @@ makeFoundation appSettings = do
 
 seedDefaults :: SqlPersistT (LoggingT IO) ()
 seedDefaults = do
-    void $ insertBy $ Board "general" (Just "General discussion") 0 0 0
-    void $ insertBy $ SiteSetting "thread_preview_chars" "200"
+    void $ insertBy $ Board "general" (Just "General discussion") 0 0
     seedAdmin
 
 seedAdmin :: SqlPersistT (LoggingT IO) ()

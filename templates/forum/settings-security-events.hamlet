@@ -1,0 +1,13 @@
+<section class="flex h-full min-h-0 flex-col bg-white">
+  <header class="shrink-0 border-b border-slate-200 px-4 py-3">
+    <div class="flex items-center gap-3">
+      <a href=@{SettingsR} class="inline-flex h-8 w-8 items-center justify-center rounded-full text-2xl text-slate-700 transition hover:bg-slate-100">←
+      <h1 class="text-4xl font-semibold text-slate-900">Security Events
+
+  <div class="min-h-0 flex-1 overflow-y-auto">
+    <div class="divide-y divide-slate-200 border-b border-slate-200">
+      $forall row <- securityEventRows
+        <div class="flex items-center justify-between gap-4 px-4 py-3">
+          <span class="text-[2rem] font-medium leading-none text-slate-900">#{securityEventLabel row}
+          <span class="shrink-0 text-lg text-slate-500">#{securityEventPlatform row} #{securityEventWhen row}
+    <div class="py-6 text-center text-2xl text-slate-500">No more events to show

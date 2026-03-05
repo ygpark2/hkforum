@@ -3,19 +3,17 @@ module Foundation where
 
 import Import.NoFoundation hiding ((.), (++))
 import qualified Prelude as P
-import Database.Persist.Sql (ConnectionPool, runSqlPool, toSqlKey)
+import Database.Persist.Sql (ConnectionPool, runSqlPool)
 import qualified Data.Text as T
-import Text.Read (readMaybe)
+import qualified Data.Set as Set
 import Text.Hamlet          (hamletFile)
 import Text.Jasmine         (minifym)
-import Yesod.Auth
 import Yesod.Auth.HashDB     (HashDBUser(..), authHashDB)
 import Yesod.Auth.OAuth2.Google (oauth2Google)
 import Auth.OAuth2Providers  (oauth2Kakao, oauth2Naver)
 import Yesod.Default.Util   (addStaticContentExternal)
 import Storage              (Storage, StorageBackendType(..))
 
-import Yesod.Core            (getCurrentRoute)
 import Yesod.Core.Types     (Logger)
 import qualified Yesod.Core.Unsafe as Unsafe
 
@@ -100,6 +98,24 @@ instance Yesod App where
                 Nothing -> runDB $ selectList [] [Asc UserIdent, LimitTo 5]
                 Just viewerId -> runDB $ selectList [UserId !=. viewerId] [Asc UserIdent, LimitTo 5]
             else pure []
+        let suggestedIds = map entityKey layoutSuggestedUsers
+        layoutFollowingRows <- if showSidebarLayout
+            then case layoutMaybeAuth of
+                Nothing -> pure []
+                Just viewerId ->
+                    if P.null suggestedIds
+                        then pure []
+                        else runDB $ selectList [UserFollowFollower ==. viewerId, UserFollowFollowing <-. suggestedIds] []
+            else pure []
+        let layoutFollowingSet = Set.fromList $ map (userFollowFollowing P.. entityVal) layoutFollowingRows
+            layoutIsFollowing uid = Set.member uid layoutFollowingSet
+            layoutFollowState uid = if layoutIsFollowing uid then ("true" :: Text) else "false"
+            layoutFollowLabel uid = if layoutIsFollowing uid then ("Following" :: Text) else "Follow"
+        layoutUnreadNotificationCount <- if showSidebarLayout
+            then case layoutMaybeAuth of
+                Nothing -> pure (0 :: Int)
+                Just viewerId -> runDB $ count [NotificationUser ==. viewerId, NotificationIsRead ==. False]
+            else pure (0 :: Int)
         pc <- widgetToPageContent $ do
             $(widgetFile "layout/default-layout")
         withUrlRenderer $(hamletFile "templates/layout/default-layout-wrapper.hamlet")
@@ -117,7 +133,79 @@ instance Yesod App where
     isAuthorized (AuthR _) _ = return Authorized
     isAuthorized FaviconR _ = return Authorized
     isAuthorized RobotsR _ = return Authorized
+    isAuthorized JobsR isWrite =
+        if isWrite
+            then do
+                mUserId <- maybeAuthId
+                case mUserId of
+                    Nothing -> return AuthenticationRequired
+                    Just _ -> return Authorized
+            else return Authorized
+    isAuthorized ChatsR _ = return Authorized
+    isAuthorized ChatsNewR isWrite =
+        if isWrite
+            then do
+                mUserId <- maybeAuthId
+                case mUserId of
+                    Nothing -> return AuthenticationRequired
+                    Just _ -> return Authorized
+            else return Authorized
+    isAuthorized (ChatRoomR _) _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized (JobCloseR _) _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized NotificationsR _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized NotificationsReadAllR _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
     isAuthorized BookmarksR _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized (UserFollowR _) _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized (PostLikeR _) _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized (PostReactR _) _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized (PostBookmarkR _) _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized (PostWatchR _) _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized (PostFlagR _) _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized (PostBlockR _) _ = do
         mUserId <- maybeAuthId
         case mUserId of
             Nothing -> return AuthenticationRequired
@@ -127,7 +215,32 @@ instance Yesod App where
         case mUserId of
             Nothing -> return AuthenticationRequired
             Just _ -> return Authorized
-    isAuthorized (ThreadBookmarkR _) _ = do
+    isAuthorized SettingsR _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized SettingsAccountR _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized SettingsConnectionsR _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized SettingsBlockedAccountsR _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized SettingsSecurityEventsR _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
+    isAuthorized SettingsAboutR _ = do
         mUserId <- maybeAuthId
         case mUserId of
             Nothing -> return AuthenticationRequired

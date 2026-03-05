@@ -1,0 +1,5 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const messages = document.querySelector('[data-chat-messages]');
+  if (!messages) return;
+  messages.scrollTop = messages.scrollHeight;
+});
