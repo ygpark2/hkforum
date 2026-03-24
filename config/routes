@@ -6,6 +6,8 @@
 
 /home HomeR GET POST
 /boards BoardsR GET
+/companies CompaniesR GET POST
+/companies/categories CompanyCategoriesR POST
 /jobs JobsR GET POST
 /jobs/#JobId/close JobCloseR POST
 /chats ChatsR GET
@@ -42,6 +44,12 @@
 /admin/boards AdminBoardsR GET POST
 /admin/boards/new AdminBoardNewR GET
 /admin/boards/#BoardId/view AdminBoardR GET POST
+/admin/companies AdminCompaniesR GET POST
+/admin/companies/new AdminCompanyNewR GET
+/admin/companies/#CompanyId/view AdminCompanyR GET POST
+/admin/company-categories AdminCompanyCategoriesR GET POST
+/admin/company-categories/new AdminCompanyCategoryNewR GET
+/admin/company-categories/#CompanyGroupId/view AdminCompanyCategoryR GET POST
 /admin/users AdminUsersR GET POST
 /admin/users/new AdminUserNewR GET
 /admin/users/#UserId/view AdminUserR GET POST

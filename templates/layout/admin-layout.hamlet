@@ -3,6 +3,8 @@
     <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Admin
     <nav class="space-y-2 text-sm font-medium">
       <a href=@{AdminBoardsR} class="block rounded-lg px-3 py-2 #{menuClass "boards"}">Boards
+      <a href=@{AdminCompaniesR} class="block rounded-lg px-3 py-2 #{menuClass "companies"}">Companies
+      <a href=@{AdminCompanyCategoriesR} class="block rounded-lg px-3 py-2 #{menuClass "company-categories"}">Company Categories
       <a href=@{AdminUsersR} class="block rounded-lg px-3 py-2 #{menuClass "users"}">Users
       <a href=@{AdminSettingsR} class="block rounded-lg px-3 py-2 #{menuClass "settings"}">Settings
       <a href=@{AdminAdsR} class="block rounded-lg px-3 py-2 #{menuClass "ads"}">Ads
