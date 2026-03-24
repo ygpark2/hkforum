@@ -141,6 +141,19 @@ instance Yesod App where
                     Nothing -> return AuthenticationRequired
                     Just _ -> return Authorized
             else return Authorized
+    isAuthorized CompaniesR isWrite =
+        if isWrite
+            then do
+                mUserId <- maybeAuthId
+                case mUserId of
+                    Nothing -> return AuthenticationRequired
+                    Just _ -> return Authorized
+            else return Authorized
+    isAuthorized CompanyCategoriesR _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
     isAuthorized ChatsR _ = return Authorized
     isAuthorized ChatsNewR isWrite =
         if isWrite
@@ -250,6 +263,12 @@ instance Yesod App where
     isAuthorized AdminBoardsR _ = isAdmin
     isAuthorized AdminBoardNewR _ = isAdmin
     isAuthorized (AdminBoardR _) _ = isAdmin
+    isAuthorized AdminCompaniesR _ = isAdmin
+    isAuthorized AdminCompanyNewR _ = isAdmin
+    isAuthorized (AdminCompanyR _) _ = isAdmin
+    isAuthorized AdminCompanyCategoriesR _ = isAdmin
+    isAuthorized AdminCompanyCategoryNewR _ = isAdmin
+    isAuthorized (AdminCompanyCategoryR _) _ = isAdmin
     isAuthorized AdminUsersR _ = isAdmin
     isAuthorized AdminUserNewR _ = isAdmin
     isAuthorized (AdminUserR _) _ = isAdmin

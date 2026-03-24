@@ -36,6 +36,26 @@ Job
     updatedAt UTCTime
     deriving Typeable
 
+CompanyGroup
+    name Text
+    description Text Maybe
+    author UserId
+    createdAt UTCTime
+    UniqueCompanyGroup name
+    deriving Typeable
+
+Company
+    name Text
+    category CompanyGroupId
+    website Text Maybe
+    location Text Maybe
+    size Text Maybe
+    description Text
+    author UserId
+    createdAt UTCTime
+    updatedAt UTCTime
+    deriving Typeable
+
 ChatMessage
     content Text
     author UserId

@@ -23,6 +23,12 @@ $if showSidebarLayout
               <path d="M5 21V9h5v12">
               <path d="M14 21V5h5v16">
             <span>Boards
+          <a href=@{CompaniesR} class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium text-slate-700 transition hover:bg-white hover:text-slate-900">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="7" width="18" height="12" rx="2">
+              <path d="M7 7V5h10v2">
+              <path d="M3 12h18">
+            <span>Company
           <a href=@{JobsR} class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium text-slate-700 transition hover:bg-white hover:text-slate-900">
             <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="6" width="18" height="14" rx="2">
