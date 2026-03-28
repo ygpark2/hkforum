@@ -1,0 +1,43 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const countrySelect = document.getElementById('profile-country-code');
+  const stateSelect = document.getElementById('profile-state');
+  if (!countrySelect || !stateSelect) return;
+
+  const allStates = Array.from(stateSelect.querySelectorAll('option[data-country-code]')).map((option) => ({
+    countryCode: option.getAttribute('data-country-code') || '',
+    value: option.value,
+    label: option.textContent || '',
+  }));
+
+  const renderStates = (countryCode, selectedState) => {
+    stateSelect.innerHTML = '';
+
+    allStates
+      .filter((state) => state.countryCode === countryCode)
+      .forEach((state) => {
+        const option = document.createElement('option');
+        option.value = state.value;
+        option.textContent = state.label;
+        if (selectedState && selectedState === state.value) {
+          option.selected = true;
+        }
+        stateSelect.appendChild(option);
+      });
+
+    if (!selectedState) {
+      if (stateSelect.options.length > 0) {
+        stateSelect.selectedIndex = 0;
+      }
+    } else if (!Array.from(stateSelect.options).some((option) => option.value === selectedState)) {
+      if (stateSelect.options.length > 0) {
+        stateSelect.selectedIndex = 0;
+      }
+    }
+  };
+
+  renderStates(countrySelect.value, stateSelect.dataset.selectedState || stateSelect.value);
+
+  countrySelect.addEventListener('change', () => {
+    renderStates(countrySelect.value, '');
+  });
+});

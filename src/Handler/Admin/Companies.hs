@@ -157,6 +157,7 @@ getAdminCompanyCategoryR categoryId = do
 postAdminCompaniesR :: Handler Html
 postAdminCompaniesR = do
     adminId <- requireAuthId
+    admin <- runDB $ get404 adminId
     nameRaw <- runInputPost $ ireq textField "name"
     categoryId <- runInputPost $ ireq hiddenField "categoryId"
     mWebsite <- runInputPost $ iopt textField "website"
@@ -169,14 +170,29 @@ postAdminCompaniesR = do
         website = normalizeOptionalText mWebsite
         location = normalizeOptionalText mLocation
         size = normalizeOptionalText mSize
+        (mCountryCodeValue, mStateValue) = userRegionFields admin
     descriptionResult <- pure $ prepareCompanyDescription descriptionRaw
     if T.null name
         then setMessage "Company name is required."
-        else case descriptionResult of
-            Left err -> setMessage (preEscapedText err)
-            Right description -> do
-                _ <- runDB $ insert $ Company name categoryId website location size description adminId now now
-                setMessage "Company created."
+                else case descriptionResult of
+                    Left err -> setMessage (preEscapedText err)
+                    Right description -> do
+                        _ <- runDB $ insert Company
+                            { companyName = name
+                            , companyCategory = categoryId
+                            , companyWebsite = website
+                            , companyLocation = location
+                            , companySize = size
+                            , companyCountryCode = mCountryCodeValue
+                            , companyState = mStateValue
+                            , companyLatitude = Nothing
+                            , companyLongitude = Nothing
+                            , companyDescription = description
+                            , companyAuthor = adminId
+                            , companyCreatedAt = now
+                            , companyUpdatedAt = now
+                            }
+                        setMessage "Company created."
     redirect AdminCompaniesR
 
 postAdminCompanyR :: CompanyId -> Handler Html
@@ -295,3 +311,9 @@ normalizeOptionalText Nothing = Nothing
 normalizeOptionalText (Just raw) =
     let trimmed = T.strip raw
     in if T.null trimmed then Nothing else Just trimmed
+
+normalizeRegionField :: Maybe Text -> Maybe Text
+normalizeRegionField = normalizeOptionalText . fmap T.strip
+
+userRegionFields :: User -> (Maybe Text, Maybe Text)
+userRegionFields user = (normalizeRegionField (userCountryCode user), normalizeRegionField (userState user))

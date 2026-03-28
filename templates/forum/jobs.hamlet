@@ -4,6 +4,8 @@
       <div>
         <h1 class="text-3xl font-semibold text-slate-900">Jobs
         <p class="mt-1 text-sm text-slate-500">구인/구직 글을 확인하고 새로운 공고를 등록하세요.
+        $maybe notice <- localRegionNotice
+          <p class="mt-2 inline-flex rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">#{notice}
       $maybe _ <- mViewerId
         <button type="button" data-open="job-create-modal" class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-slate-800">New Job
       $nothing
@@ -18,6 +20,8 @@
         <form method=post action=@{JobsR} class="mt-4 space-y-4">
           $maybe tok <- mCsrfToken
             <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
+          <input id="job-latitude" type="hidden" name="latitude">
+          <input id="job-longitude" type="hidden" name="longitude">
           <div class="space-y-1">
             <label for="job-title" class="text-sm font-semibold text-slate-700">Title
             <input id="job-title" type="text" name="title" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="Backend Engineer">
@@ -48,6 +52,11 @@
           <div class="space-y-1">
             <label for="job-content" class="text-sm font-semibold text-slate-700">Description
             <textarea id="job-content" name="content" required rows="7" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="역할, 요구사항, 지원 방법을 적어주세요.">
+          <div class="space-y-1">
+            <label class="text-sm font-semibold text-slate-700">Coordinates
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" data-open-map-picker data-picker-title="Choose job coordinates" data-target-lat="job-latitude" data-target-lng="job-longitude" data-target-label="job-location-summary" class="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900">Choose on map
+              <span id="job-location-summary" data-location-summary class="text-sm text-slate-500">No coordinates selected
           <div class="flex justify-end gap-2 pt-1">
             <button type="submit" class="rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-2 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:from-slate-800 hover:to-slate-600">Post
             <button type="button" data-close="job-create-modal" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-900 hover:text-slate-900">Cancel

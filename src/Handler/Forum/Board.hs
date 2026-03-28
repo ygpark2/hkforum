@@ -14,7 +14,26 @@ import qualified Prelude as P
 getBoardR :: BoardId -> Handler Html
 getBoardR boardId = do
     board <- runDB $ get404 boardId
-    posts <- runDB $ selectList [PostBoard ==. boardId] [Desc PostCreatedAt]
+    mViewer <- maybeAuth
+    let mViewerId = entityKey <$> mViewer
+        localRegionFilterEnabled = maybe False (userLocalRegionOnly . entityVal) mViewer
+        mActiveLocalRegion = mViewer >>= (userRegionPair . entityVal)
+        localRegionNotice =
+            if localRegionFilterEnabled
+                then
+                    case mActiveLocalRegion of
+                        Just (countryCodeValue, stateValue) ->
+                            Just ("내 지역 필터 적용 중: " <> stateValue <> ", " <> countryCodeValue)
+                        Nothing ->
+                            Just ("프로필에 국가와 주를 저장해야 내 지역 필터를 사용할 수 있습니다." :: Text)
+                else Nothing
+    posts <-
+        case (localRegionFilterEnabled, mActiveLocalRegion) of
+            (True, Nothing) -> pure []
+            (True, Just (countryCodeValue, stateValue)) ->
+                runDB $ selectList [PostBoard ==. boardId, PostCountryCode ==. Just countryCodeValue, PostState ==. Just stateValue] [Desc PostCreatedAt]
+            (False, _) ->
+                runDB $ selectList [PostBoard ==. boardId] [Desc PostCreatedAt]
     let authorIds = L.nub $ map (postAuthor . entityVal) posts
     users <- if P.null authorIds
         then pure []
@@ -51,7 +70,6 @@ getBoardR boardId = do
         likeCountFor pid = Map.findWithDefault 0 pid likeCountMap
         viewCountFor pid = Map.findWithDefault 0 pid viewCountMap
         tagsFor pid = Map.findWithDefault [] pid tagsByPost
-    mViewerId <- maybeAuthId
     bookmarkedRows <- case mViewerId of
         Nothing -> pure []
         Just viewerId ->
@@ -81,23 +99,52 @@ getBoardR boardId = do
 postBoardR :: BoardId -> Handler Html
 postBoardR boardId = do
     userId <- requireAuthId
+    user <- runDB $ get404 userId
     _ <- runDB $ get404 boardId
     titleRaw <- runInputPost $ ireq textField "title"
     mTags <- runInputPost $ iopt textField "tags"
+    mLatitude <- runInputPost $ iopt doubleField "latitude"
+    mLongitude <- runInputPost $ iopt doubleField "longitude"
     contentRaw <- runInputPost $ ireq textField "content"
     let title = T.strip titleRaw
         content = T.strip contentRaw
     when (T.null title) $ invalidArgs ["title is required"]
     when (T.null content) $ invalidArgs ["content is required"]
+    (mLatitudeValue, mLongitudeValue) <- requireCoordinatePair mLatitude mLongitude
+    let (mCountryCodeValue, mStateValue) = userRegionFields user
     now <- liftIO getCurrentTime
     postId <- runDB $ insert Post
         { postTitle = title
         , postContent = content
         , postAuthor = userId
         , postBoard = boardId
+        , postCountryCode = mCountryCodeValue
+        , postState = mStateValue
+        , postLatitude = mLatitudeValue
+        , postLongitude = mLongitudeValue
         , postCreatedAt = now
         , postUpdatedAt = now
         }
     runDB $ syncPostTags postId (parseTagList mTags)
     runDB $ update boardId [BoardPostCount +=. 1]
     redirect $ BoardR boardId
+
+requireCoordinatePair :: Maybe Double -> Maybe Double -> Handler (Maybe Double, Maybe Double)
+requireCoordinatePair Nothing Nothing = pure (Nothing, Nothing)
+requireCoordinatePair (Just lat) (Just lng) = pure (Just lat, Just lng)
+requireCoordinatePair _ _ = invalidArgs ["latitude and longitude must be provided together"]
+
+normalizeRegionField :: Maybe Text -> Maybe Text
+normalizeRegionField Nothing = Nothing
+normalizeRegionField (Just raw) =
+    let trimmed = T.strip raw
+    in if T.null trimmed then Nothing else Just trimmed
+
+userRegionFields :: User -> (Maybe Text, Maybe Text)
+userRegionFields user = (normalizeRegionField (userCountryCode user), normalizeRegionField (userState user))
+
+userRegionPair :: User -> Maybe (Text, Text)
+userRegionPair user =
+    case userRegionFields user of
+        (Just countryCodeValue, Just stateValue) -> Just (countryCodeValue, stateValue)
+        _ -> Nothing

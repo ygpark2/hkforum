@@ -4,7 +4,28 @@ User
     role Text default='user'
     name Text Maybe
     description Text Maybe
+    countryCode Text Maybe
+    state Text Maybe
+    localRegionOnly Bool default=False
+    latitude Double Maybe
+    longitude Double Maybe
     UniqueUser ident
+    deriving Typeable
+Country
+    code Text
+    name Text
+    localName Text Maybe
+    sortOrder Int default=0
+    UniqueCountryCode code
+    deriving Typeable
+CountryState
+    countryCode Text
+    code Text
+    name Text
+    localName Text Maybe
+    stateType Text Maybe
+    sortOrder Int default=0
+    UniqueCountryStateCode countryCode code
     deriving Typeable
 Email
     email Text
@@ -30,6 +51,10 @@ Job
     experience Text Maybe
     location Text Maybe
     employmentType Text Maybe
+    countryCode Text Maybe
+    state Text Maybe
+    latitude Double Maybe
+    longitude Double Maybe
     content Text
     author UserId
     createdAt UTCTime
@@ -54,6 +79,10 @@ Company
     website Text Maybe
     location Text Maybe
     size Text Maybe
+    countryCode Text Maybe
+    state Text Maybe
+    latitude Double Maybe
+    longitude Double Maybe
     description Text
     author UserId
     createdAt UTCTime
@@ -86,6 +115,10 @@ Post
     content Text
     author UserId
     board BoardId
+    countryCode Text Maybe
+    state Text Maybe
+    latitude Double Maybe
+    longitude Double Maybe
     createdAt UTCTime
     updatedAt UTCTime
     deriving Typeable

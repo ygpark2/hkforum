@@ -13,6 +13,9 @@
       <div class="flex items-center gap-1.5">
         <button type="button" data-open="home-tab-settings-drawer" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-900" aria-label="Edit tab">⚙
         <button type="button" data-open="home-tab-modal" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-700 transition hover:bg-slate-100 hover:text-slate-900" aria-label="Add tab">+
+    $maybe notice <- localRegionNotice
+      <div class="mt-2">
+        <span class="inline-flex rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">#{notice}
 
   <dialog
     id="home-tab-settings-drawer"

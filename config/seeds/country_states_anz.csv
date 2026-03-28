@@ -1,0 +1,26 @@
+country_code,country_name,state_code,state_name,state_name_local,state_type,sort_order
+AUS,Australia,NSW,New South Wales,New South Wales,state,1
+AUS,Australia,VIC,Victoria,Victoria,state,2
+AUS,Australia,QLD,Queensland,Queensland,state,3
+AUS,Australia,SA,South Australia,South Australia,state,4
+AUS,Australia,WA,Western Australia,Western Australia,state,5
+AUS,Australia,TAS,Tasmania,Tasmania,state,6
+AUS,Australia,NT,Northern Territory,Northern Territory,territory,7
+AUS,Australia,ACT,Australian Capital Territory,Australian Capital Territory,territory,8
+NZL,New Zealand,NTL,Northland,Northland,region,1
+NZL,New Zealand,AUK,Auckland,Auckland,region,2
+NZL,New Zealand,WKO,Waikato,Waikato,region,3
+NZL,New Zealand,BOP,Bay of Plenty,Bay of Plenty,region,4
+NZL,New Zealand,GIS,Gisborne,Gisborne,region,5
+NZL,New Zealand,HKB,Hawke's Bay,Hawke's Bay,region,6
+NZL,New Zealand,TKI,Taranaki,Taranaki,region,7
+NZL,New Zealand,MWT,Manawatu-Whanganui,Manawatū-Whanganui,region,8
+NZL,New Zealand,WGN,Wellington,Wellington,region,9
+NZL,New Zealand,TAS,Tasman,Tasman,region,10
+NZL,New Zealand,NSN,Nelson,Nelson,unitary_authority,11
+NZL,New Zealand,MBH,Marlborough,Marlborough,unitary_authority,12
+NZL,New Zealand,WTC,West Coast,West Coast,region,13
+NZL,New Zealand,CAN,Canterbury,Canterbury,region,14
+NZL,New Zealand,OTA,Otago,Otago,region,15
+NZL,New Zealand,STL,Southland,Southland,region,16
+NZL,New Zealand,CIT,Chatham Islands,Chatham Islands,territory,17

@@ -22,6 +22,17 @@ getCompaniesR = do
     req <- getRequest
     let mCsrfToken = reqToken req
     mViewer <- maybeAuth
+    let localRegionFilterEnabled = maybe False (userLocalRegionOnly . entityVal) mViewer
+        mActiveLocalRegion = mViewer >>= (userRegionPair . entityVal)
+        localRegionNotice =
+            if localRegionFilterEnabled
+                then
+                    case mActiveLocalRegion of
+                        Just (countryCodeValue, stateValue) ->
+                            Just ("내 지역 필터 적용 중: " <> stateValue <> ", " <> countryCodeValue)
+                        Nothing ->
+                            Just ("프로필에 국가와 주를 저장해야 내 지역 필터를 사용할 수 있습니다." :: Text)
+                else Nothing
     mSelectedMajorParam <- lookupGetParam "major"
     mSelectedCategoryParam <- lookupGetParam "category"
     categories <- runDB $ selectList [CompanyGroupIsSystem ==. True] [Asc CompanyGroupSortOrder, Asc CompanyGroupName]
@@ -48,9 +59,18 @@ getCompaniesR = do
                         Nothing -> categories
         visibleCategoryIds = map entityKey visibleCategories
     companies <-
-        if P.null visibleCategoryIds
+        if P.null visibleCategoryIds || (localRegionFilterEnabled && isNothing mActiveLocalRegion)
             then pure []
-            else runDB $ selectList [CompanyCategory <-. visibleCategoryIds] [Desc CompanyCreatedAt, Desc CompanyUpdatedAt, Asc CompanyName]
+            else do
+                let baseFilters = [CompanyCategory <-. visibleCategoryIds]
+                    regionFilters =
+                        case (localRegionFilterEnabled, mActiveLocalRegion) of
+                            (True, Just (countryCodeValue, stateValue)) ->
+                                [ CompanyCountryCode ==. Just countryCodeValue
+                                , CompanyState ==. Just stateValue
+                                ]
+                            _ -> []
+                runDB $ selectList (baseFilters <> regionFilters) [Desc CompanyCreatedAt, Desc CompanyUpdatedAt, Asc CompanyName]
     now <- liftIO getCurrentTime
     let authorIds = L.nub $ map (companyAuthor . entityVal) companies
     users <-
@@ -95,11 +115,14 @@ getCompaniesR = do
 postCompaniesR :: Handler Html
 postCompaniesR = do
     userId <- requireAuthId
+    user <- runDB $ get404 userId
     nameRaw <- runInputPost $ ireq textField "name"
     categoryIdRaw <- runInputPost $ ireq textField "categoryId"
     mWebsiteRaw <- runInputPost $ iopt textField "website"
     mLocationRaw <- runInputPost $ iopt textField "location"
     mSizeRaw <- runInputPost $ iopt textField "size"
+    mLatitude <- runInputPost $ iopt doubleField "latitude"
+    mLongitude <- runInputPost $ iopt doubleField "longitude"
     descriptionRaw <- runInputPost $ ireq textField "description"
     categoryId <-
         case fromPathPiece categoryIdRaw of
@@ -117,6 +140,8 @@ postCompaniesR = do
             Left err -> invalidArgs [err]
             Right value -> pure value
     when (T.null name) $ invalidArgs ["name is required"]
+    (mLatitudeValue, mLongitudeValue) <- requireCoordinatePair mLatitude mLongitude
+    let (mCountryCodeValue, mStateValue) = userRegionFields user
     now <- liftIO getCurrentTime
     _ <- runDB $ insert Company
         { companyName = name
@@ -124,6 +149,10 @@ postCompaniesR = do
         , companyWebsite = mWebsite
         , companyLocation = mLocation
         , companySize = mSize
+        , companyCountryCode = mCountryCodeValue
+        , companyState = mStateValue
+        , companyLatitude = mLatitudeValue
+        , companyLongitude = mLongitudeValue
         , companyDescription = description
         , companyAuthor = userId
         , companyCreatedAt = now
@@ -164,3 +193,20 @@ normalizeOptionalText Nothing = Nothing
 normalizeOptionalText (Just raw) =
     let trimmed = T.strip raw
     in if T.null trimmed then Nothing else Just trimmed
+
+normalizeRegionField :: Maybe Text -> Maybe Text
+normalizeRegionField = normalizeOptionalText . fmap T.strip
+
+userRegionFields :: User -> (Maybe Text, Maybe Text)
+userRegionFields user = (normalizeRegionField (userCountryCode user), normalizeRegionField (userState user))
+
+userRegionPair :: User -> Maybe (Text, Text)
+userRegionPair user =
+    case userRegionFields user of
+        (Just countryCodeValue, Just stateValue) -> Just (countryCodeValue, stateValue)
+        _ -> Nothing
+
+requireCoordinatePair :: Maybe Double -> Maybe Double -> Handler (Maybe Double, Maybe Double)
+requireCoordinatePair Nothing Nothing = pure (Nothing, Nothing)
+requireCoordinatePair (Just lat) (Just lng) = pure (Just lat, Just lng)
+requireCoordinatePair _ _ = invalidArgs ["latitude and longitude must be provided together"]

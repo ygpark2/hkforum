@@ -20,6 +20,9 @@ import Company.Categories                   (CompanyMinorCategory, companyMinorC
                                              companyMinorCategoryMajorName, companyMinorCategoryName,
                                              companyMinorCategorySortOrder,
                                              loadAllCompanyMinorCategories)
+import Location.Regions                     (CountrySeed (..), CountryStateSeed (..),
+                                             countrySeedsForSuffixes,
+                                             countryStateSeedsForSuffixes)
 import Data.Int                             (Int64)
 import Database.Persist.Sql                 (Single (..), rawExecute, rawSql)
 import Database.Persist.Sqlite              (createSqlitePool, runSqlPool,
@@ -51,6 +54,7 @@ import Handler.Forum.Boards
 import Handler.Company.Companies
 import Handler.Home
 import Handler.Job.Jobs
+import Handler.Map
 import Handler.Chat.Chats
 import Handler.Notification.Notifications
 import Handler.Forum.Bookmarks
@@ -113,11 +117,20 @@ makeFoundation appSettings = do
         (sqlPoolSize dbConf)
 
     companyMinorCategories <- loadAllCompanyMinorCategories
+    let locationSeedSuffixes = appLocationRegionSeedSuffixes appSettings
+    countries <-
+        case countrySeedsForSuffixes locationSeedSuffixes of
+            Left err -> error (unpack err)
+            Right values -> pure values
+    states <-
+        case countryStateSeedsForSuffixes locationSeedSuffixes of
+            Left err -> error (unpack err)
+            Right values -> pure values
 
     -- Perform database migration using our application's logging settings.
     runLoggingT
         ( runSqlPool
-            (prepareCompanyGroupSchemaForCodeNotNull companyMinorCategories >> runMigration migrateAll >> seedDefaults companyMinorCategories)
+            (prepareCompanyGroupSchemaForCodeNotNull companyMinorCategories >> runMigration migrateAll >> seedDefaults companyMinorCategories countries states)
             pool
         )
         logFunc
@@ -125,12 +138,51 @@ makeFoundation appSettings = do
     -- Return the foundation
     return $ mkFoundation pool
 
-seedDefaults :: [CompanyMinorCategory] -> SqlPersistT (LoggingT IO) ()
-seedDefaults companyMinorCategories = do
+seedDefaults :: [CompanyMinorCategory] -> [CountrySeed] -> [CountryStateSeed] -> SqlPersistT (LoggingT IO) ()
+seedDefaults companyMinorCategories countries states = do
     void $ insertBy $ Board "general" (Just "General discussion") 0 0
     adminId <- seedAdmin
+    seedCountries countries
+    seedCountryStates states
     seedSystemCompanyGroups companyMinorCategories adminId
     ensureAllCompanyGroupsHaveCodes
+
+seedCountries :: [CountrySeed] -> SqlPersistT (LoggingT IO) ()
+seedCountries countries =
+    forM_ countries $ \country ->
+        void $
+            upsertBy
+            (UniqueCountryCode (countrySeedCode country))
+            (Country
+                (countrySeedCode country)
+                (countrySeedName country)
+                (countrySeedLocalName country)
+                (countrySeedSortOrder country)
+            )
+            [ CountryName =. countrySeedName country
+            , CountryLocalName =. countrySeedLocalName country
+            , CountrySortOrder =. countrySeedSortOrder country
+            ]
+
+seedCountryStates :: [CountryStateSeed] -> SqlPersistT (LoggingT IO) ()
+seedCountryStates states =
+    forM_ states $ \stateSeed ->
+        void $
+            upsertBy
+            (UniqueCountryStateCode (countryStateSeedCountryCode stateSeed) (countryStateSeedCode stateSeed))
+            (CountryState
+                (countryStateSeedCountryCode stateSeed)
+                (countryStateSeedCode stateSeed)
+                (countryStateSeedName stateSeed)
+                (countryStateSeedLocalName stateSeed)
+                (countryStateSeedType stateSeed)
+                (countryStateSeedSortOrder stateSeed)
+            )
+            [ CountryStateName =. countryStateSeedName stateSeed
+            , CountryStateLocalName =. countryStateSeedLocalName stateSeed
+            , CountryStateStateType =. countryStateSeedType stateSeed
+            , CountryStateSortOrder =. countryStateSeedSortOrder stateSeed
+            ]
 
 prepareCompanyGroupSchemaForCodeNotNull :: [CompanyMinorCategory] -> SqlPersistT (LoggingT IO) ()
 prepareCompanyGroupSchemaForCodeNotNull companyMinorCategories = do
@@ -162,7 +214,7 @@ seedAdmin = do
             update userId [UserRole =. "admin"]
             pure userId
         Nothing -> do
-            user <- liftIO $ setPassword "1234" (User "ygpark2" Nothing "admin" Nothing Nothing)
+            user <- liftIO $ setPassword "1234" (User "ygpark2" Nothing "admin" Nothing Nothing Nothing Nothing False Nothing Nothing)
             insert user
 
 seedSystemCompanyGroups :: [CompanyMinorCategory] -> UserId -> SqlPersistT (LoggingT IO) ()

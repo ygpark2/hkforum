@@ -1,0 +1,18 @@
+country_code,country_name,state_code,state_name,state_name_local,state_type,sort_order
+KOR,South Korea,11,Seoul,서울특별시,special_city,1
+KOR,South Korea,26,Busan,부산광역시,metropolitan_city,2
+KOR,South Korea,27,Daegu,대구광역시,metropolitan_city,3
+KOR,South Korea,28,Incheon,인천광역시,metropolitan_city,4
+KOR,South Korea,29,Gwangju,광주광역시,metropolitan_city,5
+KOR,South Korea,30,Daejeon,대전광역시,metropolitan_city,6
+KOR,South Korea,31,Ulsan,울산광역시,metropolitan_city,7
+KOR,South Korea,36,Sejong,세종특별자치시,special_self_governing_city,8
+KOR,South Korea,41,Gyeonggi-do,경기도,province,9
+KOR,South Korea,42,Gangwon-do,강원특별자치도,special_self_governing_province,10
+KOR,South Korea,43,Chungcheongbuk-do,충청북도,province,11
+KOR,South Korea,44,Chungcheongnam-do,충청남도,province,12
+KOR,South Korea,45,Jeonbuk-do,전북특별자치도,special_self_governing_province,13
+KOR,South Korea,46,Jeollanam-do,전라남도,province,14
+KOR,South Korea,47,Gyeongsangbuk-do,경상북도,province,15
+KOR,South Korea,48,Gyeongsangnam-do,경상남도,province,16
+KOR,South Korea,50,Jeju-do,제주특별자치도,special_self_governing_province,17

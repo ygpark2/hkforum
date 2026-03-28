@@ -154,6 +154,7 @@ instance Yesod App where
         case mUserId of
             Nothing -> return AuthenticationRequired
             Just _ -> return Authorized
+    isAuthorized MapMarkersR _ = return Authorized
     isAuthorized UploadR _ = do
         mUserId <- maybeAuthId
         case mUserId of
@@ -345,7 +346,9 @@ instance YesodAuth App where
         mUser <- getBy $ UniqueUser ident
         case mUser of
             Just (Entity userId _) -> return $ Authenticated userId
-            Nothing -> Authenticated <$> insert (User ident Nothing "user" Nothing Nothing)
+            Nothing ->
+                Authenticated <$> insert
+                    (User ident Nothing "user" Nothing Nothing Nothing Nothing False Nothing Nothing)
 
 instance YesodAuthPersist App where
     type AuthEntity App = User

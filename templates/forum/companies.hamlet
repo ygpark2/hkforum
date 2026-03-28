@@ -4,6 +4,8 @@
       <div>
         <h1 class="text-3xl font-semibold text-slate-900">Company
         <p class="mt-1 text-sm text-slate-500">대분류와 세부 분류로 회사를 찾고, 최신 등록 기업부터 바로 확인하세요.
+        $maybe notice <- localRegionNotice
+          <p class="mt-2 inline-flex rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">#{notice}
       <div class="flex flex-wrap gap-2">
         $maybe _ <- viewerId
           $if P.null categories
@@ -13,26 +15,25 @@
         $nothing
           <a href=@{AuthR LoginR} class="rounded-lg border border-slate-900 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-900 transition hover:bg-slate-900 hover:text-white">Login to register
 
-    <form id="company-filter-form" method=get action=@{CompaniesR} class="mt-4 grid gap-3 lg:max-w-3xl">
-      <div class="grid gap-3 md:grid-cols-2">
-        <div class="space-y-1">
-          <label for="company-major-filter" class="text-sm font-semibold text-slate-700">대분류
-          <select id="company-major-filter" name="major" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
-            <option value="">전체 대분류
-            $forall major <- companyMajorCategories
-              <option value=#{companyMajorCategoryCode major} :selectedMajorCode == Just (companyMajorCategoryCode major):selected>#{companyMajorCategoryName major}
-        <div class="space-y-1">
-          <label for="company-category-filter" class="text-sm font-semibold text-slate-700">분류
-          <select id="company-category-filter" name="category" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
-            <option value="">전체 분류
-            $forall Entity categoryId category <- categories
-              <option
-                value=#{toPathPiece categoryId}
-                data-major-code=#{fromMaybe "" (companyGroupMajorCode category)}
-                :selectedCategoryId == Just categoryId:selected
-                >
-                #{categoryLabel category}
-      <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+    <form id="company-filter-form" method=get action=@{CompaniesR} class="mt-4 grid grid-cols-2 gap-3 lg:max-w-3xl">
+      <div class="space-y-1">
+        <label for="company-major-filter" class="text-sm font-semibold text-slate-700">대분류
+        <select id="company-major-filter" name="major" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
+          <option value="">전체 대분류
+          $forall major <- companyMajorCategories
+            <option value=#{companyMajorCategoryCode major} :selectedMajorCode == Just (companyMajorCategoryCode major):selected>#{companyMajorCategoryName major}
+      <div class="space-y-1">
+        <label for="company-category-filter" class="text-sm font-semibold text-slate-700">분류
+        <select id="company-category-filter" name="category" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
+          <option value="">전체 분류
+          $forall Entity categoryId category <- categories
+            <option
+              value=#{toPathPiece categoryId}
+              data-major-code=#{fromMaybe "" (companyGroupMajorCode category)}
+              :selectedCategoryId == Just categoryId:selected
+              >
+              #{categoryLabel category}
+      <div class="col-span-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
         <span class="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-700">#{length companies} companies
         $maybe major <- selectedMajor
           <span>#{companyMajorCategoryName major}
@@ -58,6 +59,8 @@
               <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
             <input id="company-category-id" type=hidden name="categoryId">
             <input id="company-description-input" type=hidden name="description">
+            <input id="company-latitude" type=hidden name="latitude">
+            <input id="company-longitude" type=hidden name="longitude">
             <div class="grid gap-3 md:grid-cols-2">
               <div class="space-y-1">
                 <label for="company-major-input" class="text-sm font-semibold text-slate-700">대분류
@@ -89,6 +92,11 @@
             <div class="space-y-1">
               <label for="company-size" class="text-sm font-semibold text-slate-700">Team size
               <input id="company-size" type="text" name="size" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="51-200">
+            <div class="space-y-1">
+              <label class="text-sm font-semibold text-slate-700">Coordinates
+              <div class="flex flex-wrap items-center gap-2">
+                <button type="button" data-open-map-picker data-picker-title="Choose company coordinates" data-target-lat="company-latitude" data-target-lng="company-longitude" data-target-label="company-location-summary" class="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900">Choose on map
+                <span id="company-location-summary" data-location-summary class="text-sm text-slate-500">No coordinates selected
             <div class="space-y-1">
               <div class="flex items-center justify-between gap-3">
                 <label for="company-description-editor" class="text-sm font-semibold text-slate-700">Description

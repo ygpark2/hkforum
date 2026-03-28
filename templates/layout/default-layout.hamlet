@@ -34,6 +34,12 @@ $if showSidebarLayout
               <rect x="3" y="6" width="18" height="14" rx="2">
               <path d="M8 6V4h8v2">
             <span>Jobs
+          <button type="button" data-open-map-browser class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[16px] font-medium text-slate-700 transition hover:bg-white hover:text-slate-900">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2V6Z">
+              <path d="M9 4v14">
+              <path d="M15 6v14">
+            <span>Map
           <a href=@{ChatsR} class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium text-slate-700 transition hover:bg-white hover:text-slate-900">
             <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M4 6h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H8l-4 3v-3H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z">
@@ -238,8 +244,36 @@ $if showSidebarLayout
             <div class="space-y-1">
               <label for="global-post-tags" class="text-sm font-semibold text-slate-700">Tags
               <input id="global-post-tags" name="tags" type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="tag1, tag2">
+            <div class="space-y-2">
+              <div class="text-sm font-semibold text-slate-700">Location
+              <input id="global-post-latitude" type="hidden" name="latitude">
+              <input id="global-post-longitude" type="hidden" name="longitude">
+              <div class="flex items-center gap-3">
+                <button type="button" data-open-map-picker data-picker-title="Choose post coordinates" data-target-lat="global-post-latitude" data-target-lng="global-post-longitude" data-target-label="global-post-location-summary" class="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900">Choose on map
+                <span id="global-post-location-summary" data-location-summary class="text-sm text-slate-500">No coordinates selected
             <div class="flex justify-end gap-2 pt-1">
               <button type="submit" class="rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-2 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:from-slate-800 hover:to-slate-600">Publish post
               <button type="button" data-close="global-post-modal" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-900 hover:text-slate-900">Cancel
+      $with googleMapsApiKey <- fromMaybe "" (appGoogleMapsApiKey (appSettings master))
+        <dialog id="global-map-modal" data-modal="global-map-modal" data-google-maps-key=#{googleMapsApiKey} data-markers-url=@{MapMarkersR} class="w-[min(92vw,70rem)] max-w-[92vw] rounded-2xl p-0 backdrop:bg-slate-900/40" style="position:fixed;inset:0;margin:auto;">
+          <div class="rounded-2xl bg-white p-6 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 data-map-modal-title class="text-lg font-semibold text-slate-900">Map
+                <p class="text-sm text-slate-500">Browse saved locations or choose a point for your post.
+              <button type="button" data-close="global-map-modal" class="rounded-xl border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-900 hover:text-slate-900">Close
+            <div class="mt-4 space-y-3">
+              $if T.null googleMapsApiKey
+                <div data-map-status class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Set `GOOGLE_MAPS_API_KEY` to enable the map.
+              $else
+                <div data-map-status class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">Loading map...
+              <div data-map-canvas class="h-[26rem] rounded-2xl border border-slate-200 bg-slate-100">
+              <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <div>
+                  <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Selected coordinates
+                  <div data-map-selection-summary class="text-sm text-slate-700">No coordinates selected
+                <div class="flex items-center gap-2">
+                  <button type="button" data-map-clear-selection class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-900 hover:text-slate-900">Clear
+                  <button type="button" data-map-apply class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-slate-800">Use coordinates
 $else
   ^{widget}

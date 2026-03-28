@@ -7,6 +7,8 @@
       $maybe desc <- boardDescription board
         $if not (T.null (T.strip desc))
           <p class="text-sm text-slate-500">#{desc}
+      $maybe notice <- localRegionNotice
+        <p class="inline-flex rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">#{notice}
     $maybe _ <- mViewerId
       <button type="button" data-open="new-post-modal" class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-white">New post
     $nothing
@@ -21,6 +23,8 @@
         <form method=post action=@{BoardR boardId} class="mt-4 space-y-4">
           $maybe tok <- mCsrfToken
             <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
+          <input id="board-post-latitude" type="hidden" name="latitude">
+          <input id="board-post-longitude" type="hidden" name="longitude">
           <div class="space-y-1">
             <label class="text-sm font-semibold text-slate-700">Title
             <input type="text" name="title" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900" placeholder="Post title">
@@ -30,6 +34,11 @@
           <div class="space-y-1">
             <label class="text-sm font-semibold text-slate-700">Tags
             <input type="text" name="tags" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900" placeholder="tag1, tag2">
+          <div class="space-y-1">
+            <label class="text-sm font-semibold text-slate-700">Coordinates
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" data-open-map-picker data-picker-title="Choose post coordinates" data-target-lat="board-post-latitude" data-target-lng="board-post-longitude" data-target-label="board-post-location-summary" class="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900">Choose on map
+              <span id="board-post-location-summary" data-location-summary class="text-sm text-slate-500">No coordinates selected
           <div class="flex justify-end gap-2">
             <button type=submit class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white">Post
             <button type="button" data-close="new-post-modal" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">Cancel
