@@ -36,11 +36,224 @@ const prepareGlobalPostModal = () => {
   const form = document.querySelector('[data-global-post-form]');
   if (!form) return;
   form.reset();
+  if (globalPostQuill) {
+    globalPostQuill.setContents([]);
+  }
   const boardSelect = form.querySelector('select[name="boardId"]');
   if (boardSelect && boardSelect.options.length > 0) {
     boardSelect.selectedIndex = 0;
   }
   updateLocationSummary('global-post-latitude', 'global-post-longitude', 'global-post-location-summary');
+};
+
+let globalPostQuill = null;
+
+const initGlobalPostQuill = () => {
+  const form = document.querySelector('[data-global-post-form]');
+  const editorRoot = document.getElementById('global-post-description-editor');
+  const descriptionInput = document.getElementById('global-post-content-input');
+  const uploadUrl = form?.dataset.uploadUrl;
+  
+  if (!editorRoot || globalPostQuill) return;
+
+  const csrfInput = document.getElementById('csrf-token');
+  const csrfParam = csrfInput?.dataset.csrfParam;
+  const csrfToken = csrfInput?.value;
+
+  const instantiate = () => {
+    if (!window.Quill) return false;
+
+    globalPostQuill = new window.Quill('#global-post-description-editor', {
+      theme: 'snow',
+      modules: {
+        toolbar: {
+          container: '#global-post-description-toolbar',
+          handlers: {
+            image: async () => {
+              if (!uploadUrl) return;
+
+              const fileInput = document.createElement('input');
+              fileInput.type = 'file';
+              fileInput.accept = 'image/*';
+              fileInput.addEventListener('change', async () => {
+                const file = fileInput.files?.[0];
+                if (!file) return;
+
+                const body = new FormData();
+                body.append('file', file);
+                if (csrfParam && csrfToken) {
+                  body.append(csrfParam, csrfToken);
+                }
+
+                try {
+                  const response = await fetch(uploadUrl, {
+                    method: 'POST',
+                    body,
+                    headers: {
+                      Accept: 'application/json',
+                      'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                  });
+                  if (response.redirected && response.url.includes('/auth/')) {
+                    throw new Error('로그인이 필요합니다.');
+                  }
+
+                  const contentType = response.headers.get('content-type') || '';
+                  const payload = contentType.includes('application/json')
+                    ? await response.json()
+                    : { message: (await response.text()).slice(0, 200) };
+
+                  if (!response.ok) {
+                    throw new Error(
+                      payload.message ||
+                      payload.error ||
+                      (response.status === 401 || response.status === 403
+                        ? '로그인이 필요합니다.'
+                        : '업로드에 실패했습니다.')
+                    );
+                  }
+
+                  if (!payload.url) {
+                    throw new Error(payload.message || '업로드된 파일 URL이 없습니다.');
+                  }
+
+                  const range = globalPostQuill.getSelection(true);
+                  const index = range ? range.index : globalPostQuill.getLength();
+                  globalPostQuill.insertEmbed(index, 'image', payload.url, 'user');
+                  globalPostQuill.setSelection(index + 1, 0, 'silent');
+                } catch (error) {
+                  window.alert(error?.message || '이미지 업로드에 실패했습니다.');
+                }
+              }, { once: true });
+              fileInput.click();
+            }
+          }
+        }
+      },
+      placeholder: 'Share your thoughts'
+    });
+
+    return true;
+  };
+
+  if (!instantiate()) {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js';
+    script.onload = instantiate;
+    document.body.appendChild(script);
+  }
+
+  form?.addEventListener('submit', () => {
+    if (globalPostQuill && descriptionInput) {
+      descriptionInput.value = globalPostQuill.root.innerHTML;
+    }
+  });
+};
+
+let boardPostQuill = null;
+
+const initBoardPostQuill = () => {
+  const form = document.querySelector('[data-board-post-form]');
+  const editorRoot = document.getElementById('board-post-description-editor');
+  const descriptionInput = document.getElementById('board-post-content-input');
+  const uploadUrl = form?.dataset.uploadUrl;
+  
+  if (!editorRoot || boardPostQuill) return;
+
+  const csrfInput = document.getElementById('csrf-token');
+  const csrfParam = csrfInput?.dataset.csrfParam;
+  const csrfToken = csrfInput?.value;
+
+  const instantiate = () => {
+    if (!window.Quill) return false;
+
+    boardPostQuill = new window.Quill('#board-post-description-editor', {
+      theme: 'snow',
+      modules: {
+        toolbar: {
+          container: '#board-post-description-toolbar',
+          handlers: {
+            image: async () => {
+              if (!uploadUrl) return;
+
+              const fileInput = document.createElement('input');
+              fileInput.type = 'file';
+              fileInput.accept = 'image/*';
+              fileInput.addEventListener('change', async () => {
+                const file = fileInput.files?.[0];
+                if (!file) return;
+
+                const body = new FormData();
+                body.append('file', file);
+                if (csrfParam && csrfToken) {
+                  body.append(csrfParam, csrfToken);
+                }
+
+                try {
+                  const response = await fetch(uploadUrl, {
+                    method: 'POST',
+                    body,
+                    headers: {
+                      Accept: 'application/json',
+                      'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                  });
+                  if (response.redirected && response.url.includes('/auth/')) {
+                    throw new Error('로그인이 필요합니다.');
+                  }
+
+                  const contentType = response.headers.get('content-type') || '';
+                  const payload = contentType.includes('application/json')
+                    ? await response.json()
+                    : { message: (await response.text()).slice(0, 200) };
+
+                  if (!response.ok) {
+                    throw new Error(
+                      payload.message ||
+                      payload.error ||
+                      (response.status === 401 || response.status === 403
+                        ? '로그인이 필요합니다.'
+                        : '업로드에 실패했습니다.')
+                    );
+                  }
+
+                  if (!payload.url) {
+                    throw new Error(payload.message || '업로드된 파일 URL이 없습니다.');
+                  }
+
+                  const range = boardPostQuill.getSelection(true);
+                  const index = range ? range.index : boardPostQuill.getLength();
+                  boardPostQuill.insertEmbed(index, 'image', payload.url, 'user');
+                  boardPostQuill.setSelection(index + 1, 0, 'silent');
+                } catch (error) {
+                  window.alert(error?.message || '이미지 업로드에 실패했습니다.');
+                }
+              }, { once: true });
+              fileInput.click();
+            }
+          }
+        }
+      },
+      placeholder: 'Write your post...'
+    });
+
+    return true;
+  };
+
+  if (!instantiate()) {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js';
+    script.onload = instantiate;
+    document.body.appendChild(script);
+  }
+
+  form?.addEventListener('submit', () => {
+    if (boardPostQuill && descriptionInput) {
+      descriptionInput.value = boardPostQuill.root.innerHTML;
+    }
+  });
 };
 
 const MAP_MODAL_KEY = 'global-map-modal';
@@ -838,6 +1051,15 @@ const initHomeCustomTabs = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  const quillCssId = 'global-quill-theme';
+  if (!document.getElementById(quillCssId)) {
+    const link = document.createElement('link');
+    link.id = quillCssId;
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css';
+    document.head.appendChild(link);
+  }
+
   try {
     const savedTheme = window.localStorage ? localStorage.getItem(THEME_STORAGE_KEY) : null;
     if (savedTheme === 'dark' || savedTheme === 'light') {
@@ -849,6 +1071,8 @@ document.addEventListener('DOMContentLoaded', () => {
   syncThemeSwitches();
   initHomeCustomTabs();
   syncAllLocationSummaries();
+  initGlobalPostQuill();
+  initBoardPostQuill();
   const modal = getMapModal();
   if (modal) {
     modal.addEventListener('close', () => {

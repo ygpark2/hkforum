@@ -13,8 +13,8 @@
         $forall tag <- tags
           <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-600">##{tag}
 
-  <div class="forum-content-wrap whitespace-pre-wrap rounded-2xl border border-slate-200 bg-slate-50/60 p-4 text-sm text-slate-700" data-post-id=#{toPathPiece postId}>
-    #{postContent post}
+  <div class="ql-editor forum-content-wrap rounded-2xl border border-slate-200 bg-slate-50/60 p-4 text-sm text-slate-700" data-post-id=#{toPathPiece postId}>
+    #{preEscapedText (postContent post)}
 
   $maybe _ <- mViewerId
     <div class="flex items-center gap-2">

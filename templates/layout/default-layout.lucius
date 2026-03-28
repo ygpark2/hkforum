@@ -161,3 +161,31 @@
 .toast--error {
   background: #dc2626;
 }
+
+/* Quill Editor Base Styles */
+#global-post-description-editor-shell .ql-toolbar.ql-snow,
+#board-post-description-editor-shell .ql-toolbar.ql-snow {
+  border: 0;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+#global-post-description-editor-shell .ql-container.ql-snow,
+#board-post-description-editor-shell .ql-container.ql-snow {
+  border: 0;
+  font-size: 0.95rem;
+}
+
+#global-post-description-editor,
+#board-post-description-editor {
+  min-height: 240px;
+}
+
+/* Fix for Quill icons being huge due to lack of CSS or Tailwind resets */
+.ql-snow .ql-picker.ql-header {
+  width: 98px;
+}
+
+.ql-snow .ql-picker {
+  height: 24px;
+}

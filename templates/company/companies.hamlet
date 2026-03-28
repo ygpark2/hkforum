@@ -55,16 +55,16 @@
             <input id="company-description-input" type=hidden name="description">
             <input id="company-latitude" type=hidden name="latitude">
             <input id="company-longitude" type=hidden name="longitude">
-            <div class="grid gap-3 md:grid-cols-2">
+            <div class="grid gap-3 sm:grid-cols-2">
               <div class="space-y-1">
                 <label for="company-major-input" class="text-sm font-semibold text-slate-700">대분류
-                <select id="company-major-input" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
+                <select id="company-major-input" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
                   <option value="">대분류를 선택하세요
                   $forall major <- companyMajorCategories
                     <option value=#{companyMajorCategoryCode major} :selectedMajorCode == Just (companyMajorCategoryCode major):selected>#{companyMajorCategoryName major}
               <div class="space-y-1">
                 <label for="company-category-select" class="text-sm font-semibold text-slate-700">분류
-                <select id="company-category-select" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
+                <select id="company-category-select" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
                   <option value="">분류를 선택하세요
                   $forall Entity categoryId category <- categories
                     <option

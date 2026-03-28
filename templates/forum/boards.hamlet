@@ -137,7 +137,8 @@
                       <span class="font-semibold text-slate-900">#{authorName (postAuthor post)}
                       <span class="text-slate-500">@#{authorHandle (postAuthor post)}
                       <span class="text-slate-400">#{relativeTime (postCreatedAt post)}
-                    <a href=@{PostR postId} class="mt-1 block whitespace-pre-wrap break-words text-[17px] leading-7 text-slate-800 hover:text-slate-900">#{postContent post}
+                    <a href=@{PostR postId} class="ql-editor forum-content-wrap mt-1 block break-words text-[17px] leading-7 text-slate-800 hover:text-slate-900">
+                      #{preEscapedText (postContent post)}
                     $with tags <- tagsFor postId
                       $if not (P.null tags)
                         <div class="mt-2 flex flex-wrap gap-1.5">

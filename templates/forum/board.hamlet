@@ -20,17 +20,38 @@
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-semibold text-slate-900">New post
           <button type="button" data-close="new-post-modal" class="rounded-xl border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">Close
-        <form method=post action=@{BoardR boardId} class="mt-4 space-y-4">
+        <form method=post action=@{BoardR boardId} data-board-post-form data-upload-url=@{UploadR} class="mt-4 space-y-4">
           $maybe tok <- mCsrfToken
             <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
+          <input id="board-post-content-input" type=hidden name="content">
           <input id="board-post-latitude" type="hidden" name="latitude">
           <input id="board-post-longitude" type="hidden" name="longitude">
           <div class="space-y-1">
             <label class="text-sm font-semibold text-slate-700">Title
-            <input type="text" name="title" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900" placeholder="Post title">
+            <input type="text" name="title" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="Post title">
           <div class="space-y-1">
-            <label class="text-sm font-semibold text-slate-700">Content
-            <textarea name="content" required rows="8" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900" placeholder="Write your post...">
+            <div class="flex items-center justify-between gap-3">
+              <label for="board-post-description-editor" class="text-sm font-semibold text-slate-700">Content
+              <span class="text-xs text-slate-500">이미지 업로드 지원
+            <div id="board-post-description-editor-shell" class="overflow-hidden rounded-2xl border border-slate-200">
+              <div id="board-post-description-toolbar">
+                <span class="ql-formats">
+                  <select class="ql-header">
+                    <option selected>
+                    <option value="2">
+                    <option value="3">
+                  <select class="ql-align">
+                <span class="ql-formats">
+                  <button type="button" class="ql-bold">
+                  <button type="button" class="ql-italic">
+                  <button type="button" class="ql-underline">
+                <span class="ql-formats">
+                  <button type="button" class="ql-list" value="ordered">
+                  <button type="button" class="ql-list" value="bullet">
+                  <button type="button" class="ql-blockquote">
+                  <button type="button" class="ql-link">
+                  <button type="button" class="ql-image">
+              <div id="board-post-description-editor" class="min-h-[240px] bg-white">
           <div class="space-y-1">
             <label class="text-sm font-semibold text-slate-700">Tags
             <input type="text" name="tags" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900" placeholder="tag1, tag2">
@@ -54,7 +75,8 @@
         $forall Entity pId p <- posts
           <article class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4" data-post-id=#{toPathPiece pId}>
             <a href=@{PostR pId} class="text-lg font-semibold text-slate-900 hover:text-slate-700">#{postTitle p}
-            <p class="mt-1 break-all text-sm text-slate-700">#{postContent p}
+            <div class="ql-editor forum-content-wrap mt-1 break-all text-sm text-slate-700">
+              #{preEscapedText (postContent p)}
             <div class="mt-2 text-xs text-slate-500">
               By @#{authorName (postAuthor p)} · #{show (postCreatedAt p)} · #{commentCountFor pId} comments
             <div class="mt-1 text-xs text-slate-500">

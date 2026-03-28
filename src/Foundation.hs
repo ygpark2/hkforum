@@ -81,6 +81,8 @@ instance Yesod App where
                 Just AdminAdsR -> False
                 Just AdminAdNewR -> False
                 Just (AdminAdR _) -> False
+                Just RegisterR -> False
+                Just (AuthR LoginR) -> False
                 _ -> True
         layoutBoards <- if showSidebarLayout
             then runDB $ selectList [] [Asc BoardName]
@@ -326,6 +328,17 @@ instance YesodAuth App where
     logoutDest _ = HomeR
     redirectToReferer _ = False
     authHttpManager = getYesod >>= return P.. getHttpManager
+
+    authLayout widget = do
+        mRoute <- getCurrentRoute
+        case mRoute of
+            Just (AuthR LoginR) -> liftHandler $ do
+                mmsg <- getMessage
+                defaultLayout $ do
+                    setTitle "Login"
+                    $(widgetFile "auth/login")
+            _ -> liftHandler $ defaultLayout widget
+
     authPlugins app =
         [authHashDB (Just P.. UniqueUser)]
         P.++ oauthPlugin oauth2Google appGoogleClientId appGoogleClientSecret
