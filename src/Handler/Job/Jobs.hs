@@ -61,7 +61,7 @@ getJobsR = do
                else tshow $ formatTime defaultTimeLocale "%b %e, %Y" ts
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum | Jobs"
-        $(widgetFile "forum/jobs")
+        $(widgetFile "job/jobs")
 
 postJobsR :: Handler Html
 postJobsR = do

@@ -20,7 +20,7 @@ getAdminAdsR = do
     let mCsrfToken = reqToken req
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Ads"
-        let adminBody = $(widgetFile "admin/admin-ads")
+        let adminBody = $(widgetFile "admin/ad/list")
             activeKey = ("ads" :: Text)
             menuClass key =
                 if key == activeKey
@@ -36,7 +36,7 @@ getAdminAdNewR = do
         isNew = True
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - New Ad"
-        let adminBody = $(widgetFile "admin/admin-ad-detail")
+        let adminBody = $(widgetFile "admin/ad/detail")
             activeKey = ("ads" :: Text)
             menuClass key =
                 if key == activeKey
@@ -53,7 +53,7 @@ getAdminAdR adId = do
         isNew = False
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Edit Ad"
-        let adminBody = $(widgetFile "admin/admin-ad-detail")
+        let adminBody = $(widgetFile "admin/ad/detail")
             activeKey = ("ads" :: Text)
             menuClass key =
                 if key == activeKey

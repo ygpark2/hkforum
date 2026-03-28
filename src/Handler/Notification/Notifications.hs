@@ -34,7 +34,7 @@ getNotificationsR = do
         targetRoute n = fmap PostR (notificationPost n)
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum | Notifications"
-        $(widgetFile "forum/notifications")
+        $(widgetFile "notification/notifications")
 
 postNotificationsReadAllR :: Handler Html
 postNotificationsReadAllR = do

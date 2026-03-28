@@ -36,7 +36,7 @@ getSettingsR = do
             in if T.null base then "?" else T.toUpper (T.take 1 base)
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum | Settings"
-        $(widgetFile "forum/settings")
+        $(widgetFile "settings/index")
 
 getSettingsAccountR :: Handler Html
 getSettingsAccountR = do
@@ -47,7 +47,7 @@ getSettingsAccountR = do
         githubProfileLabel = "github.com/" <> githubHandle
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum | Account"
-        $(widgetFile "forum/settings-account")
+        $(widgetFile "settings/account")
 
 getSettingsConnectionsR :: Handler Html
 getSettingsConnectionsR = do
@@ -58,14 +58,14 @@ getSettingsConnectionsR = do
         githubProfileLabel = "github.com/" <> githubHandle
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum | Connections"
-        $(widgetFile "forum/settings-connections")
+        $(widgetFile "settings/connections")
 
 getSettingsBlockedAccountsR :: Handler Html
 getSettingsBlockedAccountsR = do
     _ <- requireAuthId
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum | Blocked Accounts"
-        $(widgetFile "forum/settings-blocked-accounts")
+        $(widgetFile "settings/blocked-accounts")
 
 getSettingsSecurityEventsR :: Handler Html
 getSettingsSecurityEventsR = do
@@ -124,14 +124,14 @@ getSettingsSecurityEventsR = do
 
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum | Security Events"
-        $(widgetFile "forum/settings-security-events")
+        $(widgetFile "settings/security-events")
 
 getSettingsAboutR :: Handler Html
 getSettingsAboutR = do
     _ <- requireAuthId
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum | About"
-        $(widgetFile "forum/settings-about")
+        $(widgetFile "settings/about")
 
 relativeTimeLabel :: UTCTime -> UTCTime -> Text
 relativeTimeLabel now ts =

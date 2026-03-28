@@ -25,7 +25,7 @@ getAdminSettingsR = do
         siteSubtitleValue = maybe "x.com inspired discussion hub" (siteSettingValue P.. entityVal) mSiteSubtitle
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Settings"
-        let adminBody = $(widgetFile "admin/admin-settings")
+        let adminBody = $(widgetFile "admin/setting/list")
             activeKey = ("settings" :: Text)
             menuClass key =
                 if key == activeKey
@@ -41,7 +41,7 @@ getAdminSettingNewR = do
         isNew = True
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - New Setting"
-        let adminBody = $(widgetFile "admin/admin-setting-detail")
+        let adminBody = $(widgetFile "admin/setting/detail")
             activeKey = ("settings" :: Text)
             menuClass key =
                 if key == activeKey
@@ -58,7 +58,7 @@ getAdminSettingR settingId = do
         isNew = False
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Edit Setting"
-        let adminBody = $(widgetFile "admin/admin-setting-detail")
+        let adminBody = $(widgetFile "admin/setting/detail")
             activeKey = ("settings" :: Text)
             menuClass key =
                 if key == activeKey

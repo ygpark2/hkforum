@@ -121,7 +121,7 @@ getAdminModerationR = do
                 else queryBase <> "&page="
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Moderation"
-        let adminBody = $(widgetFile "admin/admin-moderation")
+        let adminBody = $(widgetFile "admin/moderation/list")
             activeKey = ("moderation" :: Text)
             menuClass key =
                 if key == activeKey
@@ -216,7 +216,7 @@ getAdminModerationLogsR = do
 
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Moderation Logs"
-        let adminBody = $(widgetFile "admin/admin-moderation-logs")
+        let adminBody = $(widgetFile "admin/moderation/logs")
             activeKey = ("moderation-logs" :: Text)
             menuClass key =
                 if key == activeKey

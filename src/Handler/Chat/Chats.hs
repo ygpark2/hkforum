@@ -34,7 +34,7 @@ getChatsR = do
             Just viewerId -> loadChatRoomSummaries viewerId
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum | Chats"
-        $(widgetFile "forum/chats")
+        $(widgetFile "chat/index")
 
 getChatsNewR :: Handler Html
 getChatsNewR = do
@@ -52,7 +52,7 @@ getChatsNewR = do
                 else []
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum | New Chat"
-        $(widgetFile "forum/chats-new")
+        $(widgetFile "chat/new")
 
 postChatsNewR :: Handler Html
 postChatsNewR = do
@@ -102,7 +102,7 @@ getChatRoomR roomId = do
         relativeTime ts = relativeTimeLabel now ts
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum | Chat Room"
-        $(widgetFile "forum/chat-room")
+        $(widgetFile "chat/room")
 
 postChatRoomR :: ChatRoomId -> Handler Html
 postChatRoomR roomId = do

@@ -46,7 +46,7 @@ getAdminCompaniesR = do
     let mCsrfToken = reqToken req
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Companies"
-        let adminBody = $(widgetFile "admin/admin-companies")
+        let adminBody = $(widgetFile "admin/company/list")
             activeKey = ("companies" :: Text)
             menuClass key =
                 if key == activeKey
@@ -64,7 +64,7 @@ getAdminCompanyNewR = do
         categoryAuthorName = Nothing :: Maybe Text
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - New Company"
-        let adminBody = $(widgetFile "admin/admin-company-detail")
+        let adminBody = $(widgetFile "admin/company/detail")
             activeKey = ("companies" :: Text)
             menuClass key =
                 if key == activeKey
@@ -84,7 +84,7 @@ getAdminCompanyR companyId = do
         categoryAuthorName = userIdent <$> mAuthor
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Edit Company"
-        let adminBody = $(widgetFile "admin/admin-company-detail")
+        let adminBody = $(widgetFile "admin/company/detail")
             activeKey = ("companies" :: Text)
             menuClass key =
                 if key == activeKey
@@ -108,7 +108,7 @@ getAdminCompanyCategoriesR = do
     let mCsrfToken = reqToken req
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Company Categories"
-        let adminBody = $(widgetFile "admin/admin-company-categories")
+        let adminBody = $(widgetFile "admin/company/category/list")
             activeKey = ("company-categories" :: Text)
             menuClass key =
                 if key == activeKey
@@ -126,7 +126,7 @@ getAdminCompanyCategoryNewR = do
         categoryAuthorName = Nothing :: Maybe Text
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - New Company Category"
-        let adminBody = $(widgetFile "admin/admin-company-category-detail")
+        let adminBody = $(widgetFile "admin/company/category/detail")
             activeKey = ("company-categories" :: Text)
             menuClass key =
                 if key == activeKey
@@ -146,7 +146,7 @@ getAdminCompanyCategoryR categoryId = do
         categoryAuthorName = userIdent <$> mAuthor
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Edit Company Category"
-        let adminBody = $(widgetFile "admin/admin-company-category-detail")
+        let adminBody = $(widgetFile "admin/company/category/detail")
             activeKey = ("company-categories" :: Text)
             menuClass key =
                 if key == activeKey
