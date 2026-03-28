@@ -39,7 +39,7 @@
 /register RegisterR GET POST
 /profile ProfileR GET POST
 /upload UploadR POST
-/files/#Text FileR GET
+/files/*Texts FileR GET
 /admin AdminR GET
 /admin/boards AdminBoardsR GET POST
 /admin/boards/new AdminBoardNewR GET

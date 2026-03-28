@@ -15,10 +15,11 @@ module Application
     ) where
 
 import Control.Monad.Logger                 (LoggingT, liftLoc, runLoggingT)
-import CompanyCategories                    (CompanyMinorCategory, allCompanyMinorCategories,
-                                             companyMinorCategoryCode, companyMinorCategoryMajorCode,
+import Company.Categories                   (CompanyMinorCategory, companyMinorCategoryCode,
+                                             companyMinorCategoryMajorCode,
                                              companyMinorCategoryMajorName, companyMinorCategoryName,
-                                             companyMinorCategorySortOrder)
+                                             companyMinorCategorySortOrder,
+                                             loadAllCompanyMinorCategories)
 import Data.Int                             (Int64)
 import Database.Persist.Sql                 (Single (..), rawExecute, rawSql)
 import Database.Persist.Sqlite              (createSqlitePool, runSqlPool,
@@ -111,21 +112,28 @@ makeFoundation appSettings = do
         (sqlDatabase dbConf)
         (sqlPoolSize dbConf)
 
+    companyMinorCategories <- loadAllCompanyMinorCategories
+
     -- Perform database migration using our application's logging settings.
-    runLoggingT (runSqlPool (prepareCompanyGroupSchemaForCodeNotNull >> runMigration migrateAll >> seedDefaults) pool) logFunc
+    runLoggingT
+        ( runSqlPool
+            (prepareCompanyGroupSchemaForCodeNotNull companyMinorCategories >> runMigration migrateAll >> seedDefaults companyMinorCategories)
+            pool
+        )
+        logFunc
 
     -- Return the foundation
     return $ mkFoundation pool
 
-seedDefaults :: SqlPersistT (LoggingT IO) ()
-seedDefaults = do
+seedDefaults :: [CompanyMinorCategory] -> SqlPersistT (LoggingT IO) ()
+seedDefaults companyMinorCategories = do
     void $ insertBy $ Board "general" (Just "General discussion") 0 0
     adminId <- seedAdmin
-    seedSystemCompanyGroups adminId
+    seedSystemCompanyGroups companyMinorCategories adminId
     ensureAllCompanyGroupsHaveCodes
 
-prepareCompanyGroupSchemaForCodeNotNull :: SqlPersistT (LoggingT IO) ()
-prepareCompanyGroupSchemaForCodeNotNull = do
+prepareCompanyGroupSchemaForCodeNotNull :: [CompanyMinorCategory] -> SqlPersistT (LoggingT IO) ()
+prepareCompanyGroupSchemaForCodeNotNull companyMinorCategories = do
     tableRows <- rawSql "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'company_group'" []
     when (not (null (tableRows :: [Single Text]))) $ do
         columns <- rawSql "SELECT name FROM pragma_table_info('company_group')" []
@@ -139,7 +147,7 @@ prepareCompanyGroupSchemaForCodeNotNull = do
             rawExecute "ALTER TABLE company_group ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0" []
         unless (hasColumn "is_system") $
             rawExecute "ALTER TABLE company_group ADD COLUMN is_system BOOLEAN NOT NULL DEFAULT 0" []
-        rawBackfillLegacySystemCompanyGroupCodes
+        rawBackfillLegacySystemCompanyGroupCodes companyMinorCategories
         missingRows <- rawSql "SELECT name FROM company_group WHERE code IS NULL OR TRIM(code) = '' ORDER BY name" []
         unless (null (missingRows :: [Single Text])) $
             error $
@@ -157,16 +165,16 @@ seedAdmin = do
             user <- liftIO $ setPassword "1234" (User "ygpark2" Nothing "admin" Nothing Nothing)
             insert user
 
-seedSystemCompanyGroups :: UserId -> SqlPersistT (LoggingT IO) ()
-seedSystemCompanyGroups adminId = do
+seedSystemCompanyGroups :: [CompanyMinorCategory] -> UserId -> SqlPersistT (LoggingT IO) ()
+seedSystemCompanyGroups companyMinorCategories adminId = do
     now <- liftIO getCurrentTime
-    backfillLegacySystemCompanyGroupCodes
-    forM_ allCompanyMinorCategories $ \minor ->
+    backfillLegacySystemCompanyGroupCodes companyMinorCategories
+    forM_ companyMinorCategories $ \minor ->
         upsertSystemCompanyGroup adminId now minor
 
-backfillLegacySystemCompanyGroupCodes :: SqlPersistT (LoggingT IO) ()
-backfillLegacySystemCompanyGroupCodes =
-    forM_ allCompanyMinorCategories $ \minor -> do
+backfillLegacySystemCompanyGroupCodes :: [CompanyMinorCategory] -> SqlPersistT (LoggingT IO) ()
+backfillLegacySystemCompanyGroupCodes companyMinorCategories =
+    forM_ companyMinorCategories $ \minor -> do
         let name = companyMinorCategoryName minor
             code = companyMinorCategoryCode minor
         existingRows <- selectList [CompanyGroupName ==. name, CompanyGroupCode ==. ""] []
@@ -186,9 +194,9 @@ ensureAllCompanyGroupsHaveCodes = do
             "CompanyGroup code is required. Missing codes for: "
                 <> unpack (T.intercalate ", " (map (companyGroupName P.. entityVal) badRows))
 
-rawBackfillLegacySystemCompanyGroupCodes :: SqlPersistT (LoggingT IO) ()
-rawBackfillLegacySystemCompanyGroupCodes =
-    forM_ allCompanyMinorCategories $ \minor ->
+rawBackfillLegacySystemCompanyGroupCodes :: [CompanyMinorCategory] -> SqlPersistT (LoggingT IO) ()
+rawBackfillLegacySystemCompanyGroupCodes companyMinorCategories =
+    forM_ companyMinorCategories $ \minor ->
         rawExecute
             "UPDATE company_group SET code = ?, major_code = ?, sort_order = ?, is_system = 1 WHERE name = ? AND (code IS NULL OR TRIM(code) = '')"
             [ toPersistValue (companyMinorCategoryCode minor)
