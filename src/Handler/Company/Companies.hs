@@ -7,8 +7,8 @@ module Handler.Company.Companies
     , postCompanyCategoriesR
     ) where
 
-import CompanyCategories
-import CompanyDescription (prepareCompanyDescription)
+import Company.Categories
+import Company.Description (prepareCompanyDescription)
 import Import
 import qualified Data.List as L
 import qualified Data.Map.Strict as Map
@@ -69,7 +69,7 @@ getCompaniesR = do
         authorName uid = Map.findWithDefault ("Unknown" :: Text) uid userMap
         authorHandle uid = T.toLower $ T.filter (/= ' ') (authorName uid)
         categoryLabel category =
-            companyGroupCode category <> " " <> companyGroupName category
+            companyGroupName category
         companyMajorName company =
             case Map.lookup (companyCategory company) categoryMap >>= companyGroupMajorCode . entityVal of
                 Just majorCode ->

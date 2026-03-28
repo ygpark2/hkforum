@@ -154,6 +154,11 @@ instance Yesod App where
         case mUserId of
             Nothing -> return AuthenticationRequired
             Just _ -> return Authorized
+    isAuthorized UploadR _ = do
+        mUserId <- maybeAuthId
+        case mUserId of
+            Nothing -> return AuthenticationRequired
+            Just _ -> return Authorized
     isAuthorized ChatsR _ = return Authorized
     isAuthorized ChatsNewR isWrite =
         if isWrite

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module CompanyDescription
+module Company.Description
     ( prepareCompanyDescription
     ) where
 

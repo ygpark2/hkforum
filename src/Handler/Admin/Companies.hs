@@ -15,7 +15,7 @@ module Handler.Admin.Companies
     , postAdminCompanyCategoryR
     ) where
 
-import CompanyDescription (prepareCompanyDescription)
+import Company.Description (prepareCompanyDescription)
 import Import
 import qualified Data.List as L
 import qualified Data.Map.Strict as Map

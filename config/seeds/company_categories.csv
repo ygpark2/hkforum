@@ -1,0 +1,40 @@
+major_code,major_name,major_sort,minor_code,minor_name,minor_sort
+agri-forestry-fishery,농/임/어업,0,01,농업,0
+agri-forestry-fishery,농/임/어업,0,02,임업,1
+agri-forestry-fishery,농/임/어업,0,03,어업,2
+mining,광업,1,05,석탄/원유,0
+mining,광업,1,06,금속광업,1
+mining,광업,1,07,비금속광물,2
+manufacturing,제조업(C),2,10,식료품,0
+manufacturing,제조업(C),2,11,음료,1
+manufacturing,제조업(C),2,13,섬유,2
+manufacturing,제조업(C),2,15,가죽/가방,3
+manufacturing,제조업(C),2,17,펄프/종이,4
+manufacturing,제조업(C),2,20,화학,5
+manufacturing,제조업(C),2,21,의약품,6
+manufacturing,제조업(C),2,23,비금속광물,7
+manufacturing,제조업(C),2,24,1차 금속,8
+manufacturing,제조업(C),2,25,금속가공,9
+manufacturing,제조업(C),2,26,전자부품/컴퓨터,10
+manufacturing,제조업(C),2,29,기타기계,11
+manufacturing,제조업(C),2,30,자동차,12
+manufacturing,제조업(C),2,31,가구,13
+utilities-waste,전기/폐기물,3,35,전기/가스/증기,0
+utilities-waste,전기/폐기물,3,38,폐기물 수집/처리,1
+construction,건설업(F),4,41,종합건설,0
+construction,건설업(F),4,42,전문공사,1
+commerce-service,도소매/서비스,5,45,자동차 도소매,0
+commerce-service,도소매/서비스,5,46,도매업,1
+commerce-service,도소매/서비스,5,47,소매업,2
+commerce-service,도소매/서비스,5,49,운수업,3
+commerce-service,도소매/서비스,5,55,숙박업,4
+commerce-service,도소매/서비스,5,56,음식점업,5
+info-finance-professional,정보/금융/전문,6,58,출판,0
+info-finance-professional,정보/금융/전문,6,61,통신업,1
+info-finance-professional,정보/금융/전문,6,62,정보통신,2
+info-finance-professional,정보/금융/전문,6,64,금융/보험,3
+info-finance-professional,정보/금융/전문,6,70,전문/과학/기술,4
+info-finance-professional,정보/금융/전문,6,74,사업지원,5
+education-health-culture,교육/보건/문화,7,80,교육,0
+education-health-culture,교육/보건/문화,7,85,보건/사회복지,1
+education-health-culture,교육/보건/문화,7,90,예술/스포츠,2
