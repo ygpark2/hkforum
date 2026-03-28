@@ -1,0 +1,717 @@
+country_code,country_name,state_code,state_name,state_name_local,state_type,sort_order
+AUT,Austria,1,Burgenland,,state,1
+AUT,Austria,2,Kärnten,,state,2
+AUT,Austria,3,Niederösterreich,,state,3
+AUT,Austria,4,Oberösterreich,,state,4
+AUT,Austria,5,Salzburg,,state,5
+AUT,Austria,6,Steiermark,,state,6
+AUT,Austria,7,Tirol,,state,7
+AUT,Austria,8,Vorarlberg,,state,8
+AUT,Austria,9,Wien,,state,9
+BEL,Belgium,BRU,Bruxelles-Capitale,,region,1
+BEL,Belgium,VLG,Vlaams Gewest,,region,2
+BEL,Belgium,WAL,wallonne,,region,3
+BGR,Bulgaria,01,Blagoevgrad,,district,1
+BGR,Bulgaria,02,Burgas,,district,2
+BGR,Bulgaria,08,Dobrich,,district,3
+BGR,Bulgaria,07,Gabrovo,,district,4
+BGR,Bulgaria,26,Haskovo,,district,5
+BGR,Bulgaria,09,Kardzhali,,district,6
+BGR,Bulgaria,10,Kyustendil,,district,7
+BGR,Bulgaria,11,Lovech,,district,8
+BGR,Bulgaria,12,Montana,,district,9
+BGR,Bulgaria,13,Pazardzhik,,district,10
+BGR,Bulgaria,14,Pernik,,district,11
+BGR,Bulgaria,15,Pleven,,district,12
+BGR,Bulgaria,16,Plovdiv,,district,13
+BGR,Bulgaria,17,Razgrad,,district,14
+BGR,Bulgaria,18,Ruse,,district,15
+BGR,Bulgaria,27,Shumen,,district,16
+BGR,Bulgaria,19,Silistra,,district,17
+BGR,Bulgaria,20,Sliven,,district,18
+BGR,Bulgaria,21,Smolyan,,district,19
+BGR,Bulgaria,22,Sofia,,district,20
+BGR,Bulgaria,23,Sofia,,district,21
+BGR,Bulgaria,24,Stara Zagora,,district,22
+BGR,Bulgaria,25,Targovishte,,district,23
+BGR,Bulgaria,03,Varna,,district,24
+BGR,Bulgaria,04,Veliko Tarnovo,,district,25
+BGR,Bulgaria,05,Vidin,,district,26
+BGR,Bulgaria,06,Vratsa,,district,27
+BGR,Bulgaria,28,Yambol,,district,28
+HRV,Croatia,07,Bjelovarsko-bilogorska županija,,county,1
+HRV,Croatia,12,Brodsko-posavska županija,,county,2
+HRV,Croatia,19,Dubrovačko-neretvanska županija,,county,3
+HRV,Croatia,21,Grad Zagreb,,city,4
+HRV,Croatia,18,Istarska županija,,county,5
+HRV,Croatia,04,Karlovačka županija,,county,6
+HRV,Croatia,06,Koprivničko-križevačka županija,,county,7
+HRV,Croatia,02,Krapinsko-zagorska županija,,county,8
+HRV,Croatia,09,Ličko-senjska županija,,county,9
+HRV,Croatia,20,Međimurska županija,,county,10
+HRV,Croatia,14,Osječko-baranjska županija,,county,11
+HRV,Croatia,11,Požeško-slavonska županija,,county,12
+HRV,Croatia,08,Primorsko-goranska županija,,county,13
+HRV,Croatia,03,Sisačko-moslavačka županija,,county,14
+HRV,Croatia,17,Splitsko-dalmatinska županija,,county,15
+HRV,Croatia,05,Varaždinska županija,,county,16
+HRV,Croatia,10,Virovitičko-podravska županija,,county,17
+HRV,Croatia,16,Vukovarsko-srijemska županija,,county,18
+HRV,Croatia,13,Zadarska županija,,county,19
+HRV,Croatia,01,Zagrebačka županija,,county,20
+HRV,Croatia,15,Šibensko-kninska županija,,county,21
+CYP,Cyprus,04,Ammochostos,,district,1
+CYP,Cyprus,06,Keryneia,,district,2
+CYP,Cyprus,03,Larnaka,,district,3
+CYP,Cyprus,01,Lefkosia,,district,4
+CYP,Cyprus,02,Lemesos,,district,5
+CYP,Cyprus,05,Pafos,,district,6
+CZE,Czechia,64,Jihomoravský kraj,,region,1
+CZE,Czechia,31,Jihočeský kraj,,region,2
+CZE,Czechia,41,Karlovarský kraj,,region,3
+CZE,Czechia,63,Kraj Vysočina,,region,4
+CZE,Czechia,52,Královéhradecký kraj,,region,5
+CZE,Czechia,51,Liberecký kraj,,region,6
+CZE,Czechia,80,Moravskoslezský kraj,,region,7
+CZE,Czechia,71,Olomoucký kraj,,region,8
+CZE,Czechia,53,Pardubický kraj,,region,9
+CZE,Czechia,32,Plzeňský kraj,,region,10
+CZE,Czechia,10,Praha,,capital_city,11
+CZE,Czechia,20,Středočeský kraj,,region,12
+CZE,Czechia,72,Zlínský kraj,,region,13
+CZE,Czechia,42,Ústecký kraj,,region,14
+DNK,Denmark,84,Hovedstaden,,region,1
+DNK,Denmark,82,Midtjylland,,region,2
+DNK,Denmark,81,Nordjylland,,region,3
+DNK,Denmark,85,Sjælland,,region,4
+DNK,Denmark,83,Syddanmark,,region,5
+EST,Estonia,37,Harjumaa,,county,1
+EST,Estonia,39,Hiiumaa,,county,2
+EST,Estonia,45,Ida-Virumaa,,county,3
+EST,Estonia,52,Järvamaa,,county,4
+EST,Estonia,50,Jõgevamaa,,county,5
+EST,Estonia,60,Lääne-Virumaa,,county,6
+EST,Estonia,56,Läänemaa,,county,7
+EST,Estonia,68,Pärnumaa,,county,8
+EST,Estonia,64,Põlvamaa,,county,9
+EST,Estonia,71,Raplamaa,,county,10
+EST,Estonia,74,Saaremaa,,county,11
+EST,Estonia,79,Tartumaa,,county,12
+EST,Estonia,81,Valgamaa,,county,13
+EST,Estonia,84,Viljandimaa,,county,14
+EST,Estonia,87,Võrumaa,,county,15
+FIN,Finland,01,Ahvenanmaan maakunta,,region,1
+FIN,Finland,02,Etelä-Karjala,,region,2
+FIN,Finland,03,Etelä-Pohjanmaa,,region,3
+FIN,Finland,04,Etelä-Savo,,region,4
+FIN,Finland,05,Kainuu,,region,5
+FIN,Finland,06,Kanta-Häme,,region,6
+FIN,Finland,07,Keski-Pohjanmaa,,region,7
+FIN,Finland,08,Keski-Suomi,,region,8
+FIN,Finland,09,Kymenlaakso,,region,9
+FIN,Finland,10,Lappi,,region,10
+FIN,Finland,11,Pirkanmaa,,region,11
+FIN,Finland,12,Pohjanmaa,,region,12
+FIN,Finland,13,Pohjois-Karjala,,region,13
+FIN,Finland,14,Pohjois-Pohjanmaa,,region,14
+FIN,Finland,15,Pohjois-Savo,,region,15
+FIN,Finland,16,Päijät-Häme,,region,16
+FIN,Finland,17,Satakunta,,region,17
+FIN,Finland,18,Uusimaa,,region,18
+FIN,Finland,19,Varsinais-Suomi,,region,19
+FRA,France,ARA,Auvergne-Rhône-Alpes,,metropolitan_region,1
+FRA,France,BFC,Bourgogne-Franche-Comté,,metropolitan_region,2
+FRA,France,BRE,Bretagne,,metropolitan_region,3
+FRA,France,CVL,Centre-Val de Loire,,metropolitan_region,4
+FRA,France,GES,Grand-Est,,metropolitan_region,5
+FRA,France,971,Guadeloupe,,overseas_departmental_collectivity,6
+FRA,France,973,Guyane,,overseas_unique_territorial_collectivity,7
+FRA,France,HDF,Hauts-de-France,,metropolitan_region,8
+FRA,France,974,La Réunion,,overseas_departmental_collectivity,9
+FRA,France,972,Martinique,,overseas_unique_territorial_collectivity,10
+FRA,France,976,Mayotte,,overseas_departmental_collectivity,11
+FRA,France,NOR,Normandie,,metropolitan_region,12
+FRA,France,NAQ,Nouvelle-Aquitaine,,metropolitan_region,13
+FRA,France,OCC,Occitanie,,metropolitan_region,14
+FRA,France,PDL,Pays-de-la-Loire,,metropolitan_region,15
+FRA,France,PAC,Provence-Alpes-Côte-d’Azur,,metropolitan_region,16
+FRA,France,IDF,Île-de-France,,metropolitan_region,17
+DEU,Germany,BW,Baden-Württemberg,,land,1
+DEU,Germany,BY,Bayern,,land,2
+DEU,Germany,BE,Berlin,,land,3
+DEU,Germany,BB,Brandenburg,,land,4
+DEU,Germany,HB,Bremen,,land,5
+DEU,Germany,HH,Hamburg,,land,6
+DEU,Germany,HE,Hessen,,land,7
+DEU,Germany,MV,Mecklenburg-Vorpommern,,land,8
+DEU,Germany,NI,Niedersachsen,,land,9
+DEU,Germany,NW,Nordrhein-Westfalen,,land,10
+DEU,Germany,RP,Rheinland-Pfalz,,land,11
+DEU,Germany,SL,Saarland,,land,12
+DEU,Germany,SN,Sachsen,,land,13
+DEU,Germany,ST,Sachsen-Anhalt,,land,14
+DEU,Germany,SH,Schleswig-Holstein,,land,15
+DEU,Germany,TH,Thüringen,,land,16
+GRC,Greece,A,Anatolikí Makedonía kai Thráki,,administrative_region,1
+GRC,Greece,I,Attikí,,administrative_region,2
+GRC,Greece,G,Dytikí Elláda,,administrative_region,3
+GRC,Greece,C,Dytikí Makedonía,,administrative_region,4
+GRC,Greece,F,Ionía Nísia,,administrative_region,5
+GRC,Greece,B,Kentrikí Makedonía,,administrative_region,6
+GRC,Greece,M,Kríti,,administrative_region,7
+GRC,Greece,L,Nótio Aigaío,,administrative_region,8
+GRC,Greece,J,Pelopónnisos,,administrative_region,9
+GRC,Greece,H,Stereá Elláda,,administrative_region,10
+GRC,Greece,E,Thessalía,,administrative_region,11
+GRC,Greece,K,Vóreio Aigaío,,administrative_region,12
+GRC,Greece,69,Ágion Óros,,self_governed_part,13
+GRC,Greece,D,Ípeiros,,administrative_region,14
+HUN,Hungary,BA,Baranya,,county,1
+HUN,Hungary,BZ,Borsod-Abaúj-Zemplén,,county,2
+HUN,Hungary,BU,Budapest,,capital_city,3
+HUN,Hungary,BK,Bács-Kiskun,,county,4
+HUN,Hungary,BE,Békés,,county,5
+HUN,Hungary,CS,Csongrád-Csanád,,county,6
+HUN,Hungary,FE,Fejér,,county,7
+HUN,Hungary,GS,Győr-Moson-Sopron,,county,8
+HUN,Hungary,HB,Hajdú-Bihar,,county,9
+HUN,Hungary,HE,Heves,,county,10
+HUN,Hungary,JN,Jász-Nagykun-Szolnok,,county,11
+HUN,Hungary,KE,Komárom-Esztergom,,county,12
+HUN,Hungary,NO,Nógrád,,county,13
+HUN,Hungary,PE,Pest,,county,14
+HUN,Hungary,SO,Somogy,,county,15
+HUN,Hungary,SZ,Szabolcs-Szatmár-Bereg,,county,16
+HUN,Hungary,TO,Tolna,,county,17
+HUN,Hungary,VA,Vas,,county,18
+HUN,Hungary,VE,Veszprém,,county,19
+HUN,Hungary,ZA,Zala,,county,20
+IRL,Ireland,CW,Carlow,,county,1
+IRL,Ireland,CN,Cavan,,county,2
+IRL,Ireland,CE,Clare,,county,3
+IRL,Ireland,CO,Cork,,county,4
+IRL,Ireland,DL,Donegal,,county,5
+IRL,Ireland,D,Dublin,,county,6
+IRL,Ireland,G,Galway,,county,7
+IRL,Ireland,KY,Kerry,,county,8
+IRL,Ireland,KE,Kildare,,county,9
+IRL,Ireland,KK,Kilkenny,,county,10
+IRL,Ireland,LS,Laois,,county,11
+IRL,Ireland,LM,Leitrim,,county,12
+IRL,Ireland,LK,Limerick,,county,13
+IRL,Ireland,LD,Longford,,county,14
+IRL,Ireland,LH,Louth,,county,15
+IRL,Ireland,MO,Mayo,,county,16
+IRL,Ireland,MH,Meath,,county,17
+IRL,Ireland,MN,Monaghan,,county,18
+IRL,Ireland,OY,Offaly,,county,19
+IRL,Ireland,RN,Roscommon,,county,20
+IRL,Ireland,SO,Sligo,,county,21
+IRL,Ireland,TA,Tipperary,,county,22
+IRL,Ireland,WD,Waterford,,county,23
+IRL,Ireland,WH,Westmeath,,county,24
+IRL,Ireland,WX,Wexford,,county,25
+IRL,Ireland,WW,Wicklow,,county,26
+ITA,Italy,65,Abruzzo,,region,1
+ITA,Italy,77,Basilicata,,region,2
+ITA,Italy,78,Calabria,,region,3
+ITA,Italy,72,Campania,,region,4
+ITA,Italy,45,Emilia-Romagna,,region,5
+ITA,Italy,36,Friuli Venezia Giulia,,autonomous_region,6
+ITA,Italy,62,Lazio,,region,7
+ITA,Italy,42,Liguria,,region,8
+ITA,Italy,25,Lombardia,,region,9
+ITA,Italy,57,Marche,,region,10
+ITA,Italy,67,Molise,,region,11
+ITA,Italy,21,Piemonte,,region,12
+ITA,Italy,75,Puglia,,region,13
+ITA,Italy,88,Sardegna,,autonomous_region,14
+ITA,Italy,82,Sicilia,,autonomous_region,15
+ITA,Italy,52,Toscana,,region,16
+ITA,Italy,32,Trentino-Alto Adige,,autonomous_region,17
+ITA,Italy,55,Umbria,,region,18
+ITA,Italy,23,Valle d'Aosta,,autonomous_region,19
+ITA,Italy,34,Veneto,,region,20
+LVA,Latvia,002,Aizkraukles novads,,municipality,1
+LVA,Latvia,007,Alūksnes novads,,municipality,2
+LVA,Latvia,111,Augšdaugavas novads,,municipality,3
+LVA,Latvia,015,Balvu novads,,municipality,4
+LVA,Latvia,016,Bauskas novads,,municipality,5
+LVA,Latvia,022,Cēsu novads,,municipality,6
+LVA,Latvia,DGV,Daugavpils,,state_city,7
+LVA,Latvia,112,Dienvidkurzemes Novads,,municipality,8
+LVA,Latvia,026,Dobeles novads,,municipality,9
+LVA,Latvia,033,Gulbenes novads,,municipality,10
+LVA,Latvia,JEL,Jelgava,,state_city,11
+LVA,Latvia,041,Jelgavas novads,,municipality,12
+LVA,Latvia,042,Jēkabpils novads,,municipality,13
+LVA,Latvia,JUR,Jūrmala,,state_city,14
+LVA,Latvia,047,Krāslavas novads,,municipality,15
+LVA,Latvia,050,Kuldīgas novads,,municipality,16
+LVA,Latvia,LPX,Liepāja,,state_city,17
+LVA,Latvia,054,Limbažu novads,,municipality,18
+LVA,Latvia,058,Ludzas novads,,municipality,19
+LVA,Latvia,056,Līvānu novads,,municipality,20
+LVA,Latvia,059,Madonas novads,,municipality,21
+LVA,Latvia,062,Mārupes novads,,municipality,22
+LVA,Latvia,067,Ogres novads,,municipality,23
+LVA,Latvia,068,Olaines novads,,municipality,24
+LVA,Latvia,073,Preiļu novads,,municipality,25
+LVA,Latvia,080,Ropažu novads,,municipality,26
+LVA,Latvia,REZ,Rēzekne,,state_city,27
+LVA,Latvia,077,Rēzeknes novads,,municipality,28
+LVA,Latvia,RIX,Rīga,,state_city,29
+LVA,Latvia,087,Salaspils novads,,municipality,30
+LVA,Latvia,088,Saldus novads,,municipality,31
+LVA,Latvia,089,Saulkrastu novads,,municipality,32
+LVA,Latvia,091,Siguldas novads,,municipality,33
+LVA,Latvia,094,Smiltenes novads,,municipality,34
+LVA,Latvia,097,Talsu novads,,municipality,35
+LVA,Latvia,099,Tukuma novads,,municipality,36
+LVA,Latvia,101,Valkas novads,,municipality,37
+LVA,Latvia,113,Valmieras Novads,,municipality,38
+LVA,Latvia,102,Varakļānu novads,,municipality,39
+LVA,Latvia,VEN,Ventspils,,state_city,40
+LVA,Latvia,106,Ventspils novads,,municipality,41
+LVA,Latvia,011,Ādažu novads,,municipality,42
+LVA,Latvia,052,Ķekavas novads,,municipality,43
+LTU,Lithuania,AL,Alytaus apskritis,,county,1
+LTU,Lithuania,KU,Kauno apskritis,,county,2
+LTU,Lithuania,KL,Klaipėdos apskritis,,county,3
+LTU,Lithuania,MR,Marijampolės apskritis,,county,4
+LTU,Lithuania,PN,Panevėžio apskritis,,county,5
+LTU,Lithuania,TA,Tauragės apskritis,,county,6
+LTU,Lithuania,TE,Telšių apskritis,,county,7
+LTU,Lithuania,UT,Utenos apskritis,,county,8
+LTU,Lithuania,VL,Vilniaus apskritis,,county,9
+LTU,Lithuania,SA,Šiaulių apskritis,,county,10
+LUX,Luxembourg,CA,Capellen,,canton,1
+LUX,Luxembourg,CL,Clervaux,,canton,2
+LUX,Luxembourg,DI,Diekirch,,canton,3
+LUX,Luxembourg,EC,Echternach,,canton,4
+LUX,Luxembourg,ES,Esch-sur-Alzette,,canton,5
+LUX,Luxembourg,GR,Grevenmacher,,canton,6
+LUX,Luxembourg,LU,Luxembourg,,canton,7
+LUX,Luxembourg,ME,Mersch,,canton,8
+LUX,Luxembourg,RD,Redange,,canton,9
+LUX,Luxembourg,RM,Remich,,canton,10
+LUX,Luxembourg,VD,Vianden,,canton,11
+LUX,Luxembourg,WI,Wiltz,,canton,12
+MLT,Malta,01,Attard,,local_council,1
+MLT,Malta,02,Balzan,,local_council,2
+MLT,Malta,03,Birgu,,local_council,3
+MLT,Malta,04,Birkirkara,,local_council,4
+MLT,Malta,05,Birżebbuġa,,local_council,5
+MLT,Malta,06,Bormla,,local_council,6
+MLT,Malta,07,Dingli,,local_council,7
+MLT,Malta,08,Fgura,,local_council,8
+MLT,Malta,09,Floriana,,local_council,9
+MLT,Malta,10,Fontana,,local_council,10
+MLT,Malta,11,Gudja,,local_council,11
+MLT,Malta,13,Għajnsielem,,local_council,12
+MLT,Malta,14,Għarb,,local_council,13
+MLT,Malta,15,Għargħur,,local_council,14
+MLT,Malta,16,Għasri,,local_council,15
+MLT,Malta,17,Għaxaq,,local_council,16
+MLT,Malta,12,Gżira,,local_council,17
+MLT,Malta,19,Iklin,,local_council,18
+MLT,Malta,20,Isla,,local_council,19
+MLT,Malta,21,Kalkara,,local_council,20
+MLT,Malta,22,Kerċem,,local_council,21
+MLT,Malta,23,Kirkop,,local_council,22
+MLT,Malta,24,Lija,,local_council,23
+MLT,Malta,25,Luqa,,local_council,24
+MLT,Malta,26,Marsa,,local_council,25
+MLT,Malta,27,Marsaskala,,local_council,26
+MLT,Malta,28,Marsaxlokk,,local_council,27
+MLT,Malta,29,Mdina,,local_council,28
+MLT,Malta,30,Mellieħa,,local_council,29
+MLT,Malta,32,Mosta,,local_council,30
+MLT,Malta,33,Mqabba,,local_council,31
+MLT,Malta,34,Msida,,local_council,32
+MLT,Malta,35,Mtarfa,,local_council,33
+MLT,Malta,36,Munxar,,local_council,34
+MLT,Malta,31,Mġarr,,local_council,35
+MLT,Malta,37,Nadur,,local_council,36
+MLT,Malta,38,Naxxar,,local_council,37
+MLT,Malta,39,Paola,,local_council,38
+MLT,Malta,40,Pembroke,,local_council,39
+MLT,Malta,41,Pietà,,local_council,40
+MLT,Malta,42,Qala,,local_council,41
+MLT,Malta,43,Qormi,,local_council,42
+MLT,Malta,44,Qrendi,,local_council,43
+MLT,Malta,45,Rabat Gozo,,local_council,44
+MLT,Malta,46,Rabat Malta,,local_council,45
+MLT,Malta,47,Safi,,local_council,46
+MLT,Malta,49,Saint John,,local_council,47
+MLT,Malta,48,Saint Julian's,,local_council,48
+MLT,Malta,50,Saint Lawrence,,local_council,49
+MLT,Malta,53,Saint Lucia's,,local_council,50
+MLT,Malta,51,Saint Paul's Bay,,local_council,51
+MLT,Malta,52,Sannat,,local_council,52
+MLT,Malta,54,Santa Venera,,local_council,53
+MLT,Malta,55,Siġġiewi,,local_council,54
+MLT,Malta,56,Sliema,,local_council,55
+MLT,Malta,57,Swieqi,,local_council,56
+MLT,Malta,58,Ta' Xbiex,,local_council,57
+MLT,Malta,59,Tarxien,,local_council,58
+MLT,Malta,60,Valletta,,local_council,59
+MLT,Malta,61,Xagħra,,local_council,60
+MLT,Malta,62,Xewkija,,local_council,61
+MLT,Malta,63,Xgħajra,,local_council,62
+MLT,Malta,18,Ħamrun,,local_council,63
+MLT,Malta,64,Żabbar,,local_council,64
+MLT,Malta,65,Żebbuġ Gozo,,local_council,65
+MLT,Malta,66,Żebbuġ Malta,,local_council,66
+MLT,Malta,67,Żejtun,,local_council,67
+MLT,Malta,68,Żurrieq,,local_council,68
+NLD,Netherlands,DR,Drenthe,,province,1
+NLD,Netherlands,FL,Flevoland,,province,2
+NLD,Netherlands,FR,Fryslân,,province,3
+NLD,Netherlands,GE,Gelderland,,province,4
+NLD,Netherlands,GR,Groningen,,province,5
+NLD,Netherlands,LI,Limburg,,province,6
+NLD,Netherlands,NB,Noord-Brabant,,province,7
+NLD,Netherlands,NH,Noord-Holland,,province,8
+NLD,Netherlands,OV,Overijssel,,province,9
+NLD,Netherlands,UT,Utrecht,,province,10
+NLD,Netherlands,ZE,Zeeland,,province,11
+NLD,Netherlands,ZH,Zuid-Holland,,province,12
+POL,Poland,02,Dolnośląskie,,voivodship,1
+POL,Poland,04,Kujawsko-Pomorskie,,voivodship,2
+POL,Poland,06,Lubelskie,,voivodship,3
+POL,Poland,08,Lubuskie,,voivodship,4
+POL,Poland,14,Mazowieckie,,voivodship,5
+POL,Poland,12,Małopolskie,,voivodship,6
+POL,Poland,16,Opolskie,,voivodship,7
+POL,Poland,18,Podkarpackie,,voivodship,8
+POL,Poland,20,Podlaskie,,voivodship,9
+POL,Poland,22,Pomorskie,,voivodship,10
+POL,Poland,28,Warmińsko-Mazurskie,,voivodship,11
+POL,Poland,30,Wielkopolskie,,voivodship,12
+POL,Poland,32,Zachodniopomorskie,,voivodship,13
+POL,Poland,10,Łódzkie,,voivodship,14
+POL,Poland,24,Śląskie,,voivodship,15
+POL,Poland,26,Świętokrzyskie,,voivodship,16
+PRT,Portugal,01,Aveiro,,district,1
+PRT,Portugal,02,Beja,,district,2
+PRT,Portugal,03,Braga,,district,3
+PRT,Portugal,04,Bragança,,district,4
+PRT,Portugal,05,Castelo Branco,,district,5
+PRT,Portugal,06,Coimbra,,district,6
+PRT,Portugal,08,Faro,,district,7
+PRT,Portugal,09,Guarda,,district,8
+PRT,Portugal,10,Leiria,,district,9
+PRT,Portugal,11,Lisboa,,district,10
+PRT,Portugal,12,Portalegre,,district,11
+PRT,Portugal,13,Porto,,district,12
+PRT,Portugal,30,Região Autónoma da Madeira,,autonomous_region,13
+PRT,Portugal,20,Região Autónoma dos Açores,,autonomous_region,14
+PRT,Portugal,14,Santarém,,district,15
+PRT,Portugal,15,Setúbal,,district,16
+PRT,Portugal,16,Viana do Castelo,,district,17
+PRT,Portugal,17,Vila Real,,district,18
+PRT,Portugal,18,Viseu,,district,19
+PRT,Portugal,07,Évora,,district,20
+ROU,Romania,AB,Alba,,department,1
+ROU,Romania,AR,Arad,,department,2
+ROU,Romania,AG,Argeș,,department,3
+ROU,Romania,BC,Bacău,,department,4
+ROU,Romania,BH,Bihor,,department,5
+ROU,Romania,BN,Bistrița-Năsăud,,department,6
+ROU,Romania,BT,Botoșani,,department,7
+ROU,Romania,BV,Brașov,,department,8
+ROU,Romania,BR,Brăila,,department,9
+ROU,Romania,B,București,,municipality,10
+ROU,Romania,BZ,Buzău,,department,11
+ROU,Romania,CS,Caraș-Severin,,department,12
+ROU,Romania,CJ,Cluj,,department,13
+ROU,Romania,CT,Constanța,,department,14
+ROU,Romania,CV,Covasna,,department,15
+ROU,Romania,CL,Călărași,,department,16
+ROU,Romania,DJ,Dolj,,department,17
+ROU,Romania,DB,Dâmbovița,,department,18
+ROU,Romania,GL,Galați,,department,19
+ROU,Romania,GR,Giurgiu,,department,20
+ROU,Romania,GJ,Gorj,,department,21
+ROU,Romania,HR,Harghita,,department,22
+ROU,Romania,HD,Hunedoara,,department,23
+ROU,Romania,IL,Ialomița,,department,24
+ROU,Romania,IS,Iași,,department,25
+ROU,Romania,IF,Ilfov,,department,26
+ROU,Romania,MM,Maramureș,,department,27
+ROU,Romania,MH,Mehedinți,,department,28
+ROU,Romania,MS,Mureș,,department,29
+ROU,Romania,NT,Neamț,,department,30
+ROU,Romania,OT,Olt,,department,31
+ROU,Romania,PH,Prahova,,department,32
+ROU,Romania,SM,Satu Mare,,department,33
+ROU,Romania,SB,Sibiu,,department,34
+ROU,Romania,SV,Suceava,,department,35
+ROU,Romania,SJ,Sălaj,,department,36
+ROU,Romania,TR,Teleorman,,department,37
+ROU,Romania,TM,Timiș,,department,38
+ROU,Romania,TL,Tulcea,,department,39
+ROU,Romania,VS,Vaslui,,department,40
+ROU,Romania,VN,Vrancea,,department,41
+ROU,Romania,VL,Vâlcea,,department,42
+SVK,Slovakia,BC,Banskobystrický kraj,,region,1
+SVK,Slovakia,BL,Bratislavský kraj,,region,2
+SVK,Slovakia,KI,Košický kraj,,region,3
+SVK,Slovakia,NI,Nitriansky kraj,,region,4
+SVK,Slovakia,PV,Prešovský kraj,,region,5
+SVK,Slovakia,TC,Trenčiansky kraj,,region,6
+SVK,Slovakia,TA,Trnavský kraj,,region,7
+SVK,Slovakia,ZI,Žilinský kraj,,region,8
+SVN,Slovenia,001,Ajdovščina,,municipality,1
+SVN,Slovenia,213,Ankaran,,municipality,2
+SVN,Slovenia,195,Apače,,municipality,3
+SVN,Slovenia,002,Beltinci,,municipality,4
+SVN,Slovenia,148,Benedikt,,municipality,5
+SVN,Slovenia,149,Bistrica ob Sotli,,municipality,6
+SVN,Slovenia,003,Bled,,municipality,7
+SVN,Slovenia,150,Bloke,,municipality,8
+SVN,Slovenia,004,Bohinj,,municipality,9
+SVN,Slovenia,005,Borovnica,,municipality,10
+SVN,Slovenia,006,Bovec,,municipality,11
+SVN,Slovenia,151,Braslovče,,municipality,12
+SVN,Slovenia,007,Brda,,municipality,13
+SVN,Slovenia,008,Brezovica,,municipality,14
+SVN,Slovenia,009,Brežice,,municipality,15
+SVN,Slovenia,152,Cankova,,municipality,16
+SVN,Slovenia,011,Celje,,urban_municipality,17
+SVN,Slovenia,012,Cerklje na Gorenjskem,,municipality,18
+SVN,Slovenia,013,Cerknica,,municipality,19
+SVN,Slovenia,014,Cerkno,,municipality,20
+SVN,Slovenia,153,Cerkvenjak,,municipality,21
+SVN,Slovenia,196,Cirkulane,,municipality,22
+SVN,Slovenia,018,Destrnik,,municipality,23
+SVN,Slovenia,019,Divača,,municipality,24
+SVN,Slovenia,154,Dobje,,municipality,25
+SVN,Slovenia,020,Dobrepolje,,municipality,26
+SVN,Slovenia,155,Dobrna,,municipality,27
+SVN,Slovenia,021,Dobrova-Polhov Gradec,,municipality,28
+SVN,Slovenia,156,Dobrovnik,,municipality,29
+SVN,Slovenia,022,Dol pri Ljubljani,,municipality,30
+SVN,Slovenia,157,Dolenjske Toplice,,municipality,31
+SVN,Slovenia,023,Domžale,,municipality,32
+SVN,Slovenia,024,Dornava,,municipality,33
+SVN,Slovenia,025,Dravograd,,municipality,34
+SVN,Slovenia,026,Duplek,,municipality,35
+SVN,Slovenia,027,Gorenja vas-Poljane,,municipality,36
+SVN,Slovenia,028,Gorišnica,,municipality,37
+SVN,Slovenia,207,Gorje,,municipality,38
+SVN,Slovenia,029,Gornja Radgona,,municipality,39
+SVN,Slovenia,030,Gornji Grad,,municipality,40
+SVN,Slovenia,031,Gornji Petrovci,,municipality,41
+SVN,Slovenia,158,Grad,,municipality,42
+SVN,Slovenia,032,Grosuplje,,municipality,43
+SVN,Slovenia,159,Hajdina,,municipality,44
+SVN,Slovenia,161,Hodoš,,municipality,45
+SVN,Slovenia,162,Horjul,,municipality,46
+SVN,Slovenia,160,Hoče-Slivnica,,municipality,47
+SVN,Slovenia,034,Hrastnik,,municipality,48
+SVN,Slovenia,035,Hrpelje-Kozina,,municipality,49
+SVN,Slovenia,036,Idrija,,municipality,50
+SVN,Slovenia,037,Ig,,municipality,51
+SVN,Slovenia,038,Ilirska Bistrica,,municipality,52
+SVN,Slovenia,039,Ivančna Gorica,,municipality,53
+SVN,Slovenia,040,Izola,,municipality,54
+SVN,Slovenia,041,Jesenice,,municipality,55
+SVN,Slovenia,163,Jezersko,,municipality,56
+SVN,Slovenia,042,Juršinci,,municipality,57
+SVN,Slovenia,043,Kamnik,,municipality,58
+SVN,Slovenia,044,Kanal ob Soči,,municipality,59
+SVN,Slovenia,045,Kidričevo,,municipality,60
+SVN,Slovenia,046,Kobarid,,municipality,61
+SVN,Slovenia,047,Kobilje,,municipality,62
+SVN,Slovenia,049,Komen,,municipality,63
+SVN,Slovenia,164,Komenda,,municipality,64
+SVN,Slovenia,050,Koper,,urban_municipality,65
+SVN,Slovenia,197,Kostanjevica na Krki,,municipality,66
+SVN,Slovenia,165,Kostel,,municipality,67
+SVN,Slovenia,051,Kozje,,municipality,68
+SVN,Slovenia,048,Kočevje,,municipality,69
+SVN,Slovenia,052,Kranj,,urban_municipality,70
+SVN,Slovenia,053,Kranjska Gora,,municipality,71
+SVN,Slovenia,166,Križevci,,municipality,72
+SVN,Slovenia,054,Krško,,urban_municipality,73
+SVN,Slovenia,055,Kungota,,municipality,74
+SVN,Slovenia,056,Kuzma,,municipality,75
+SVN,Slovenia,057,Laško,,municipality,76
+SVN,Slovenia,058,Lenart,,municipality,77
+SVN,Slovenia,059,Lendava,,municipality,78
+SVN,Slovenia,060,Litija,,municipality,79
+SVN,Slovenia,061,Ljubljana,,urban_municipality,80
+SVN,Slovenia,062,Ljubno,,municipality,81
+SVN,Slovenia,063,Ljutomer,,municipality,82
+SVN,Slovenia,208,Log-Dragomer,,municipality,83
+SVN,Slovenia,064,Logatec,,municipality,84
+SVN,Slovenia,167,Lovrenc na Pohorju,,municipality,85
+SVN,Slovenia,065,Loška dolina,,municipality,86
+SVN,Slovenia,066,Loški Potok,,municipality,87
+SVN,Slovenia,068,Lukovica,,municipality,88
+SVN,Slovenia,067,Luče,,municipality,89
+SVN,Slovenia,069,Majšperk,,municipality,90
+SVN,Slovenia,198,Makole,,municipality,91
+SVN,Slovenia,070,Maribor,,urban_municipality,92
+SVN,Slovenia,168,Markovci,,municipality,93
+SVN,Slovenia,071,Medvode,,municipality,94
+SVN,Slovenia,072,Mengeš,,municipality,95
+SVN,Slovenia,073,Metlika,,municipality,96
+SVN,Slovenia,074,Mežica,,municipality,97
+SVN,Slovenia,169,Miklavž na Dravskem polju,,municipality,98
+SVN,Slovenia,075,Miren-Kostanjevica,,municipality,99
+SVN,Slovenia,212,Mirna,,municipality,100
+SVN,Slovenia,170,Mirna Peč,,municipality,101
+SVN,Slovenia,076,Mislinja,,municipality,102
+SVN,Slovenia,199,Mokronog-Trebelno,,municipality,103
+SVN,Slovenia,078,Moravske Toplice,,municipality,104
+SVN,Slovenia,077,Moravče,,municipality,105
+SVN,Slovenia,079,Mozirje,,municipality,106
+SVN,Slovenia,080,Murska Sobota,,urban_municipality,107
+SVN,Slovenia,081,Muta,,municipality,108
+SVN,Slovenia,082,Naklo,,municipality,109
+SVN,Slovenia,083,Nazarje,,municipality,110
+SVN,Slovenia,084,Nova Gorica,,urban_municipality,111
+SVN,Slovenia,085,Novo Mesto,,urban_municipality,112
+SVN,Slovenia,086,Odranci,,municipality,113
+SVN,Slovenia,171,Oplotnica,,municipality,114
+SVN,Slovenia,087,Ormož,,municipality,115
+SVN,Slovenia,088,Osilnica,,municipality,116
+SVN,Slovenia,089,Pesnica,,municipality,117
+SVN,Slovenia,090,Piran,,municipality,118
+SVN,Slovenia,091,Pivka,,municipality,119
+SVN,Slovenia,172,Podlehnik,,municipality,120
+SVN,Slovenia,093,Podvelka,,municipality,121
+SVN,Slovenia,092,Podčetrtek,,municipality,122
+SVN,Slovenia,200,Poljčane,,municipality,123
+SVN,Slovenia,173,Polzela,,municipality,124
+SVN,Slovenia,094,Postojna,,municipality,125
+SVN,Slovenia,174,Prebold,,municipality,126
+SVN,Slovenia,095,Preddvor,,municipality,127
+SVN,Slovenia,175,Prevalje,,municipality,128
+SVN,Slovenia,096,Ptuj,,urban_municipality,129
+SVN,Slovenia,097,Puconci,,municipality,130
+SVN,Slovenia,100,Radenci,,municipality,131
+SVN,Slovenia,099,Radeče,,municipality,132
+SVN,Slovenia,101,Radlje ob Dravi,,municipality,133
+SVN,Slovenia,102,Radovljica,,municipality,134
+SVN,Slovenia,103,Ravne na Koroškem,,municipality,135
+SVN,Slovenia,176,Razkrižje,,municipality,136
+SVN,Slovenia,098,Rače-Fram,,municipality,137
+SVN,Slovenia,201,Renče-Vogrsko,,municipality,138
+SVN,Slovenia,209,Rečica ob Savinji,,municipality,139
+SVN,Slovenia,104,Ribnica,,municipality,140
+SVN,Slovenia,177,Ribnica na Pohorju,,municipality,141
+SVN,Slovenia,107,Rogatec,,municipality,142
+SVN,Slovenia,106,Rogaška Slatina,,municipality,143
+SVN,Slovenia,105,Rogašovci,,municipality,144
+SVN,Slovenia,108,Ruše,,municipality,145
+SVN,Slovenia,178,Selnica ob Dravi,,municipality,146
+SVN,Slovenia,109,Semič,,municipality,147
+SVN,Slovenia,110,Sevnica,,municipality,148
+SVN,Slovenia,111,Sežana,,municipality,149
+SVN,Slovenia,112,Slovenj Gradec,,urban_municipality,150
+SVN,Slovenia,113,Slovenska Bistrica,,municipality,151
+SVN,Slovenia,114,Slovenske Konjice,,municipality,152
+SVN,Slovenia,179,Sodražica,,municipality,153
+SVN,Slovenia,180,Solčava,,municipality,154
+SVN,Slovenia,202,Središče ob Dravi,,municipality,155
+SVN,Slovenia,115,Starše,,municipality,156
+SVN,Slovenia,203,Straža,,municipality,157
+SVN,Slovenia,181,Sveta Ana,,municipality,158
+SVN,Slovenia,204,Sveta Trojica v Slovenskih goricah,,municipality,159
+SVN,Slovenia,182,Sveti Andraž v Slovenskih goricah,,municipality,160
+SVN,Slovenia,116,Sveti Jurij ob Ščavnici,,municipality,161
+SVN,Slovenia,210,Sveti Jurij v Slovenskih goricah,,municipality,162
+SVN,Slovenia,205,Sveti Tomaž,,municipality,163
+SVN,Slovenia,184,Tabor,,municipality,164
+SVN,Slovenia,010,Tišina,,municipality,165
+SVN,Slovenia,128,Tolmin,,municipality,166
+SVN,Slovenia,129,Trbovlje,,municipality,167
+SVN,Slovenia,130,Trebnje,,municipality,168
+SVN,Slovenia,185,Trnovska Vas,,municipality,169
+SVN,Slovenia,186,Trzin,,municipality,170
+SVN,Slovenia,131,Tržič,,municipality,171
+SVN,Slovenia,132,Turnišče,,municipality,172
+SVN,Slovenia,133,Velenje,,urban_municipality,173
+SVN,Slovenia,187,Velika Polana,,municipality,174
+SVN,Slovenia,134,Velike Lašče,,municipality,175
+SVN,Slovenia,188,Veržej,,municipality,176
+SVN,Slovenia,135,Videm,,municipality,177
+SVN,Slovenia,136,Vipava,,municipality,178
+SVN,Slovenia,137,Vitanje,,municipality,179
+SVN,Slovenia,138,Vodice,,municipality,180
+SVN,Slovenia,139,Vojnik,,municipality,181
+SVN,Slovenia,189,Vransko,,municipality,182
+SVN,Slovenia,140,Vrhnika,,municipality,183
+SVN,Slovenia,141,Vuzenica,,municipality,184
+SVN,Slovenia,142,Zagorje ob Savi,,municipality,185
+SVN,Slovenia,143,Zavrč,,municipality,186
+SVN,Slovenia,144,Zreče,,municipality,187
+SVN,Slovenia,015,Črenšovci,,municipality,188
+SVN,Slovenia,016,Črna na Koroškem,,municipality,189
+SVN,Slovenia,017,Črnomelj,,municipality,190
+SVN,Slovenia,033,Šalovci,,municipality,191
+SVN,Slovenia,183,Šempeter-Vrtojba,,municipality,192
+SVN,Slovenia,118,Šentilj,,municipality,193
+SVN,Slovenia,119,Šentjernej,,municipality,194
+SVN,Slovenia,120,Šentjur,,municipality,195
+SVN,Slovenia,211,Šentrupert,,municipality,196
+SVN,Slovenia,117,Šenčur,,municipality,197
+SVN,Slovenia,121,Škocjan,,municipality,198
+SVN,Slovenia,122,Škofja Loka,,municipality,199
+SVN,Slovenia,123,Škofljica,,municipality,200
+SVN,Slovenia,124,Šmarje pri Jelšah,,municipality,201
+SVN,Slovenia,206,Šmarješke Toplice,,municipality,202
+SVN,Slovenia,125,Šmartno ob Paki,,municipality,203
+SVN,Slovenia,194,Šmartno pri Litiji,,municipality,204
+SVN,Slovenia,126,Šoštanj,,municipality,205
+SVN,Slovenia,127,Štore,,municipality,206
+SVN,Slovenia,190,Žalec,,municipality,207
+SVN,Slovenia,146,Železniki,,municipality,208
+SVN,Slovenia,191,Žetale,,municipality,209
+SVN,Slovenia,147,Žiri,,municipality,210
+SVN,Slovenia,192,Žirovnica,,municipality,211
+SVN,Slovenia,193,Žužemberk,,municipality,212
+ESP,Spain,AN,Andalucía,,autonomous_community,1
+ESP,Spain,AR,Aragón,,autonomous_community,2
+ESP,Spain,AS,Asturias,,autonomous_community,3
+ESP,Spain,CN,Canarias,,autonomous_community,4
+ESP,Spain,CB,Cantabria,,autonomous_community,5
+ESP,Spain,CL,Castilla y León,,autonomous_community,6
+ESP,Spain,CM,Castilla-La Mancha,,autonomous_community,7
+ESP,Spain,CT,Catalunya,,autonomous_community,8
+ESP,Spain,CE,Ceuta,,autonomous_city_in_north_africa,9
+ESP,Spain,EX,Extremadura,,autonomous_community,10
+ESP,Spain,GA,Galicia,,autonomous_community,11
+ESP,Spain,IB,Illes Balears,,autonomous_community,12
+ESP,Spain,RI,La Rioja,,autonomous_community,13
+ESP,Spain,MD,Madrid,,autonomous_community,14
+ESP,Spain,ML,Melilla,,autonomous_city_in_north_africa,15
+ESP,Spain,MC,Murcia,,autonomous_community,16
+ESP,Spain,NC,Navarra,,autonomous_community,17
+ESP,Spain,PV,País Vasco,,autonomous_community,18
+ESP,Spain,VC,Valenciana,,autonomous_community,19
+SWE,Sweden,K,Blekinge län,,county,1
+SWE,Sweden,W,Dalarnas län,,county,2
+SWE,Sweden,I,Gotlands län,,county,3
+SWE,Sweden,X,Gävleborgs län,,county,4
+SWE,Sweden,N,Hallands län,,county,5
+SWE,Sweden,Z,Jämtlands län,,county,6
+SWE,Sweden,F,Jönköpings län,,county,7
+SWE,Sweden,H,Kalmar län,,county,8
+SWE,Sweden,G,Kronobergs län,,county,9
+SWE,Sweden,BD,Norrbottens län,,county,10
+SWE,Sweden,M,Skåne län,,county,11
+SWE,Sweden,AB,Stockholms län,,county,12
+SWE,Sweden,D,Södermanlands län,,county,13
+SWE,Sweden,C,Uppsala län,,county,14
+SWE,Sweden,S,Värmlands län,,county,15
+SWE,Sweden,AC,Västerbottens län,,county,16
+SWE,Sweden,Y,Västernorrlands län,,county,17
+SWE,Sweden,U,Västmanlands län,,county,18
+SWE,Sweden,O,Västra Götalands län,,county,19
+SWE,Sweden,T,Örebro län,,county,20
+SWE,Sweden,E,Östergötlands län,,county,21

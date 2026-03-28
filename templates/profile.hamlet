@@ -1,7 +1,44 @@
-<div class="max-w-lg mx-auto">
+<div class="mx-auto max-w-2xl">
   <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
     <h1 class="text-2xl font-semibold text-slate-900">Edit profile</h1>
-    <p class="mt-2 text-sm text-slate-500">Update your name and description.</p>
-    <form method=post action=@{ProfileR} enctype=#{enctype} class="mt-6 space-y-4">
-      ^{widget}
+    <p class="mt-2 text-sm text-slate-500">Update your public profile and required region metadata.</p>
+    $maybe err <- formError
+      <div class="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        #{err}
+    <form method=post action=@{ProfileR} class="mt-6 space-y-4">
+      $maybe tok <- mCsrfToken
+        <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="space-y-1">
+          <label for="profile-name" class="text-sm font-semibold text-slate-700">Name
+          <input id="profile-name" type="text" name="name" value=#{profileNameValue} class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
+        <div class="space-y-1">
+          <label for="profile-country-code" class="text-sm font-semibold text-slate-700">Country
+          <select id="profile-country-code" name="countryCode" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
+            $forall Entity _ country <- profileCountries
+              $with code <- countryCode country
+                <option value=#{code} :profileCountryCodeValue == code:selected>#{fromMaybe (countryName country) (countryLocalName country)}
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="space-y-1">
+          <label for="profile-state" class="text-sm font-semibold text-slate-700">State
+          <select id="profile-state" name="state" required data-selected-state=#{profileStateValue} class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
+            $forall Entity _ stateRow <- profileCountryStates
+              $with countryCodeValue <- countryStateCountryCode stateRow
+                $with stateCodeValue <- countryStateCode stateRow
+                  <option value=#{stateCodeValue} data-country-code=#{countryCodeValue} :profileStateValue == stateCodeValue:selected>#{fromMaybe (countryStateName stateRow) (countryStateLocalName stateRow)}
+        <div class="space-y-1">
+          <label class="text-sm font-semibold text-slate-700">Coordinates
+          <input id="profile-latitude" type="hidden" name="latitude" value=#{profileLatitudeValue}>
+          <input id="profile-longitude" type="hidden" name="longitude" value=#{profileLongitudeValue}>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" data-open-map-picker data-picker-title="Choose profile coordinates" data-target-lat="profile-latitude" data-target-lng="profile-longitude" data-target-label="profile-location-summary" class="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900">Choose on map
+            <span id="profile-location-summary" data-location-summary class="text-sm text-slate-500">#{profileLocationSummary}
+      <label class="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+        <input type="checkbox" name="localRegionOnly" value="1" :profileLocalRegionOnlyValue:checked class="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900">
+        <span>
+          <span class="block font-semibold text-slate-900">내 지역만 보기
+          <span class="mt-1 block text-xs text-slate-500">체크하면 회사와 채용 목록이 프로필에 저장된 국가와 주 기준으로만 표시됩니다.
+      <div class="space-y-1">
+        <label for="profile-description" class="text-sm font-semibold text-slate-700">Description
+        <textarea id="profile-description" name="description" rows="6" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">#{profileDescriptionValue}
       <button class="w-full rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Save</button>

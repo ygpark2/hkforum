@@ -44,5 +44,11 @@ oauth2:
   naver-client-id: "_env:NAVER_CLIENT_ID:"
   naver-client-secret: "_env:NAVER_CLIENT_SECRET:"
 
+maps:
+  google-api-key: "_env:GOOGLE_MAPS_API_KEY:"
+
+location-seeds:
+  suffixes: "_env:LOCATION_REGION_SEED_SUFFIXES:ko"
+
 copyright: Insert copyright statement here
 #analytics: UA-YOURCODE

@@ -11,6 +11,7 @@ import Control.Exception           (throw)
 import Data.Aeson                  (Result (..), fromJSON, withObject, (.!=),
                                     (.:?))
 import Data.FileEmbed              (embedFile)
+import qualified Data.Text as T
 import Data.Yaml                   (decodeEither')
 import Database.Persist.Sqlite     (SqliteConf)
 import Language.Haskell.TH.Syntax  (Exp, Name, Q)
@@ -67,6 +68,8 @@ data AppSettings = AppSettings
     , appKakaoClientSecret      :: Maybe Text
     , appNaverClientId          :: Maybe Text
     , appNaverClientSecret      :: Maybe Text
+    , appGoogleMapsApiKey       :: Maybe Text
+    , appLocationRegionSeedSuffixes :: [Text]
     }
 
 instance FromJSON AppSettings where
@@ -113,6 +116,17 @@ instance FromJSON AppSettings where
         appKakaoClientSecret      <- oauth2 .:? "kakao-client-secret"
         appNaverClientId          <- oauth2 .:? "naver-client-id"
         appNaverClientSecret      <- oauth2 .:? "naver-client-secret"
+
+        mapsConfig                 <- o .:? "maps" .!= mempty
+        appGoogleMapsApiKey        <- mapsConfig .:? "google-api-key"
+        locationSeedsConfig        <- o .:? "location-seeds" .!= mempty
+        rawLocationSeedSuffixes    <- locationSeedsConfig .:? "suffixes" .!= ("ko" :: Text)
+        let appLocationRegionSeedSuffixes =
+                [ T.toLower trimmed
+                | value <- T.splitOn "," rawLocationSeedSuffixes
+                , let trimmed = T.strip value
+                , trimmed /= ""
+                ]
 
         return AppSettings {..}
 

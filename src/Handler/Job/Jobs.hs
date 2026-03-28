@@ -15,7 +15,24 @@ getJobsR = do
     req <- getRequest
     let mCsrfToken = reqToken req
     mViewer <- maybeAuth
-    jobs <- runDB $ selectList [] [Desc JobCreatedAt]
+    let localRegionFilterEnabled = maybe False (userLocalRegionOnly . entityVal) mViewer
+        mActiveLocalRegion = mViewer >>= (userRegionPair . entityVal)
+        localRegionNotice =
+            if localRegionFilterEnabled
+                then
+                    case mActiveLocalRegion of
+                        Just (countryCodeValue, stateValue) ->
+                            Just ("내 지역 필터 적용 중: " <> stateValue <> ", " <> countryCodeValue)
+                        Nothing ->
+                            Just ("프로필에 국가와 주를 저장해야 내 지역 필터를 사용할 수 있습니다." :: Text)
+                else Nothing
+    jobs <-
+        case (localRegionFilterEnabled, mActiveLocalRegion) of
+            (True, Nothing) -> pure []
+            (True, Just (countryCodeValue, stateValue)) ->
+                runDB $ selectList [JobCountryCode ==. Just countryCodeValue, JobState ==. Just stateValue] [Desc JobCreatedAt]
+            (False, _) ->
+                runDB $ selectList [] [Desc JobCreatedAt]
     now <- liftIO getCurrentTime
     let today = utctDay now
         mViewerId = entityKey <$> mViewer
@@ -49,6 +66,7 @@ getJobsR = do
 postJobsR :: Handler Html
 postJobsR = do
     userId <- requireAuthId
+    user <- runDB $ get404 userId
     titleRaw <- runInputPost $ ireq textField "title"
     companyRaw <- runInputPost $ ireq textField "company"
     mSalaryRaw <- runInputPost $ iopt textField "salary"
@@ -57,6 +75,8 @@ postJobsR = do
     mExperienceRaw <- runInputPost $ iopt textField "experience"
     mLocationRaw <- runInputPost $ iopt textField "location"
     mEmploymentTypeRaw <- runInputPost $ iopt textField "employmentType"
+    mLatitude <- runInputPost $ iopt doubleField "latitude"
+    mLongitude <- runInputPost $ iopt doubleField "longitude"
     contentRaw <- runInputPost $ ireq textField "content"
     let title = T.strip titleRaw
         company = T.strip companyRaw
@@ -69,6 +89,8 @@ postJobsR = do
     when (T.null title) $ invalidArgs ["title is required"]
     when (T.null company) $ invalidArgs ["company is required"]
     when (T.null content) $ invalidArgs ["content is required"]
+    (mLatitudeValue, mLongitudeValue) <- requireCoordinatePair mLatitude mLongitude
+    let (mCountryCodeValue, mStateValue) = userRegionFields user
     now <- liftIO getCurrentTime
     _ <- runDB $ insert Job
         { jobTitle = title
@@ -80,6 +102,10 @@ postJobsR = do
         , jobExperience = mExperience
         , jobLocation = mLocation
         , jobEmploymentType = mEmploymentType
+        , jobCountryCode = mCountryCodeValue
+        , jobState = mStateValue
+        , jobLatitude = mLatitudeValue
+        , jobLongitude = mLongitudeValue
         , jobContent = content
         , jobAuthor = userId
         , jobCreatedAt = now
@@ -105,3 +131,20 @@ normalizeOptionalText Nothing = Nothing
 normalizeOptionalText (Just raw) =
     let trimmed = T.strip raw
     in if T.null trimmed then Nothing else Just trimmed
+
+normalizeRegionField :: Maybe Text -> Maybe Text
+normalizeRegionField = normalizeOptionalText . fmap T.strip
+
+userRegionFields :: User -> (Maybe Text, Maybe Text)
+userRegionFields user = (normalizeRegionField (userCountryCode user), normalizeRegionField (userState user))
+
+userRegionPair :: User -> Maybe (Text, Text)
+userRegionPair user =
+    case userRegionFields user of
+        (Just countryCodeValue, Just stateValue) -> Just (countryCodeValue, stateValue)
+        _ -> Nothing
+
+requireCoordinatePair :: Maybe Double -> Maybe Double -> Handler (Maybe Double, Maybe Double)
+requireCoordinatePair Nothing Nothing = pure (Nothing, Nothing)
+requireCoordinatePair (Just lat) (Just lng) = pure (Just lat, Just lng)
+requireCoordinatePair _ _ = invalidArgs ["latitude and longitude must be provided together"]

@@ -75,7 +75,7 @@ postAdminUsersR = do
     case mExisting of
         Just _ -> setMessage "User already exists."
         Nothing -> do
-            user <- liftIO $ setPassword password (User ident Nothing role name description)
+            user <- liftIO $ setPassword password (User ident Nothing role name description Nothing Nothing False Nothing Nothing)
             void $ runDB $ insert user
             setMessage "User created."
     redirect AdminUsersR

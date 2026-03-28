@@ -25,7 +25,7 @@ postRegisterR = do
             mUser <- runDB $ selectFirst [UserIdent ==. ident] []
             case mUser of
                 Nothing -> do
-                    user <- liftIO $ setPassword pwd (User ident Nothing "user" Nothing Nothing)
+                    user <- liftIO $ setPassword pwd (User ident Nothing "user" Nothing Nothing Nothing Nothing False Nothing Nothing)
                     _ <- runDB $ insert user
                     setMessage "Registration successful. Please login."
                     redirect $ AuthR LoginR

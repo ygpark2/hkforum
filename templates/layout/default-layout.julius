@@ -40,11 +40,340 @@ const prepareGlobalPostModal = () => {
   if (boardSelect && boardSelect.options.length > 0) {
     boardSelect.selectedIndex = 0;
   }
+  updateLocationSummary('global-post-latitude', 'global-post-longitude', 'global-post-location-summary');
+};
+
+const MAP_MODAL_KEY = 'global-map-modal';
+const DEFAULT_MAP_CENTER = { lat: 37.5665, lng: 126.978 };
+
+const mapState = {
+  loader: null,
+  map: null,
+  infoWindow: null,
+  markers: [],
+  selectionMarker: null,
+  pickerTarget: null,
+  selectedLocation: null,
+  markersLoaded: false,
+  mode: 'browse',
+};
+
+const formatCoordinateValue = (value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric.toFixed(6) : '';
+};
+
+const formatCoordinateSummary = (lat, lng) => {
+  const latitude = Number(lat);
+  const longitude = Number(lng);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return 'No coordinates selected';
+  }
+  return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+};
+
+const escapeHtml = (value) =>
+  (value || '')
+    .toString()
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+
+const getNumericInputValue = (inputId) => {
+  const input = document.getElementById(inputId);
+  if (!input) return null;
+  const parsed = Number.parseFloat(input.value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const updateLocationSummary = (latInputId, lngInputId, labelId) => {
+  const label = document.getElementById(labelId);
+  if (!label) return;
+  const lat = getNumericInputValue(latInputId);
+  const lng = getNumericInputValue(lngInputId);
+  label.textContent = formatCoordinateSummary(lat, lng);
+};
+
+const syncAllLocationSummaries = () => {
+  document.querySelectorAll('[data-open-map-picker]').forEach((button) => {
+    const latInputId = button.getAttribute('data-target-lat');
+    const lngInputId = button.getAttribute('data-target-lng');
+    const labelId = button.getAttribute('data-target-label');
+    if (!latInputId || !lngInputId || !labelId) return;
+    updateLocationSummary(latInputId, lngInputId, labelId);
+  });
+};
+
+const getMapModal = () => document.querySelector(`[data-modal="${MAP_MODAL_KEY}"]`);
+const getMapCanvas = () => getMapModal()?.querySelector('[data-map-canvas]');
+const getMapStatus = () => getMapModal()?.querySelector('[data-map-status]');
+const getMapTitle = () => getMapModal()?.querySelector('[data-map-modal-title]');
+const getMapSelectionSummary = () => getMapModal()?.querySelector('[data-map-selection-summary]');
+const getMapApplyButton = () => getMapModal()?.querySelector('[data-map-apply]');
+const getMapClearButton = () => getMapModal()?.querySelector('[data-map-clear-selection]');
+
+const setMapStatus = (message, variant) => {
+  const status = getMapStatus();
+  if (!status) return;
+  status.textContent = message;
+  status.className =
+    variant === 'error'
+      ? 'rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700'
+      : variant === 'success'
+        ? 'rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700'
+        : 'rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600';
+};
+
+const refreshMapSelectionSummary = () => {
+  const summary = getMapSelectionSummary();
+  if (!summary) return;
+  const location = mapState.selectedLocation;
+  summary.textContent = location ? formatCoordinateSummary(location.lat, location.lng) : 'No coordinates selected';
+};
+
+const refreshMapModeControls = () => {
+  const applyButton = getMapApplyButton();
+  const clearButton = getMapClearButton();
+  const isPicker = mapState.mode === 'picker';
+  if (applyButton) {
+    applyButton.hidden = !isPicker;
+    applyButton.disabled = !isPicker || !mapState.selectedLocation;
+  }
+  if (clearButton) {
+    clearButton.hidden = !isPicker;
+  }
+};
+
+const placeSelectionMarker = (location, panToLocation) => {
+  if (!mapState.map || !window.google?.maps) return;
+  if (!location) {
+    if (mapState.selectionMarker) {
+      mapState.selectionMarker.setMap(null);
+      mapState.selectionMarker = null;
+    }
+    mapState.selectedLocation = null;
+    refreshMapSelectionSummary();
+    refreshMapModeControls();
+    return;
+  }
+  mapState.selectedLocation = location;
+  if (!mapState.selectionMarker) {
+    mapState.selectionMarker = new google.maps.Marker({
+      map: mapState.map,
+      title: 'Selected location',
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 8,
+        fillColor: '#0f172a',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 2,
+      },
+    });
+  }
+  mapState.selectionMarker.setPosition(location);
+  if (panToLocation) {
+    mapState.map.panTo(location);
+    mapState.map.setZoom(13);
+  }
+  refreshMapSelectionSummary();
+  refreshMapModeControls();
+};
+
+const resetMapSelection = () => {
+  placeSelectionMarker(null, false);
+};
+
+const fitMapToVisiblePoints = () => {
+  if (!mapState.map || !window.google?.maps) return;
+  const bounds = new google.maps.LatLngBounds();
+  let pointCount = 0;
+  mapState.markers.forEach((marker) => {
+    const position = marker.getPosition();
+    if (!position) return;
+    bounds.extend(position);
+    pointCount += 1;
+  });
+  if (mapState.selectedLocation) {
+    bounds.extend(mapState.selectedLocation);
+    pointCount += 1;
+  }
+  if (pointCount === 0) {
+    mapState.map.setCenter(DEFAULT_MAP_CENTER);
+    mapState.map.setZoom(6);
+    return;
+  }
+  if (pointCount === 1) {
+    mapState.map.setCenter(bounds.getCenter());
+    mapState.map.setZoom(13);
+    return;
+  }
+  mapState.map.fitBounds(bounds, 48);
+};
+
+const markerIconByKind = (kind) => {
+  const colors = {
+    post: '#2563eb',
+    job: '#f97316',
+    company: '#059669',
+  };
+  return {
+    path: google.maps.SymbolPath.CIRCLE,
+    scale: 7,
+    fillColor: colors[kind] || '#475569',
+    fillOpacity: 0.95,
+    strokeColor: '#ffffff',
+    strokeWeight: 2,
+  };
+};
+
+const loadGoogleMapsApi = () => {
+  const modal = getMapModal();
+  if (!modal) return Promise.reject(new Error('Map modal is unavailable.'));
+  if (window.google?.maps) return Promise.resolve(window.google.maps);
+  const apiKey = modal.getAttribute('data-google-maps-key') || '';
+  if (!apiKey) return Promise.reject(new Error('GOOGLE_MAPS_API_KEY is not configured.'));
+  if (mapState.loader) return mapState.loader;
+
+  mapState.loader = new Promise((resolve, reject) => {
+    const callbackName = '__hkforumGoogleMapsReady';
+    window[callbackName] = () => {
+      delete window[callbackName];
+      resolve(window.google.maps);
+    };
+    const existing = document.querySelector('script[data-google-maps-loader]');
+    if (existing) {
+      existing.addEventListener('error', () => reject(new Error('Failed to load Google Maps.')), { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&loading=async&callback=${callbackName}`;
+    script.async = true;
+    script.defer = true;
+    script.setAttribute('data-google-maps-loader', 'true');
+    script.addEventListener('error', () => {
+      delete window[callbackName];
+      reject(new Error('Failed to load Google Maps.'));
+    }, { once: true });
+    document.head.appendChild(script);
+  });
+
+  return mapState.loader;
+};
+
+const ensureMapInitialized = async () => {
+  const canvas = getMapCanvas();
+  if (!canvas) throw new Error('Map canvas is unavailable.');
+  await loadGoogleMapsApi();
+  if (!mapState.map) {
+    mapState.map = new google.maps.Map(canvas, {
+      center: DEFAULT_MAP_CENTER,
+      zoom: 6,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+    });
+    mapState.infoWindow = new google.maps.InfoWindow();
+    mapState.map.addListener('click', (event) => {
+      if (mapState.mode !== 'picker') return;
+      const latLng = event.latLng;
+      if (!latLng) return;
+      placeSelectionMarker({ lat: latLng.lat(), lng: latLng.lng() }, false);
+    });
+  }
+  google.maps.event.trigger(mapState.map, 'resize');
+  return mapState.map;
+};
+
+const loadMapMarkers = async () => {
+  const modal = getMapModal();
+  if (!modal || mapState.markersLoaded || !mapState.map) return;
+  const markersUrl = modal.getAttribute('data-markers-url');
+  if (!markersUrl) return;
+  const response = await fetch(markersUrl, { credentials: 'same-origin' });
+  if (!response.ok) throw new Error('Failed to load map markers.');
+  const payload = await response.json();
+  const markers = Array.isArray(payload?.markers) ? payload.markers : [];
+  mapState.markers.forEach((marker) => marker.setMap(null));
+  mapState.markers = markers
+    .filter((item) => Number.isFinite(Number(item?.latitude)) && Number.isFinite(Number(item?.longitude)))
+    .map((item) => {
+      const marker = new google.maps.Marker({
+        map: mapState.map,
+        position: { lat: Number(item.latitude), lng: Number(item.longitude) },
+        title: item?.title || 'Location',
+        icon: markerIconByKind(item?.kind || ''),
+      });
+      marker.addListener('click', () => {
+        if (!mapState.infoWindow) return;
+        const title = escapeHtml(item?.title || 'Location');
+        const subtitle = item?.subtitle ? `<div style="color:#475569;font-size:12px;margin-top:4px;">${escapeHtml(item.subtitle)}</div>` : '';
+        const link = item?.url ? `<a href="${item.url}" style="display:inline-block;margin-top:8px;color:#0f172a;font-weight:600;text-decoration:none;">Open</a>` : '';
+        mapState.infoWindow.setContent(`<div style="min-width:160px;"><div style="font-weight:700;color:#0f172a;">${title}</div>${subtitle}${link}</div>`);
+        mapState.infoWindow.open({ anchor: marker, map: mapState.map });
+      });
+      return marker;
+    });
+  mapState.markersLoaded = true;
+};
+
+const openMapModal = async (options) => {
+  const modal = getMapModal();
+  if (!modal) return;
+  mapState.mode = options?.mode === 'picker' ? 'picker' : 'browse';
+  mapState.pickerTarget = options?.pickerTarget || null;
+  const title = options?.title || (mapState.mode === 'picker' ? 'Choose location' : 'Map');
+  const titleEl = getMapTitle();
+  if (titleEl) titleEl.textContent = title;
+  refreshMapModeControls();
+  refreshMapSelectionSummary();
+  openDialogByKey(MAP_MODAL_KEY);
+  setMapStatus('Loading map...', 'info');
+
+  try {
+    await ensureMapInitialized();
+    if (!mapState.markersLoaded) {
+      await loadMapMarkers();
+    }
+    setMapStatus(
+      mapState.mode === 'picker'
+        ? 'Click the map to choose coordinates, then confirm.'
+        : `Showing ${mapState.markers.length} saved locations.`,
+      mapState.markers.length > 0 ? 'success' : 'info'
+    );
+    if (options?.selectedLocation) {
+      placeSelectionMarker(options.selectedLocation, true);
+    } else {
+      resetMapSelection();
+    }
+    fitMapToVisiblePoints();
+    refreshMapModeControls();
+  } catch (error) {
+    resetMapSelection();
+    refreshMapModeControls();
+    setMapStatus(error instanceof Error ? error.message : 'Failed to load map.', 'error');
+  }
+};
+
+const applySelectedLocation = () => {
+  const target = mapState.pickerTarget;
+  const location = mapState.selectedLocation;
+  if (!target || !location) return;
+  const latInput = document.getElementById(target.latInputId);
+  const lngInput = document.getElementById(target.lngInputId);
+  if (!latInput || !lngInput) return;
+  latInput.value = formatCoordinateValue(location.lat);
+  lngInput.value = formatCoordinateValue(location.lng);
+  updateLocationSummary(target.latInputId, target.lngInputId, target.labelId);
+  closeDialogByKey(MAP_MODAL_KEY);
 };
 
 const HOME_FEED_LABELS = {
   unread: 'Unread',
   everything: 'Everything',
+  local: '내지역',
   trends: 'Trends',
   following: 'Following',
   interests: 'Interests',
@@ -519,6 +848,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   syncThemeSwitches();
   initHomeCustomTabs();
+  syncAllLocationSummaries();
+  const modal = getMapModal();
+  if (modal) {
+    modal.addEventListener('close', () => {
+      mapState.mode = 'browse';
+      mapState.pickerTarget = null;
+      resetMapSelection();
+      refreshMapModeControls();
+    });
+  }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -530,6 +869,55 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener('click', (event) => {
+  const browseMapTarget = event.target.closest('[data-open-map-browser]');
+  if (browseMapTarget) {
+    event.preventDefault();
+    openMapModal({ mode: 'browse', title: 'Location map' });
+    return;
+  }
+
+  const pickerTarget = event.target.closest('[data-open-map-picker]');
+  if (pickerTarget) {
+    event.preventDefault();
+    const latInputId = pickerTarget.getAttribute('data-target-lat');
+    const lngInputId = pickerTarget.getAttribute('data-target-lng');
+    const labelId = pickerTarget.getAttribute('data-target-label');
+    if (!latInputId || !lngInputId || !labelId) return;
+    const selectedLat = getNumericInputValue(latInputId);
+    const selectedLng = getNumericInputValue(lngInputId);
+    openMapModal({
+      mode: 'picker',
+      title: pickerTarget.getAttribute('data-picker-title') || 'Choose location',
+      pickerTarget: { latInputId, lngInputId, labelId },
+      selectedLocation:
+        selectedLat !== null && selectedLng !== null
+          ? { lat: selectedLat, lng: selectedLng }
+          : null,
+    });
+    return;
+  }
+
+  const applyTarget = event.target.closest('[data-map-apply]');
+  if (applyTarget) {
+    event.preventDefault();
+    applySelectedLocation();
+    return;
+  }
+
+  const clearTarget = event.target.closest('[data-map-clear-selection]');
+  if (clearTarget) {
+    event.preventDefault();
+    resetMapSelection();
+    if (mapState.pickerTarget) {
+      const latInput = document.getElementById(mapState.pickerTarget.latInputId);
+      const lngInput = document.getElementById(mapState.pickerTarget.lngInputId);
+      if (latInput) latInput.value = '';
+      if (lngInput) lngInput.value = '';
+      updateLocationSummary(mapState.pickerTarget.latInputId, mapState.pickerTarget.lngInputId, mapState.pickerTarget.labelId);
+    }
+    return;
+  }
+
   const openTarget = event.target.closest('[data-open]');
   if (openTarget) {
     const key = openTarget.getAttribute('data-open');

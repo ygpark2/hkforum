@@ -40,6 +40,7 @@
 /profile ProfileR GET POST
 /upload UploadR POST
 /files/*Texts FileR GET
+/map/markers MapMarkersR GET
 /admin AdminR GET
 /admin/boards AdminBoardsR GET POST
 /admin/boards/new AdminBoardNewR GET

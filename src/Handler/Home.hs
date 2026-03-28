@@ -19,6 +19,7 @@ reactionEmojiOptions =
 data FeedTab
     = FeedUnread
     | FeedEverything
+    | FeedLocal
     | FeedTrends
     | FeedFollowing
     | FeedInterests
@@ -33,7 +34,9 @@ data PostTypeFilter
 getHomeR :: Handler Html
 getHomeR = do
     now <- liftIO getCurrentTime
-    mViewerId <- maybeAuthId
+    mViewer <- maybeAuth
+    let mViewerId = entityKey <$> mViewer
+        mViewerRegion = mViewer >>= (userRegionPair . entityVal)
     mTab <- lookupGetParam "tab"
     mTag <- lookupGetParam "tag"
     mSort <- lookupGetParam "sort"
@@ -69,6 +72,17 @@ getHomeR = do
                 || isJust mContentFilter
                 || isJust mPostTypeFilter
     let feedTab = parseFeedTab mTab
+        localRegionNotice =
+            if feedTab == FeedLocal
+                then
+                    case mViewerRegion of
+                        Just (countryCodeValue, stateValue) ->
+                            Just ("내 지역 필터 적용 중: " <> stateValue <> ", " <> countryCodeValue)
+                        Nothing ->
+                            case mViewerId of
+                                Nothing -> Just ("로그인해야 내지역 탭을 사용할 수 있습니다." :: Text)
+                                Just _ -> Just ("프로필에 국가와 주를 저장해야 내지역 탭을 사용할 수 있습니다." :: Text)
+                else Nothing
     boards <- runDB $ selectList [] [Asc BoardName]
     allRecentPosts <- runDB $ selectList [] [Desc PostCreatedAt, LimitTo 300]
     let allPostIds = map entityKey allRecentPosts
@@ -233,6 +247,16 @@ getHomeR = do
                     filter
                         (\(Entity _ p) -> postAuthor p == viewerId || Set.member (postAuthor p) followingSet)
                         allRecentPosts
+        localPosts =
+            case mViewerRegion of
+                Nothing -> []
+                Just (countryCodeValue, stateValue) ->
+                    filter
+                        (\(Entity _ post) ->
+                            postCountryCode post == Just countryCodeValue
+                                && postState post == Just stateValue
+                        )
+                        allRecentPosts
         interestsPosts =
             case mViewerId of
                 Nothing -> []
@@ -250,6 +274,7 @@ getHomeR = do
             case feedTab of
                 FeedUnread -> unreadPosts
                 FeedEverything -> allRecentPosts
+                FeedLocal -> localPosts
                 FeedTrends -> allRecentPosts
                 FeedFollowing -> followingPosts
                 FeedInterests -> rankedInterestsPosts
@@ -286,6 +311,13 @@ getHomeR = do
                                     case mViewerId of
                                         Nothing -> "Login to use unread feed."
                                         Just _ -> "No unread posts."
+                                FeedLocal ->
+                                    case mViewerId of
+                                        Nothing -> "Login to see posts from your region."
+                                        Just _ ->
+                                            case mViewerRegion of
+                                                Nothing -> "Set your country and state in profile to use 내지역."
+                                                Just _ -> "No posts from your region yet."
                                 FeedTrends -> "No trending posts yet."
                                 FeedFollowing ->
                                     case mViewerId of
@@ -340,7 +372,7 @@ getHomeR = do
         watchState pid = if isWatching pid then ("true" :: Text) else "false"
         watchIcon pid = if isWatching pid then ("🙈" :: Text) else "👁"
         watchLabel pid = if isWatching pid then ("Not watching" :: Text) else "Watch"
-        feedTabs = [FeedUnread, FeedEverything, FeedTrends, FeedFollowing, FeedInterests]
+        feedTabs = [FeedUnread, FeedEverything, FeedLocal, FeedTrends, FeedFollowing, FeedInterests]
         isActiveTab tab = tab == feedTab
         tabClass tab =
             if isActiveTab tab && not hasTagFilter
@@ -367,6 +399,7 @@ parseFeedTab mRaw =
     case fmap (T.toLower . T.strip) mRaw of
         Just "unread" -> FeedUnread
         Just "everything" -> FeedEverything
+        Just "local" -> FeedLocal
         Just "trends" -> FeedTrends
         Just "following" -> FeedFollowing
         Just "interests" -> FeedInterests
@@ -377,6 +410,7 @@ feedTabParam tab =
     case tab of
         FeedUnread -> "unread"
         FeedEverything -> "everything"
+        FeedLocal -> "local"
         FeedTrends -> "trends"
         FeedFollowing -> "following"
         FeedInterests -> "interests"
@@ -386,6 +420,7 @@ feedTabLabel tab =
     case tab of
         FeedUnread -> "Unread"
         FeedEverything -> "Everything"
+        FeedLocal -> "내지역"
         FeedTrends -> "Trends"
         FeedFollowing -> "Following"
         FeedInterests -> "Interests"
@@ -434,9 +469,12 @@ parsePostTypeFilter mRaw =
 postHomeR :: Handler Html
 postHomeR = do
     userId <- requireAuthId
+    user <- runDB $ get404 userId
     boardId <- runInputPost $ ireq hiddenField "boardId"
     mTitle <- runInputPost $ iopt textField "title"
     mTags <- runInputPost $ iopt textField "tags"
+    mLatitude <- runInputPost $ iopt doubleField "latitude"
+    mLongitude <- runInputPost $ iopt doubleField "longitude"
     contentRaw <- runInputPost $ ireq textField "content"
     _ <- runDB $ get404 boardId
     let content = T.strip contentRaw
@@ -447,15 +485,41 @@ postHomeR = do
                     let firstLine = T.takeWhile (/= '\n') content
                     in if T.null firstLine then "Untitled" else T.take 80 firstLine
     when (T.null content) $ invalidArgs ["content is required"]
+    (mLatitudeValue, mLongitudeValue) <- requireCoordinatePair mLatitude mLongitude
+    let (mCountryCodeValue, mStateValue) = userRegionFields user
     now <- liftIO getCurrentTime
     postId <- runDB $ insert Post
         { postTitle = title
         , postContent = content
         , postAuthor = userId
         , postBoard = boardId
+        , postCountryCode = mCountryCodeValue
+        , postState = mStateValue
+        , postLatitude = mLatitudeValue
+        , postLongitude = mLongitudeValue
         , postCreatedAt = now
         , postUpdatedAt = now
         }
     runDB $ syncPostTags postId (parseTagList mTags)
     runDB $ update boardId [BoardPostCount +=. 1]
     redirect HomeR
+
+requireCoordinatePair :: Maybe Double -> Maybe Double -> Handler (Maybe Double, Maybe Double)
+requireCoordinatePair Nothing Nothing = pure (Nothing, Nothing)
+requireCoordinatePair (Just lat) (Just lng) = pure (Just lat, Just lng)
+requireCoordinatePair _ _ = invalidArgs ["latitude and longitude must be provided together"]
+
+normalizeRegionField :: Maybe Text -> Maybe Text
+normalizeRegionField Nothing = Nothing
+normalizeRegionField (Just raw) =
+    let trimmed = T.strip raw
+    in if T.null trimmed then Nothing else Just trimmed
+
+userRegionFields :: User -> (Maybe Text, Maybe Text)
+userRegionFields user = (normalizeRegionField (userCountryCode user), normalizeRegionField (userState user))
+
+userRegionPair :: User -> Maybe (Text, Text)
+userRegionPair user =
+    case userRegionFields user of
+        (Just countryCodeValue, Just stateValue) -> Just (countryCodeValue, stateValue)
+        _ -> Nothing
