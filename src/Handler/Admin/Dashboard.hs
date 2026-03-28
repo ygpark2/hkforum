@@ -13,7 +13,7 @@ getAdminR :: Handler Html
 getAdminR = do
     defaultLayout $ do
         setTitle $ preEscapedText "Admin"
-        let adminBody = $(widgetFile "admin/admin")
+        let adminBody = $(widgetFile "admin/index")
             activeKey = ("overview" :: Text)
             menuClass key =
                 if key == activeKey

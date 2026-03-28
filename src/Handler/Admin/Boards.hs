@@ -20,7 +20,7 @@ getAdminBoardsR = do
     let mCsrfToken = reqToken req
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Boards"
-        let adminBody = $(widgetFile "admin/admin-boards")
+        let adminBody = $(widgetFile "admin/board/list")
             activeKey = ("boards" :: Text)
             menuClass key =
                 if key == activeKey
@@ -36,7 +36,7 @@ getAdminBoardNewR = do
         isNew = True
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - New Board"
-        let adminBody = $(widgetFile "admin/admin-board-detail")
+        let adminBody = $(widgetFile "admin/board/detail")
             activeKey = ("boards" :: Text)
             menuClass key =
                 if key == activeKey
@@ -53,7 +53,7 @@ getAdminBoardR boardId = do
         isNew = False
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Edit Board"
-        let adminBody = $(widgetFile "admin/admin-board-detail")
+        let adminBody = $(widgetFile "admin/board/detail")
             activeKey = ("boards" :: Text)
             menuClass key =
                 if key == activeKey

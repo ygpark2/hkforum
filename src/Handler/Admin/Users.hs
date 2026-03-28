@@ -23,7 +23,7 @@ getAdminUsersR = do
     let mCsrfToken = reqToken req
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Users"
-        let adminBody = $(widgetFile "admin/admin-users")
+        let adminBody = $(widgetFile "admin/user/list")
             activeKey = ("users" :: Text)
             menuClass key =
                 if key == activeKey
@@ -39,7 +39,7 @@ getAdminUserNewR = do
         isNew = True
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - New User"
-        let adminBody = $(widgetFile "admin/admin-user-detail")
+        let adminBody = $(widgetFile "admin/user/detail")
             activeKey = ("users" :: Text)
             menuClass key =
                 if key == activeKey
@@ -56,7 +56,7 @@ getAdminUserR userId = do
         isNew = False
     defaultLayout $ do
         setTitle $ preEscapedText "Admin - Edit User"
-        let adminBody = $(widgetFile "admin/admin-user-detail")
+        let adminBody = $(widgetFile "admin/user/detail")
             activeKey = ("users" :: Text)
             menuClass key =
                 if key == activeKey

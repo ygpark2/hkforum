@@ -110,7 +110,7 @@ getCompaniesR = do
         companyDescriptionHtml company = preEscapedText (companyDescription company)
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum | Company"
-        $(widgetFile "forum/companies")
+        $(widgetFile "company/companies")
 
 postCompaniesR :: Handler Html
 postCompaniesR = do
