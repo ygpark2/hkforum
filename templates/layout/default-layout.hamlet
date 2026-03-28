@@ -203,9 +203,10 @@ $if showSidebarLayout
           <div class="flex items-center justify-between">
             <h2 class="text-lg font-semibold text-slate-900">New post
             <button type="button" data-close="global-post-modal" class="rounded-xl border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-900 hover:text-slate-900">Close
-          <form method=post action=@{HomeR} data-global-post-form class="mt-4 space-y-4">
+          <form method=post action=@{HomeR} data-global-post-form data-upload-url=@{UploadR} class="mt-4 space-y-4">
             $maybe tok <- layoutCsrfToken
               <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
+            <input id="global-post-content-input" type=hidden name="content">
             <div class="space-y-1">
               <label for="global-board-id" class="text-sm font-semibold text-slate-700">Board
               <select id="global-board-id" name="boardId" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
@@ -215,8 +216,28 @@ $if showSidebarLayout
               <label for="global-post-title" class="text-sm font-semibold text-slate-700">Post title
               <input id="global-post-title" name="title" type="text" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="What's on your mind?">
             <div class="space-y-1">
-              <label for="global-post-content" class="text-sm font-semibold text-slate-700">Content
-              <textarea id="global-post-content" name="content" required rows="8" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="Share your thoughts">
+              <div class="flex items-center justify-between gap-3">
+                <label for="global-post-description-editor" class="text-sm font-semibold text-slate-700">Content
+                <span class="text-xs text-slate-500">이미지 업로드 지원
+              <div id="global-post-description-editor-shell" class="overflow-hidden rounded-2xl border border-slate-200">
+                <div id="global-post-description-toolbar">
+                  <span class="ql-formats">
+                    <select class="ql-header">
+                      <option selected>
+                      <option value="2">
+                      <option value="3">
+                    <select class="ql-align">
+                  <span class="ql-formats">
+                    <button type="button" class="ql-bold">
+                    <button type="button" class="ql-italic">
+                    <button type="button" class="ql-underline">
+                  <span class="ql-formats">
+                    <button type="button" class="ql-list" value="ordered">
+                    <button type="button" class="ql-list" value="bullet">
+                    <button type="button" class="ql-blockquote">
+                    <button type="button" class="ql-link">
+                    <button type="button" class="ql-image">
+                <div id="global-post-description-editor" class="min-h-[200px] bg-white">
             <div class="space-y-1">
               <label for="global-post-tags" class="text-sm font-semibold text-slate-700">Tags
               <input id="global-post-tags" name="tags" type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="tag1, tag2">

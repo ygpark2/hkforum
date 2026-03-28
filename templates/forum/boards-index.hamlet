@@ -33,5 +33,6 @@
                       <div class="flex items-center justify-between gap-2">
                         <p class="truncate text-sm font-semibold text-slate-900">#{postTitle post}
                         <span class="shrink-0 text-xs text-slate-400">#{relativeTime (postCreatedAt post)}
-                      <p class="mt-1 break-all text-sm text-slate-700">#{postContent post}
+                      <div class="ql-editor forum-content-wrap mt-1 break-all text-sm text-slate-700">
+                        #{preEscapedText (postContent post)}
                       <p class="mt-1 text-xs text-slate-500">@#{authorHandle (postAuthor post)} · #{authorName (postAuthor post)}
