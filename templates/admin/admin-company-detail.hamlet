@@ -24,7 +24,9 @@
             <div class="admin-form-select-wrap">
               <select id="company-category-id" name=categoryId class="admin-form-select">
                 $forall Entity categoryId category <- categories
-                  <option value=#{toPathPiece categoryId}>#{companyGroupName category}
+                  <option value=#{toPathPiece categoryId}>
+                    #{companyGroupCode category} 
+                    #{companyGroupName category}
         <div class="admin-form-row">
           <div class="admin-form-col admin-form-col-half">
             <label class="admin-form-label" for="company-website">Website</label>
@@ -60,7 +62,9 @@
               <div class="admin-form-select-wrap">
                 <select id="edit-company-category-id" name=categoryId class="admin-form-select">
                   $forall Entity categoryId category <- categories
-                    <option value=#{toPathPiece categoryId} :companyCategory company == categoryId:selected>#{companyGroupName category}
+                    <option value=#{toPathPiece categoryId} :companyCategory company == categoryId:selected>
+                      #{companyGroupCode category} 
+                      #{companyGroupName category}
           <div class="admin-form-row">
             <div class="admin-form-col admin-form-col-half">
               <label class="admin-form-label" for="edit-company-website">Website</label>

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Handler.Forum.Notifications (getNotificationsR, postNotificationsReadAllR) where
+module Handler.Notification.Notifications (getNotificationsR, postNotificationsReadAllR) where
 
 import Import
 import qualified Data.List as L

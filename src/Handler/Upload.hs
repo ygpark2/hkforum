@@ -4,24 +4,16 @@ module Handler.Upload (postUploadR, getFileR) where
 import Import
 import Storage (StorageBackendType(..), storagePut, storageOpen, storageUrl)
 import Data.Time (getCurrentTime)
-
-uploadForm :: Html -> MForm Handler (FormResult FileInfo, Widget)
-uploadForm = renderDivs $ fileAFormReq $ FieldSettings
-    { fsLabel = "file"
-    , fsTooltip = Nothing
-    , fsId = Nothing
-    , fsName = Nothing
-    , fsAttrs = []
-    }
+import qualified Prelude as P
 
 postUploadR :: Handler Value
 postUploadR = do
     uid <- requireAuthId
     storage <- getsYesod appStorage
     now <- liftIO getCurrentTime
-    ((res, _), _) <- runFormPost uploadForm
-    case res of
-        FormSuccess fi -> do
+    (_params, files) <- runRequestBody
+    case P.lookup "file" files of
+        Just fi -> do
             let prefix = "users/" <> toPathPiece uid
             key <- storagePut storage fi prefix
             _ <- runDB $ insert $ Upload

@@ -12,9 +12,12 @@
         $maybe tok <- mCsrfToken
           <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
         <div class="admin-form-row">
-          <div class="admin-form-col admin-form-col-full">
+          <div class="admin-form-col admin-form-col-half">
             <label class="admin-form-label" for="company-category-name">Name</label>
             <input id="company-category-name" type=text name=name placeholder="Fintech" required class="admin-form-input">
+          <div class="admin-form-col admin-form-col-half">
+            <label class="admin-form-label" for="company-category-code">Code</label>
+            <input id="company-category-code" type=text name=code placeholder="62-63" required class="admin-form-input">
         <div class="admin-form-row">
           <div class="admin-form-col admin-form-col-full">
             <label class="admin-form-label" for="company-category-description">Description</label>
@@ -33,10 +36,33 @@
           <div class="admin-form-row">
             <div class="admin-form-col admin-form-col-half">
               <label class="admin-form-label" for="edit-company-category-name">Name</label>
-              <input id="edit-company-category-name" type=text name=name value=#{companyGroupName category} required class="admin-form-input">
+              <input
+                id="edit-company-category-name"
+                type=text
+                name=name
+                value=#{companyGroupName category}
+                required
+                :companyGroupIsSystem category:readonly
+                class="admin-form-input"
+                >
             <div class="admin-form-col admin-form-col-half">
               <label class="admin-form-label" for="edit-company-category-count">Companies</label>
               <input id="edit-company-category-count" type=text value=#{tshow companyCount} readonly class="admin-form-input">
+          <div class="admin-form-row">
+            <div class="admin-form-col admin-form-col-half">
+              <label class="admin-form-label" for="edit-company-category-code">Code</label>
+              <input
+                id="edit-company-category-code"
+                type=text
+                name=code
+                value=#{companyGroupCode category}
+                required
+                :companyGroupIsSystem category:readonly
+                class="admin-form-input"
+                >
+            <div class="admin-form-col admin-form-col-half">
+              <label class="admin-form-label" for="edit-company-category-major-code">Major code</label>
+              <input id="edit-company-category-major-code" type=text value=#{fromMaybe "" (companyGroupMajorCode category)} readonly class="admin-form-input">
           <div class="admin-form-row">
             <div class="admin-form-col admin-form-col-half">
               <label class="admin-form-label" for="edit-company-category-author">Created by</label>
@@ -54,7 +80,9 @@
               <button class="rounded-xl border border-slate-900 px-4 py-2 text-sm font-semibold text-slate-900">Save</button>
         <div class="mt-6 rounded-xl border border-slate-200 bg-white p-4">
           <div class="text-sm font-semibold text-slate-900">Delete category</div>
-          $if companyCount > 0
+          $if companyGroupIsSystem category
+            <p class="mt-2 text-sm text-slate-500">System categories cannot be deleted.
+          $elseif companyCount > 0
             <p class="mt-2 text-sm text-slate-500">This category has #{companyCount} companies, so it cannot be deleted.
           $else
             <p class="mt-2 text-sm text-slate-500">This category can be deleted because it is not used by any company.

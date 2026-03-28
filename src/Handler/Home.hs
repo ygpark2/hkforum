@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Handler.Forum.Home (getHomeR, postHomeR) where
+module Handler.Home (getHomeR, postHomeR) where
 
 import Import
 import Forum.Tag (loadPostTagsMap, parseTagList, syncPostTags)

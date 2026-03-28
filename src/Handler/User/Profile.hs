@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings, TemplateHaskell #-}
-module Handler.Profile
+module Handler.User.Profile
     ( getProfileR
     , postProfileR
     ) where

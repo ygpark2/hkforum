@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Handler.Forum.Chats
+module Handler.Chat.Chats
     ( getChatsR
     , getChatsNewR
     , postChatsNewR
@@ -138,60 +138,44 @@ loadChatRoomSummaries viewerId = do
     now <- liftIO getCurrentTime
     let peerMap = Map.fromList $ map (\(Entity uid user) -> (uid, user)) peers
         latestMessageByRoom =
-            P.foldl'
-                (\acc msgEnt ->
-                    let rid = directMessageRoom (entityVal msgEnt)
-                    in Map.insertWith (\_ old -> old) rid msgEnt acc
-                )
-                Map.empty
-                messages
-    pure $ mapMaybe (toSummary now peerMap latestMessageByRoom) rooms
-  where
-    toSummary now peerMap latestMessageByRoom (Entity roomId room) = do
-        peer <- Map.lookup (roomPeerId viewerId room) peerMap
-        let mLastMessage = Map.lookup roomId latestMessageByRoom
-            preview = maybe "No messages yet." (directMessageContent . entityVal) mLastMessage
-            updatedAt = maybe (chatRoomUpdatedAt room) (directMessageCreatedAt . entityVal) mLastMessage
-        pure ChatRoomSummary
-            { chatRoomSummaryId = roomId
-            , chatRoomSummaryPeerName = userIdent peer
-            , chatRoomSummaryPeerHandle = T.toLower (userIdent peer)
-            , chatRoomSummaryPreview = T.take 96 preview
-            , chatRoomSummaryUpdatedLabel = relativeTimeLabel now updatedAt
-            }
-
-matchesNeedle :: Text -> Entity User -> Bool
-matchesNeedle needle (Entity _ user) =
-    needle `T.isInfixOf` identLower || needle `T.isInfixOf` nameLower
-  where
-    identLower = T.toLower $ userIdent user
-    nameLower = T.toLower $ fromMaybe "" $ userName user
+            Map.fromListWith
+                (\old _ -> old)
+                (map (\(Entity _ msg) -> (directMessageRoom msg, msg)) messages)
+        summaryFor (Entity roomId room) =
+            let peerId = roomPeerId viewerId room
+                peer = Map.lookup peerId peerMap
+                peerName = maybe "Unknown" userIdent peer
+                peerHandle = T.toLower $ T.filter (/= ' ') peerName
+                preview = maybe "No messages yet" directMessageContent (Map.lookup roomId latestMessageByRoom)
+                updatedLabel = relativeTimeLabel now (chatRoomUpdatedAt room)
+            in ChatRoomSummary roomId peerName peerHandle preview updatedLabel
+    pure $ map summaryFor rooms
 
 normalizeChatPair :: UserId -> UserId -> (UserId, UserId)
 normalizeChatPair a b =
-    if fromSqlKey a <= fromSqlKey b
-        then (a, b)
-        else (b, a)
+    if fromSqlKey a <= fromSqlKey b then (a, b) else (b, a)
+
+roomPeerId :: UserId -> ChatRoom -> UserId
+roomPeerId viewerId room
+    | chatRoomUserA room == viewerId = chatRoomUserB room
+    | otherwise = chatRoomUserA room
 
 viewerCanAccessRoom :: UserId -> ChatRoom -> Bool
 viewerCanAccessRoom viewerId room =
     chatRoomUserA room == viewerId || chatRoomUserB room == viewerId
 
-roomPeerId :: UserId -> ChatRoom -> UserId
-roomPeerId viewerId room =
-    if chatRoomUserA room == viewerId
-        then chatRoomUserB room
-        else chatRoomUserA room
+matchesNeedle :: Text -> Entity User -> Bool
+matchesNeedle needle (Entity _ user) =
+    let ident = T.toLower (userIdent user)
+        nameText = maybe "" T.toLower (userName user)
+    in needle `T.isInfixOf` ident || needle `T.isInfixOf` nameText
 
 relativeTimeLabel :: UTCTime -> UTCTime -> Text
 relativeTimeLabel now ts =
     let minutes = floor (diffUTCTime now ts / 60) :: Int
         hours = minutes `div` 60
         days = hours `div` 24
-    in if minutes < 60
-        then tshow minutes <> " min ago"
-        else if hours < 24
-            then tshow hours <> " hours ago"
-            else if days < 30
-                then tshow days <> " days ago"
-                else tshow $ formatTime defaultTimeLocale "%b %e, %Y" ts
+    in if minutes < 60 then tshow minutes <> " min ago"
+       else if hours < 24 then tshow hours <> " hours ago"
+       else if days < 30 then tshow days <> " days ago"
+       else tshow $ formatTime defaultTimeLocale "%b %e, %Y" ts

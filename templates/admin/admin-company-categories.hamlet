@@ -16,13 +16,17 @@
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div class="min-w-0">
                 <div class="text-sm font-semibold text-slate-900">#{companyGroupName category}
-                <div class="mt-1 text-xs text-slate-500">#{companyCount} companies
+                <div class="mt-1 text-xs text-slate-500">
+                  Code: #{companyGroupCode category} · #{companyCount} companies
+                  $if companyGroupIsSystem category
+                    · system
                 $maybe description <- companyGroupDescription category
                   <div class="mt-2 text-sm text-slate-600">#{description}
               <div class="flex items-center gap-3">
                 <a href=@{AdminCompanyCategoryR categoryId} class="rounded-xl border border-slate-900 px-4 py-2 text-sm font-semibold text-slate-900">View
-                <form method=post action=@{AdminCompanyCategoryR categoryId} class="m-0">
-                  $maybe tok <- mCsrfToken
-                    <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
-                  <input type=hidden name=action value="delete">
-                  <button class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700">Delete</button>
+                $if not (companyGroupIsSystem category)
+                  <form method=post action=@{AdminCompanyCategoryR categoryId} class="m-0">
+                    $maybe tok <- mCsrfToken
+                      <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
+                    <input type=hidden name=action value="delete">
+                    <button class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700">Delete</button>
