@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Handler.Forum.Jobs (getJobsR, postJobsR, postJobCloseR) where
+module Handler.Job.Jobs (getJobsR, postJobsR, postJobCloseR) where
 
 import Import
 import qualified Data.List as L

@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Handler.Forum.User (postUserFollowR) where
+module Handler.User.User (postUserFollowR) where
 
 import Import
 

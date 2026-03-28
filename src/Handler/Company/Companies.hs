@@ -1,12 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Handler.Forum.Companies
+module Handler.Company.Companies
     ( getCompaniesR
     , postCompaniesR
     , postCompanyCategoriesR
     ) where
 
+import CompanyCategories
+import CompanyDescription (prepareCompanyDescription)
 import Import
 import qualified Data.List as L
 import qualified Data.Map.Strict as Map
@@ -20,9 +22,35 @@ getCompaniesR = do
     req <- getRequest
     let mCsrfToken = reqToken req
     mViewer <- maybeAuth
+    mSelectedMajorParam <- lookupGetParam "major"
     mSelectedCategoryParam <- lookupGetParam "category"
-    categories <- runDB $ selectList [] [Asc CompanyGroupName]
-    companies <- runDB $ selectList [] [Desc CompanyUpdatedAt, Asc CompanyName]
+    categories <- runDB $ selectList [CompanyGroupIsSystem ==. True] [Asc CompanyGroupSortOrder, Asc CompanyGroupName]
+    let categoryMap = Map.fromList $ map (\ent@(Entity categoryId _) -> (categoryId, ent)) categories
+        selectedCategoryId = mSelectedCategoryParam >>= fromPathPiece
+        selectedCategory =
+            selectedCategoryId >>= (`Map.lookup` categoryMap)
+        selectedMajorCode =
+            case mSelectedMajorParam >>= findCompanyMajorCategory of
+                Just major -> Just (companyMajorCategoryCode major)
+                Nothing ->
+                    selectedCategory >>= companyGroupMajorCode . entityVal
+        selectedMajor =
+            selectedMajorCode >>= findCompanyMajorCategory
+        visibleCategories =
+            case selectedCategory of
+                Just categoryEnt -> [categoryEnt]
+                Nothing ->
+                    case selectedMajorCode of
+                        Just majorCode ->
+                            filter
+                                ((== Just majorCode) . companyGroupMajorCode . entityVal)
+                                categories
+                        Nothing -> categories
+        visibleCategoryIds = map entityKey visibleCategories
+    companies <-
+        if P.null visibleCategoryIds
+            then pure []
+            else runDB $ selectList [CompanyCategory <-. visibleCategoryIds] [Desc CompanyCreatedAt, Desc CompanyUpdatedAt, Asc CompanyName]
     now <- liftIO getCurrentTime
     let authorIds = L.nub $ map (companyAuthor . entityVal) companies
     users <-
@@ -30,31 +58,27 @@ getCompaniesR = do
             then pure []
             else runDB $ selectList [UserId <-. authorIds] []
     let userMap = Map.fromList $ map (\(Entity uid user) -> (uid, userIdent user)) users
-        categoryMap = Map.fromList $ map (\ent@(Entity categoryId _) -> (categoryId, ent)) categories
-        companyCountMap = Map.fromListWith (+) $ map (\(Entity _ company) -> (companyCategory company, 1 :: Int)) companies
-        selectedCategoryId = mSelectedCategoryParam >>= fromPathPiece
-        selectedCategory = selectedCategoryId >>= (`Map.lookup` categoryMap)
-        visibleCategories =
-            case selectedCategory of
-                Just categoryEnt -> [categoryEnt]
-                Nothing -> categories
-        addCompanyByCategory acc ent@(Entity _ company) =
-            Map.insertWith (\new old -> old P.++ new) (companyCategory company) [ent] acc
-        companiesByCategory = P.foldl' addCompanyByCategory Map.empty companies
-        companiesFor categoryId = Map.findWithDefault [] categoryId companiesByCategory
-        totalCompanyCount = length companies
-        visibleCompanyRows = concatMap (companiesFor . entityKey) visibleCategories
         viewerId = entityKey <$> mViewer
-        allCategoryFilterClass =
-            if isNothing selectedCategory
-                then ("bg-slate-900 text-white" :: Text)
-                else "border border-slate-200 text-slate-700 hover:border-slate-900 hover:text-slate-900"
-        categoryFilterClass categoryId =
-            if selectedCategoryId == Just categoryId
-                then ("bg-slate-900 text-white" :: Text)
-                else "border border-slate-200 text-slate-700 hover:border-slate-900 hover:text-slate-900"
+        selectedCreateCategoryId =
+            case selectedCategory of
+                Just (Entity categoryId _) -> Just categoryId
+                Nothing ->
+                    case visibleCategories of
+                        Entity categoryId _ : _ -> Just categoryId
+                        [] -> Nothing
         authorName uid = Map.findWithDefault ("Unknown" :: Text) uid userMap
         authorHandle uid = T.toLower $ T.filter (/= ' ') (authorName uid)
+        categoryLabel category =
+            companyGroupCode category <> " " <> companyGroupName category
+        companyMajorName company =
+            case Map.lookup (companyCategory company) categoryMap >>= companyGroupMajorCode . entityVal of
+                Just majorCode ->
+                    maybe "기타" companyMajorCategoryName (findCompanyMajorCategory majorCode)
+                Nothing -> "기타"
+        companyMinorLabel company =
+            case Map.lookup (companyCategory company) categoryMap of
+                Just (Entity _ category) -> categoryLabel category
+                Nothing -> "미분류"
         relativeTime ts =
             let minutes = floor (diffUTCTime now ts / 60) :: Int
                 hours = minutes `div` 60
@@ -63,6 +87,7 @@ getCompaniesR = do
                else if hours < 24 then tshow hours <> " hours ago"
                else if days < 30 then tshow days <> " days ago"
                else tshow $ formatTime defaultTimeLocale "%b %e, %Y" ts
+        companyDescriptionHtml company = preEscapedText (companyDescription company)
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum | Company"
         $(widgetFile "forum/companies")
@@ -80,14 +105,18 @@ postCompaniesR = do
         case fromPathPiece categoryIdRaw of
             Nothing -> invalidArgs ["categoryId is invalid"]
             Just cid -> pure cid
-    _ <- runDB $ get404 categoryId
+    category <- runDB $ get404 categoryId
+    unless (companyGroupIsSystem category) $
+        invalidArgs ["categoryId is invalid"]
     let name = T.strip nameRaw
         mWebsite = normalizeOptionalText mWebsiteRaw
         mLocation = normalizeOptionalText mLocationRaw
         mSize = normalizeOptionalText mSizeRaw
-        description = T.strip descriptionRaw
+    description <-
+        case prepareCompanyDescription descriptionRaw of
+            Left err -> invalidArgs [err]
+            Right value -> pure value
     when (T.null name) $ invalidArgs ["name is required"]
-    when (T.null description) $ invalidArgs ["description is required"]
     now <- liftIO getCurrentTime
     _ <- runDB $ insert Company
         { companyName = name
@@ -107,19 +136,26 @@ postCompanyCategoriesR :: Handler Html
 postCompanyCategoriesR = do
     userId <- requireAuthId
     nameRaw <- runInputPost $ ireq textField "name"
+    codeRaw <- runInputPost $ ireq textField "code"
     mDescriptionRaw <- runInputPost $ iopt textField "description"
     let name = T.strip nameRaw
+        code = T.strip codeRaw
         mDescription = normalizeOptionalText mDescriptionRaw
     when (T.null name) $ invalidArgs ["name is required"]
+    when (T.null code) $ invalidArgs ["code is required"]
     now <- liftIO getCurrentTime
     inserted <- runDB $ insertBy CompanyGroup
         { companyGroupName = name
         , companyGroupDescription = mDescription
         , companyGroupAuthor = userId
         , companyGroupCreatedAt = now
+        , companyGroupCode = code
+        , companyGroupMajorCode = Nothing
+        , companyGroupSortOrder = 0
+        , companyGroupIsSystem = False
         }
     case inserted of
-        Left _ -> setMessage "Category already exists."
+        Left _ -> setMessage "Category code already exists."
         Right _ -> setMessage "Company category created."
     redirect CompaniesR
 

@@ -41,7 +41,11 @@ CompanyGroup
     description Text Maybe
     author UserId
     createdAt UTCTime
-    UniqueCompanyGroup name
+    code Text
+    majorCode Text Maybe
+    sortOrder Int default=0
+    isSystem Bool default=False
+    UniqueCompanyGroupCode code
     deriving Typeable
 
 Company
