@@ -32,10 +32,6 @@
             <label class="admin-form-label" for="company-website">Website</label>
             <input id="company-website" type=text name=website placeholder="https://example.com" class="admin-form-input">
           <div class="admin-form-col admin-form-col-half">
-            <label class="admin-form-label" for="company-location">Location</label>
-            <input id="company-location" type=text name=location placeholder="Seoul / Remote" class="admin-form-input">
-        <div class="admin-form-row">
-          <div class="admin-form-col admin-form-col-half">
             <label class="admin-form-label" for="company-size">Team size</label>
             <input id="company-size" type=text name=size placeholder="51-200" class="admin-form-input">
         <div class="admin-form-row">
@@ -69,10 +65,6 @@
             <div class="admin-form-col admin-form-col-half">
               <label class="admin-form-label" for="edit-company-website">Website</label>
               <input id="edit-company-website" type=text name=website value=#{fromMaybe "" (companyWebsite company)} class="admin-form-input">
-            <div class="admin-form-col admin-form-col-half">
-              <label class="admin-form-label" for="edit-company-location">Location</label>
-              <input id="edit-company-location" type=text name=location value=#{fromMaybe "" (companyLocation company)} class="admin-form-input">
-          <div class="admin-form-row">
             <div class="admin-form-col admin-form-col-half">
               <label class="admin-form-label" for="edit-company-size">Team size</label>
               <input id="edit-company-size" type=text name=size value=#{fromMaybe "" (companySize company)} class="admin-form-input">

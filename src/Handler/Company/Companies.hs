@@ -119,7 +119,6 @@ postCompaniesR = do
     nameRaw <- runInputPost $ ireq textField "name"
     categoryIdRaw <- runInputPost $ ireq textField "categoryId"
     mWebsiteRaw <- runInputPost $ iopt textField "website"
-    mLocationRaw <- runInputPost $ iopt textField "location"
     mSizeRaw <- runInputPost $ iopt textField "size"
     mLatitude <- runInputPost $ iopt doubleField "latitude"
     mLongitude <- runInputPost $ iopt doubleField "longitude"
@@ -133,7 +132,6 @@ postCompaniesR = do
         invalidArgs ["categoryId is invalid"]
     let name = T.strip nameRaw
         mWebsite = normalizeOptionalText mWebsiteRaw
-        mLocation = normalizeOptionalText mLocationRaw
         mSize = normalizeOptionalText mSizeRaw
     description <-
         case prepareCompanyDescription descriptionRaw of
@@ -147,7 +145,6 @@ postCompaniesR = do
         { companyName = name
         , companyCategory = categoryId
         , companyWebsite = mWebsite
-        , companyLocation = mLocation
         , companySize = mSize
         , companyCountryCode = mCountryCodeValue
         , companyState = mStateValue
