@@ -33,7 +33,7 @@ getMapMarkersR = do
                             object
                                 [ "kind" .= ("job" :: Text)
                                 , "title" .= jobTitle job
-                                , "subtitle" .= (fromMaybe (jobCompany job) (jobLocation job))
+                                , "subtitle" .= jobCompany job
                                 , "latitude" .= lat
                                 , "longitude" .= lng
                                 , "url" .= renderUrl JobsR
@@ -47,7 +47,7 @@ getMapMarkersR = do
                             object
                                 [ "kind" .= ("company" :: Text)
                                 , "title" .= companyName company
-                                , "subtitle" .= fromMaybe ("" :: Text) (companyLocation company)
+                                , "subtitle" .= companyName company
                                 , "latitude" .= lat
                                 , "longitude" .= lng
                                 , "url" .= renderUrl CompaniesR

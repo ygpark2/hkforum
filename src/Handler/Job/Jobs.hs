@@ -59,6 +59,7 @@ getJobsR = do
                else if hours < 24 then tshow hours <> " hours ago"
                else if days < 30 then tshow days <> " days ago"
                else tshow $ formatTime defaultTimeLocale "%b %e, %Y" ts
+    companiesList <- runDB $ selectList [] [Asc CompanyName]
     defaultLayout $ do
         setTitle $ preEscapedText "HKForum | Jobs"
         $(widgetFile "job/jobs")
@@ -73,7 +74,6 @@ postJobsR = do
     mWorkingHoursRaw <- runInputPost $ iopt textField "workingHours"
     mDeadline <- runInputPost $ iopt dayField "deadline"
     mExperienceRaw <- runInputPost $ iopt textField "experience"
-    mLocationRaw <- runInputPost $ iopt textField "location"
     mEmploymentTypeRaw <- runInputPost $ iopt textField "employmentType"
     mLatitude <- runInputPost $ iopt doubleField "latitude"
     mLongitude <- runInputPost $ iopt doubleField "longitude"
@@ -83,7 +83,6 @@ postJobsR = do
         mSalary = normalizeOptionalText mSalaryRaw
         mWorkingHours = normalizeOptionalText mWorkingHoursRaw
         mExperience = normalizeOptionalText mExperienceRaw
-        mLocation = normalizeOptionalText mLocationRaw
         mEmploymentType = normalizeOptionalText mEmploymentTypeRaw
         content = T.strip contentRaw
     when (T.null title) $ invalidArgs ["title is required"]
@@ -100,7 +99,6 @@ postJobsR = do
         , jobDeadline = mDeadline
         , jobIsClosed = False
         , jobExperience = mExperience
-        , jobLocation = mLocation
         , jobEmploymentType = mEmploymentType
         , jobCountryCode = mCountryCodeValue
         , jobState = mStateValue

@@ -20,8 +20,6 @@
               <div class="min-w-0">
                 <div class="text-sm font-semibold text-slate-900">#{companyName company}
                 <div class="mt-1 text-xs text-slate-500">#{categoryNameFor (companyCategory company)} · @#{authorNameFor (companyAuthor company)}
-                $maybe location <- companyLocation company
-                  <div class="mt-2 text-sm text-slate-600">#{location}
                 $maybe website <- companyWebsite company
                   <div class="mt-1 text-sm text-sky-700">#{website}
               <div class="flex items-center gap-3">

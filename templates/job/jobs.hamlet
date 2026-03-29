@@ -12,7 +12,7 @@
         <a href=@{AuthR LoginR} class="rounded-lg border border-slate-900 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-900 transition hover:bg-slate-900 hover:text-white">Login to post
 
   $maybe _ <- mViewerId
-    <dialog id="job-create-modal" data-modal="job-create-modal" class="w-[min(90vw,42rem)] max-w-[90vw] rounded-2xl p-0 backdrop:bg-slate-900/40" style="position:fixed;inset:0;margin:auto;">
+    <dialog id="job-create-modal" data-modal="job-create-modal" class="w-[min(94vw,43rem)] max-w-[94vw] rounded-2xl p-0 backdrop:bg-slate-900/40" style="position:fixed;inset:0;margin:auto;">
       <div class="rounded-2xl bg-white p-6 shadow-xl">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-semibold text-slate-900">New job post
@@ -25,38 +25,48 @@
           <div class="space-y-1">
             <label for="job-title" class="text-sm font-semibold text-slate-700">Title
             <input id="job-title" type="text" name="title" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="Backend Engineer">
-          <div class="space-y-1">
-            <label for="job-company" class="text-sm font-semibold text-slate-700">Company
-            <input id="job-company" type="text" name="company" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="Acme Inc.">
-          <div class="grid gap-3 sm:grid-cols-2">
-            <div class="space-y-1">
+
+          <div class="grid grid-cols-2 gap-3 !grid">
+            <div class="flex flex-col space-y-1 relative" id="company-search-container">
+              <label for="job-company" class="text-sm font-semibold text-slate-700">Company
+              <input id="job-company" type="text" name="company" required autocomplete="off" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="Type to search company...">
+              <div id="company-dropdown" class="absolute z-50 mt-1 hidden w-full rounded-xl border border-slate-200 bg-white py-1 shadow-lg max-h-48 overflow-y-auto top-full left-0">
+                $if null companiesList
+                  <div class="px-4 py-2 text-xs text-slate-400">등록된 회사가 없습니다.
+                $else
+                  $forall Entity _ company <- companiesList
+                    <div class="company-option cursor-pointer px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" data-name=#{companyName company}>
+                      #{companyName company}
+            <div class="flex flex-col space-y-1">
               <label for="job-salary" class="text-sm font-semibold text-slate-700">Salary
               <input id="job-salary" type="text" name="salary" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="연 7,000만원~9,000만원">
-            <div class="space-y-1">
+
+          <div class="grid grid-cols-2 gap-3 !grid">
+            <div class="flex flex-col space-y-1">
               <label for="job-working-hours" class="text-sm font-semibold text-slate-700">Working hours
               <input id="job-working-hours" type="text" name="workingHours" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="09:00-18:00">
-          <div class="grid gap-3 sm:grid-cols-2">
-            <div class="space-y-1">
+            <div class="flex flex-col space-y-1">
               <label for="job-deadline" class="text-sm font-semibold text-slate-700">Deadline
               <input id="job-deadline" type="date" name="deadline" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900">
-            <div class="space-y-1">
+
+          <div class="grid grid-cols-2 gap-3 !grid">
+            <div class="flex flex-col space-y-1">
               <label for="job-experience" class="text-sm font-semibold text-slate-700">Experience
               <input id="job-experience" type="text" name="experience" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="3년 이상">
-          <div class="grid gap-3 sm:grid-cols-2">
-            <div class="space-y-1">
-              <label for="job-location" class="text-sm font-semibold text-slate-700">Location
-              <input id="job-location" type="text" name="location" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="Seoul / Remote">
-            <div class="space-y-1">
+            <div class="flex flex-col space-y-1">
               <label for="job-employment-type" class="text-sm font-semibold text-slate-700">Employment type
               <input id="job-employment-type" type="text" name="employmentType" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="Full-time">
+
+          <div class="grid grid-cols-2 gap-3 !grid">
+            <div class="flex flex-col space-y-1">
+              <label class="text-sm font-semibold text-slate-700">Coordinates
+              <button type="button" data-open-map-picker data-picker-title="Choose job coordinates" data-target-lat="job-latitude" data-target-lng="job-longitude" data-target-label="job-location-summary" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900">Choose on map
+            <div class="flex flex-col justify-end">
+              <div id="job-location-summary" data-location-summary class="text-xs text-slate-500">No coordinates selected
+
           <div class="space-y-1">
             <label for="job-content" class="text-sm font-semibold text-slate-700">Description
             <textarea id="job-content" name="content" required rows="7" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="역할, 요구사항, 지원 방법을 적어주세요.">
-          <div class="space-y-1">
-            <label class="text-sm font-semibold text-slate-700">Coordinates
-            <div class="flex flex-wrap items-center gap-2">
-              <button type="button" data-open-map-picker data-picker-title="Choose job coordinates" data-target-lat="job-latitude" data-target-lng="job-longitude" data-target-label="job-location-summary" class="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900">Choose on map
-              <span id="job-location-summary" data-location-summary class="text-sm text-slate-500">No coordinates selected
           <div class="flex justify-end gap-2 pt-1">
             <button type="submit" class="rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-2 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:from-slate-800 hover:to-slate-600">Post
             <button type="button" data-close="job-create-modal" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-900 hover:text-slate-900">Cancel
@@ -80,8 +90,6 @@
                     <span>· 근무시간: #{workingHours}
                   $maybe experience <- jobExperience job
                     <span>· 경력: #{experience}
-                  $maybe location <- jobLocation job
-                    <span>· #{location}
                   $maybe employmentType <- jobEmploymentType job
                     <span>· #{employmentType}
                   $maybe deadline <- jobDeadline job

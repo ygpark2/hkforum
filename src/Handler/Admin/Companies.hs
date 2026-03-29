@@ -161,14 +161,12 @@ postAdminCompaniesR = do
     nameRaw <- runInputPost $ ireq textField "name"
     categoryId <- runInputPost $ ireq hiddenField "categoryId"
     mWebsite <- runInputPost $ iopt textField "website"
-    mLocation <- runInputPost $ iopt textField "location"
     mSize <- runInputPost $ iopt textField "size"
     descriptionRaw <- runInputPost $ ireq textField "description"
     _ <- runDB $ get404 categoryId
     now <- liftIO getCurrentTime
     let name = T.strip nameRaw
         website = normalizeOptionalText mWebsite
-        location = normalizeOptionalText mLocation
         size = normalizeOptionalText mSize
         (mCountryCodeValue, mStateValue) = userRegionFields admin
     descriptionResult <- pure $ prepareCompanyDescription descriptionRaw
@@ -181,7 +179,6 @@ postAdminCompaniesR = do
                             { companyName = name
                             , companyCategory = categoryId
                             , companyWebsite = website
-                            , companyLocation = location
                             , companySize = size
                             , companyCountryCode = mCountryCodeValue
                             , companyState = mStateValue
@@ -207,14 +204,12 @@ postAdminCompanyR companyId = do
             nameRaw <- runInputPost $ ireq textField "name"
             categoryId <- runInputPost $ ireq hiddenField "categoryId"
             mWebsite <- runInputPost $ iopt textField "website"
-            mLocation <- runInputPost $ iopt textField "location"
             mSize <- runInputPost $ iopt textField "size"
             descriptionRaw <- runInputPost $ ireq textField "description"
             _ <- runDB $ get404 categoryId
             now <- liftIO getCurrentTime
             let name = T.strip nameRaw
                 website = normalizeOptionalText mWebsite
-                location = normalizeOptionalText mLocation
                 size = normalizeOptionalText mSize
             descriptionResult <- pure $ prepareCompanyDescription descriptionRaw
             if T.null name
@@ -226,7 +221,6 @@ postAdminCompanyR companyId = do
                             [ CompanyName =. name
                             , CompanyCategory =. categoryId
                             , CompanyWebsite =. website
-                            , CompanyLocation =. location
                             , CompanySize =. size
                             , CompanyDescription =. description
                             , CompanyUpdatedAt =. now
