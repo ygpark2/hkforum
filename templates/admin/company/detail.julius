@@ -1,0 +1,59 @@
+(() => {
+  const syncCompanyCategoryForm = (form) => {
+    const majorSelect = form.querySelector("[data-company-major-select]");
+    const categorySelect = form.querySelector("[data-company-category-select]");
+
+    if (!majorSelect || !categorySelect) {
+      return;
+    }
+
+    const activeMajorKey = majorSelect.value;
+    const previousValue = categorySelect.value;
+    let firstVisibleValue = "";
+    let hasVisibleSelectedValue = false;
+
+    Array.from(categorySelect.options).forEach((option) => {
+      const optionMajorKey = option.dataset.majorKey || "";
+      const isVisible = optionMajorKey === activeMajorKey;
+
+      option.hidden = !isVisible;
+      option.disabled = !isVisible;
+
+      if (isVisible && !firstVisibleValue) {
+        firstVisibleValue = option.value;
+      }
+
+      if (isVisible && option.value === previousValue) {
+        hasVisibleSelectedValue = true;
+      }
+    });
+
+    if (hasVisibleSelectedValue) {
+      categorySelect.value = previousValue;
+    } else {
+      categorySelect.value = firstVisibleValue;
+    }
+  };
+
+  const initializeCompanyCategoryForms = () => {
+    const forms = document.querySelectorAll("[data-company-category-form]");
+
+    forms.forEach((form) => {
+      const majorSelect = form.querySelector("[data-company-major-select]");
+
+      if (!majorSelect || majorSelect.dataset.companyCategoryInitialized === "true") {
+        return;
+      }
+
+      majorSelect.dataset.companyCategoryInitialized = "true";
+      majorSelect.addEventListener("change", () => syncCompanyCategoryForm(form));
+      syncCompanyCategoryForm(form);
+    });
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializeCompanyCategoryForms);
+  } else {
+    initializeCompanyCategoryForms();
+  }
+})();

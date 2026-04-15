@@ -12,20 +12,33 @@
       <a href=@{AdminCompanyCategoriesR} class="mt-4 inline-flex rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Go to company categories</a>
     $elseif isNew
       <h2 class="text-lg font-medium text-slate-900">Create company</h2>
-      <form method=post action=@{AdminCompaniesR} class="admin-form mt-4">
+      <form method=post action=@{AdminCompaniesR} class="admin-form mt-4" data-company-category-form>
         $maybe tok <- mCsrfToken
           <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
         <div class="admin-form-row">
-          <div class="admin-form-col admin-form-col-half">
+          <div class="admin-form-col admin-form-col-full">
             <label class="admin-form-label" for="company-name">Name</label>
             <input id="company-name" type=text name=name placeholder="Acme Labs" required class="admin-form-input">
+        <div class="admin-form-row">
           <div class="admin-form-col admin-form-col-half">
-            <label class="admin-form-label" for="company-category-id">Category</label>
+            <label class="admin-form-label" for="company-major-category">Primary category</label>
             <div class="admin-form-select-wrap">
-              <select id="company-category-id" name=categoryId class="admin-form-select">
+              <select id="company-major-category" class="admin-form-select" data-company-major-select>
+                $forall (majorKey, majorLabel) <- majorOptions
+                  <option value=#{majorKey} :selectedMajorKey == majorKey:selected>
+                    #{majorLabel}
+          <div class="admin-form-col admin-form-col-half">
+            <label class="admin-form-label" for="company-category-id">Secondary category</label>
+            <div class="admin-form-select-wrap">
+              <select id="company-category-id" name=categoryId class="admin-form-select" data-company-category-select required>
                 $forall Entity categoryId category <- categories
-                  <option value=#{toPathPiece categoryId}>
-                    #{companyGroupCode category} 
+                  <option
+                    value=#{toPathPiece categoryId}
+                    data-major-key=#{companyMajorKeyForCategory category}
+                    :selectedCategoryId == Just categoryId:selected
+                    >
+                    #{companyGroupCode category}
+                    \ -
                     #{companyGroupName category}
         <div class="admin-form-row">
           <div class="admin-form-col admin-form-col-half">
@@ -45,7 +58,7 @@
     $else
       $maybe Entity companyId company <- mCompany
         <h2 class="text-lg font-medium text-slate-900">Edit company</h2>
-        <form method=post action=@{AdminCompanyR companyId} class="admin-form mt-4">
+        <form method=post action=@{AdminCompanyR companyId} class="admin-form mt-4" data-company-category-form>
           $maybe tok <- mCsrfToken
             <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
           <input type=hidden name=action value="update">
@@ -54,12 +67,24 @@
               <label class="admin-form-label" for="edit-company-name">Name</label>
               <input id="edit-company-name" type=text name=name value=#{companyName company} required class="admin-form-input">
             <div class="admin-form-col admin-form-col-half">
-              <label class="admin-form-label" for="edit-company-category-id">Category</label>
+              <label class="admin-form-label" for="edit-company-major-category">Primary category</label>
               <div class="admin-form-select-wrap">
-                <select id="edit-company-category-id" name=categoryId class="admin-form-select">
+                <select id="edit-company-major-category" class="admin-form-select" data-company-major-select>
+                  $forall (majorKey, majorLabel) <- majorOptions
+                    <option value=#{majorKey} :selectedMajorKey == majorKey:selected>
+                      #{majorLabel}
+            <div class="admin-form-col admin-form-col-half">
+              <label class="admin-form-label" for="edit-company-category-id">Secondary category</label>
+              <div class="admin-form-select-wrap">
+                <select id="edit-company-category-id" name=categoryId class="admin-form-select" data-company-category-select required>
                   $forall Entity categoryId category <- categories
-                    <option value=#{toPathPiece categoryId} :companyCategory company == categoryId:selected>
-                      #{companyGroupCode category} 
+                    <option
+                      value=#{toPathPiece categoryId}
+                      data-major-key=#{companyMajorKeyForCategory category}
+                      :selectedCategoryId == Just categoryId:selected
+                      >
+                      #{companyGroupCode category}
+                      \ -
                       #{companyGroupName category}
           <div class="admin-form-row">
             <div class="admin-form-col admin-form-col-half">
