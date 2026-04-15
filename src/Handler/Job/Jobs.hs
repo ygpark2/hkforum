@@ -3,10 +3,11 @@
 module Handler.Job.Jobs (getJobsR, postJobsR, postJobCloseR) where
 
 import Import
+import SiteSettings
 import qualified Data.List as L
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
-import Data.Time (diffUTCTime)
+import Data.Time (addDays, diffUTCTime)
 import qualified Prelude as P
 import Text.Blaze (preEscapedText)
 
@@ -14,8 +15,13 @@ getJobsR :: Handler Html
 getJobsR = do
     req <- getRequest
     let mCsrfToken = reqToken req
+    settingRows <- runDB $ selectList [] []
+    let settingMap = siteSettingMapFromEntities settingRows
+        globalLocalRegionFilterEnabled = siteSettingBool "local_region_filter_enabled" True settingMap
+        mapsEnabled = siteSettingBool "maps_enabled" True settingMap
+        jobAutoCloseDays = max 0 (siteSettingInt "job_auto_close_days" 0 settingMap)
     mViewer <- maybeAuth
-    let localRegionFilterEnabled = maybe False (userLocalRegionOnly . entityVal) mViewer
+    let localRegionFilterEnabled = globalLocalRegionFilterEnabled && maybe False (userLocalRegionOnly . entityVal) mViewer
         mActiveLocalRegion = mViewer >>= (userRegionPair . entityVal)
         localRegionNotice =
             if localRegionFilterEnabled
@@ -46,7 +52,10 @@ getJobsR = do
         authorName uid = Map.findWithDefault ("Unknown" :: Text) uid userMap
         authorHandle uid = T.toLower $ T.filter (/= ' ') (authorName uid)
         isClosedByDeadline job = maybe False (< today) (jobDeadline job)
-        isClosedNow job = jobIsClosed job || isClosedByDeadline job
+        isClosedByAge job =
+            jobAutoCloseDays > 0
+                && addDays (fromIntegral jobAutoCloseDays) (utctDay (jobCreatedAt job)) < today
+        isClosedNow job = jobIsClosed job || isClosedByDeadline job || isClosedByAge job
         canCloseJob job =
             case mViewerId of
                 Nothing -> False
@@ -68,6 +77,9 @@ postJobsR :: Handler Html
 postJobsR = do
     userId <- requireAuthId
     user <- runDB $ get404 userId
+    settingRows <- runDB $ selectList [] []
+    let settingMap = siteSettingMapFromEntities settingRows
+        blockedWords = siteSettingCsv "blocked_words" settingMap
     titleRaw <- runInputPost $ ireq textField "title"
     companyRaw <- runInputPost $ ireq textField "company"
     mSalaryRaw <- runInputPost $ iopt textField "salary"
@@ -88,6 +100,8 @@ postJobsR = do
     when (T.null title) $ invalidArgs ["title is required"]
     when (T.null company) $ invalidArgs ["company is required"]
     when (T.null content) $ invalidArgs ["content is required"]
+    when (textContainsBlockedTerm blockedWords (title <> " " <> company <> " " <> content)) $
+        invalidArgs ["content contains blocked terms"]
     (mLatitudeValue, mLongitudeValue) <- requireCoordinatePair mLatitude mLongitude
     let (mCountryCodeValue, mStateValue) = userRegionFields user
     now <- liftIO getCurrentTime

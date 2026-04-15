@@ -1,5 +1,7 @@
 <section class="flex h-full min-h-0 flex-col bg-[#f6f7f8]">
   <div class="shrink-0 border-b border-slate-200 bg-white px-4 py-2.5">
+    <div class="mb-2">
+      <h1 class="text-xl font-semibold text-slate-900">#{homeFeedTitle}</h1>
     <div class="flex items-center justify-between gap-3">
       <nav
         class="flex items-center gap-5 overflow-x-auto whitespace-nowrap text-[15px] font-semibold text-slate-500 no-scrollbar"
@@ -166,34 +168,38 @@
                         >
                         <span data-watch-icon>#{watchIcon postId}
                         <span data-watch-label>#{watchLabel postId}
-                      <button
-                        type="button"
-                        data-action-url=@{PostFlagR postId}
-                        data-action-type="post-flag"
-                        data-post-id=#{toPathPiece postId}
-                        class="feed-menu__item inline-flex items-center gap-2"
-                        >
-                        <span>⚑
-                        <span>Flag
-                      <button
-                        type="button"
-                        data-action-url=@{PostBlockR postId}
-                        data-action-type="post-block"
-                        data-post-id=#{toPathPiece postId}
-                        class="feed-menu__item inline-flex items-center gap-2"
-                        >
-                        <span>✕
-                        <span>Block
+                      $if allowPostReporting
+                        <button
+                          type="button"
+                          data-action-url=@{PostFlagR postId}
+                          data-action-type="post-flag"
+                          data-post-id=#{toPathPiece postId}
+                          class="feed-menu__item inline-flex items-center gap-2"
+                          >
+                          <span>⚑
+                          <span>Flag
+                      $if allowUserBlocking
+                        <button
+                          type="button"
+                          data-action-url=@{PostBlockR postId}
+                          data-action-type="post-block"
+                          data-post-id=#{toPathPiece postId}
+                          class="feed-menu__item inline-flex items-center gap-2"
+                          >
+                          <span>✕
+                          <span>Block
                     $nothing
                       <a href=@{AuthR LoginR} class="feed-menu__item inline-flex items-center gap-2 text-slate-700">
                         <span>👁
                         <span>Watch
-                      <a href=@{AuthR LoginR} class="feed-menu__item inline-flex items-center gap-2 text-slate-700">
-                        <span>⚑
-                        <span>Flag
-                      <a href=@{AuthR LoginR} class="feed-menu__item inline-flex items-center gap-2 text-slate-700">
-                        <span>✕
-                        <span>Block
+                      $if allowPostReporting
+                        <a href=@{AuthR LoginR} class="feed-menu__item inline-flex items-center gap-2 text-slate-700">
+                          <span>⚑
+                          <span>Flag
+                      $if allowUserBlocking
+                        <a href=@{AuthR LoginR} class="feed-menu__item inline-flex items-center gap-2 text-slate-700">
+                          <span>✕
+                          <span>Block
 
               <div class="mt-3 flex items-center justify-between text-sm">
                 <div class="flex items-center gap-4 text-slate-500">

@@ -258,6 +258,7 @@ const initBoardPostQuill = () => {
 
 const MAP_MODAL_KEY = 'global-map-modal';
 const DEFAULT_MAP_CENTER = { lat: 37.5665, lng: 126.978 };
+const DEFAULT_MAP_ZOOM = 6;
 
 const mapState = {
   loader: null,
@@ -326,6 +327,22 @@ const getMapTitle = () => getMapModal()?.querySelector('[data-map-modal-title]')
 const getMapSelectionSummary = () => getMapModal()?.querySelector('[data-map-selection-summary]');
 const getMapApplyButton = () => getMapModal()?.querySelector('[data-map-apply]');
 const getMapClearButton = () => getMapModal()?.querySelector('[data-map-clear-selection]');
+const getConfiguredMapCenter = () => {
+  const modal = getMapModal();
+  if (!modal) return DEFAULT_MAP_CENTER;
+  const latitude = Number.parseFloat(modal.getAttribute('data-default-latitude') || '');
+  const longitude = Number.parseFloat(modal.getAttribute('data-default-longitude') || '');
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return DEFAULT_MAP_CENTER;
+  }
+  return { lat: latitude, lng: longitude };
+};
+const getConfiguredMapZoom = () => {
+  const modal = getMapModal();
+  if (!modal) return DEFAULT_MAP_ZOOM;
+  const zoom = Number.parseInt(modal.getAttribute('data-default-zoom') || '', 10);
+  return Number.isFinite(zoom) ? zoom : DEFAULT_MAP_ZOOM;
+};
 
 const setMapStatus = (message, variant) => {
   const status = getMapStatus();
@@ -414,8 +431,8 @@ const fitMapToVisiblePoints = () => {
     pointCount += 1;
   }
   if (pointCount === 0) {
-    mapState.map.setCenter(DEFAULT_MAP_CENTER);
-    mapState.map.setZoom(6);
+    mapState.map.setCenter(getConfiguredMapCenter());
+    mapState.map.setZoom(getConfiguredMapZoom());
     return;
   }
   if (pointCount === 1) {
@@ -482,8 +499,8 @@ const ensureMapInitialized = async () => {
   await loadGoogleMapsApi();
   if (!mapState.map) {
     mapState.map = new google.maps.Map(canvas, {
-      center: DEFAULT_MAP_CENTER,
-      zoom: 6,
+      center: getConfiguredMapCenter(),
+      zoom: getConfiguredMapZoom(),
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,

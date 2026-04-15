@@ -58,11 +58,14 @@
               <input id="job-employment-type" type="text" name="employmentType" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="Full-time">
 
           <div class="grid grid-cols-2 gap-3 !grid">
-            <div class="flex flex-col space-y-1">
-              <label class="text-sm font-semibold text-slate-700">Coordinates
-              <button type="button" data-open-map-picker data-picker-title="Choose job coordinates" data-target-lat="job-latitude" data-target-lng="job-longitude" data-target-label="job-location-summary" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900">Choose on map
-            <div class="flex flex-col justify-end">
-              <div id="job-location-summary" data-location-summary class="text-xs text-slate-500">No coordinates selected
+            $if mapsEnabled
+              <div class="flex flex-col space-y-1">
+                <label class="text-sm font-semibold text-slate-700">Coordinates
+                <button type="button" data-open-map-picker data-picker-title="Choose job coordinates" data-target-lat="job-latitude" data-target-lng="job-longitude" data-target-label="job-location-summary" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900">Choose on map
+              <div class="flex flex-col justify-end">
+                <div id="job-location-summary" data-location-summary class="text-xs text-slate-500">No coordinates selected
+            $else
+              <div class="col-span-2 rounded-xl border border-slate-200 bg-slate-100 px-3 py-3 text-sm text-slate-500">Maps are disabled.
 
           <div class="space-y-1">
             <label for="job-content" class="text-sm font-semibold text-slate-700">Description

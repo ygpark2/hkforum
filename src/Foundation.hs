@@ -6,12 +6,14 @@ import qualified Prelude as P
 import Database.Persist.Sql (ConnectionPool, runSqlPool)
 import qualified Data.Text as T
 import qualified Data.Set as Set
+import Data.Time (utctDay)
 import Text.Hamlet          (hamletFile)
 import Text.Jasmine         (minifym)
 import Yesod.Auth.HashDB     (HashDBUser(..), authHashDB)
 import Yesod.Auth.OAuth2.Google (oauth2Google)
 import Auth.OAuth2Providers  (oauth2Kakao, oauth2Naver)
 import Yesod.Default.Util   (addStaticContentExternal)
+import SiteSettings
 import Storage              (Storage, StorageBackendType(..))
 
 import Yesod.Core.Types     (Logger)
@@ -60,10 +62,27 @@ instance Yesod App where
     defaultLayout widget = do
         master <- getYesod
         mmsg <- getMessage
-        mSiteTitle <- runDB $ getBy $ UniqueSiteSetting "site_title"
-        mSiteSubtitle <- runDB $ getBy $ UniqueSiteSetting "site_subtitle"
-        let siteTitle = maybe "HKForum" (siteSettingValue P.. entityVal) mSiteTitle
-            siteSubtitle = maybe "x.com inspired discussion hub" (siteSettingValue P.. entityVal) mSiteSubtitle
+        settingRows <- runDB $ selectList [] []
+        let settingMap = siteSettingMapFromEntities settingRows
+        let siteTitle = siteSettingText "site_title" "HKForum" settingMap
+            siteSubtitle = siteSettingText "site_subtitle" "x.com inspired discussion hub" settingMap
+            layoutSiteDescription = siteSettingText "site_description" siteSubtitle settingMap
+            layoutSiteKeywords = siteSettingText "site_keywords" "" settingMap
+            layoutSiteLogoUrl = siteSettingMaybeText "site_logo_url" settingMap
+            layoutSiteFaviconUrl = siteSettingMaybeText "site_favicon_url" settingMap
+            layoutFooterText = siteSettingText "footer_text" (appCopyright $ appSettings master) settingMap
+            layoutDefaultLocale = siteSettingText "default_locale" "en" settingMap
+            layoutAllowUserRegistration = siteSettingBool "allow_user_registration" True settingMap
+            layoutAllowPostReporting = siteSettingBool "allow_post_reporting" True settingMap
+            layoutAllowUserBlocking = siteSettingBool "allow_user_blocking" True settingMap
+            layoutShowCompaniesNav = siteSettingBool "companies_enabled" True settingMap
+            layoutShowJobsNav = siteSettingBool "jobs_enabled" True settingMap
+            layoutMapsEnabled = siteSettingBool "maps_enabled" True settingMap
+            layoutAdsEnabled = siteSettingBool "ads_enabled" True settingMap
+            layoutAdSlotsSidebarEnabled = siteSettingBool "ad_slots_sidebar_enabled" True settingMap
+            layoutMapDefaultLatitude = siteSettingDouble "default_map_latitude" 37.5665 settingMap
+            layoutMapDefaultLongitude = siteSettingDouble "default_map_longitude" 126.978 settingMap
+            layoutMapDefaultZoom = siteSettingInt "default_map_zoom" 6 settingMap
         mRoute <- getCurrentRoute
         req <- getRequest
         let layoutCsrfToken = reqToken req
@@ -101,6 +120,16 @@ instance Yesod App where
             layoutIsFollowing uid = Set.member uid layoutFollowingSet
             layoutFollowState uid = if layoutIsFollowing uid then ("true" :: Text) else "false"
             layoutFollowLabel uid = if layoutIsFollowing uid then ("Following" :: Text) else "Follow"
+        today <- liftIO $ utctDay <$> getCurrentTime
+        layoutSidebarAds <- if showSidebarLayout && layoutAdsEnabled && layoutAdSlotsSidebarEnabled
+            then runDB $ selectList
+                [ AdPosition ==. "sidebar-right"
+                , AdIsActive ==. True
+                , FilterOr [AdStartDate ==. Nothing, AdStartDate <=. Just today]
+                , FilterOr [AdEndDate ==. Nothing, AdEndDate >=. Just today]
+                ]
+                [Asc AdSortOrder, Desc AdCreatedAt]
+            else pure []
         layoutUnreadNotificationCount <- if showSidebarLayout
             then case layoutMaybeAuth of
                 Nothing -> pure (0 :: Int)
@@ -119,166 +148,132 @@ instance Yesod App where
     -- The page to be redirected to when authentication is required.
     authRoute _ = Just $ AuthR LoginR
 
-    -- Routes not requiring authentication.
-    isAuthorized (AuthR _) _ = return Authorized
-    isAuthorized FaviconR _ = return Authorized
-    isAuthorized RobotsR _ = return Authorized
-    isAuthorized JobsR isWrite =
-        if isWrite
-            then do
-                mUserId <- maybeAuthId
+    isAuthorized route isWrite = do
+        settingRows <- runDB $ selectList [] []
+        mUserId <- maybeAuthId
+        mViewer <-
+            case mUserId of
+                Nothing -> pure Nothing
+                Just userId -> runDB $ get userId
+        let settingMap = siteSettingMapFromEntities settingRows
+            maintenanceMode = siteSettingBool "maintenance_mode" False settingMap
+            maintenanceMessage = siteSettingText "maintenance_message" "The site is temporarily in maintenance mode." settingMap
+            allowAnonymousRead = siteSettingBool "allow_anonymous_read" True settingMap
+            allowUserRegistration = siteSettingBool "allow_user_registration" True settingMap
+            allowPostReporting = siteSettingBool "allow_post_reporting" True settingMap
+            allowUserBlocking = siteSettingBool "allow_user_blocking" True settingMap
+            jobsEnabled = siteSettingBool "jobs_enabled" True settingMap
+            companiesEnabled = siteSettingBool "companies_enabled" True settingMap
+            mapsEnabled = siteSettingBool "maps_enabled" True settingMap
+            viewerIsAdmin = maybe False (\user -> userRole user == ("admin" :: Text)) mViewer
+            requireAuthenticated =
                 case mUserId of
-                    Nothing -> return AuthenticationRequired
-                    Just _ -> return Authorized
-            else return Authorized
-    isAuthorized CompaniesR isWrite =
-        if isWrite
-            then do
-                mUserId <- maybeAuthId
-                case mUserId of
-                    Nothing -> return AuthenticationRequired
-                    Just _ -> return Authorized
-            else return Authorized
-    isAuthorized CompanyCategoriesR _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized MapMarkersR _ = return Authorized
-    isAuthorized UploadR _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized ChatsR _ = return Authorized
-    isAuthorized ChatsNewR isWrite =
-        if isWrite
-            then do
-                mUserId <- maybeAuthId
-                case mUserId of
-                    Nothing -> return AuthenticationRequired
-                    Just _ -> return Authorized
-            else return Authorized
-    isAuthorized (ChatRoomR _) _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized (JobCloseR _) _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized NotificationsR _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized NotificationsReadAllR _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized BookmarksR _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized (UserFollowR _) _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized (PostLikeR _) _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized (PostReactR _) _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized (PostBookmarkR _) _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized (PostWatchR _) _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized (PostFlagR _) _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized (PostBlockR _) _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized ProfileR _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized SettingsR _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized SettingsAccountR _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized SettingsConnectionsR _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized SettingsBlockedAccountsR _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized SettingsSecurityEventsR _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    isAuthorized SettingsAboutR _ = do
-        mUserId <- maybeAuthId
-        case mUserId of
-            Nothing -> return AuthenticationRequired
-            Just _ -> return Authorized
-    -- Admin-only routes.
-    isAuthorized AdminR _ = isAdmin
-    isAuthorized AdminBoardsR _ = isAdmin
-    isAuthorized AdminBoardNewR _ = isAdmin
-    isAuthorized (AdminBoardR _) _ = isAdmin
-    isAuthorized AdminCompaniesR _ = isAdmin
-    isAuthorized AdminCompanyNewR _ = isAdmin
-    isAuthorized (AdminCompanyR _) _ = isAdmin
-    isAuthorized AdminCompanyCategoriesR _ = isAdmin
-    isAuthorized AdminCompanyCategoryNewR _ = isAdmin
-    isAuthorized (AdminCompanyCategoryR _) _ = isAdmin
-    isAuthorized AdminUsersR _ = isAdmin
-    isAuthorized AdminUserNewR _ = isAdmin
-    isAuthorized (AdminUserR _) _ = isAdmin
-    isAuthorized AdminSettingsR _ = isAdmin
-    isAuthorized AdminSettingNewR _ = isAdmin
-    isAuthorized (AdminSettingR _) _ = isAdmin
-    isAuthorized AdminAdsR _ = isAdmin
-    isAuthorized AdminAdNewR _ = isAdmin
-    isAuthorized (AdminAdR _) _ = isAdmin
-    isAuthorized AdminModerationR _ = isAdmin
-    isAuthorized AdminModerationActionR _ = isAdmin
-    isAuthorized AdminModerationLogsR _ = isAdmin
-    -- Default to Authorized for now.
-    isAuthorized _ _ = return Authorized
+                    Nothing -> AuthenticationRequired
+                    Just _ -> Authorized
+        if maintenanceMode && not viewerIsAdmin && not (isMaintenanceExemptRoute route)
+            then return $ Unauthorized maintenanceMessage
+            else
+                if not allowAnonymousRead && not isWrite && isAnonymousReadRoute route && isNothing mUserId
+                    then return AuthenticationRequired
+                    else
+                        case route of
+                            AuthR _ -> return Authorized
+                            FaviconR -> return Authorized
+                            RobotsR -> return Authorized
+                            HomeR ->
+                                if isWrite
+                                    then return requireAuthenticated
+                                    else return Authorized
+                            BoardsR -> return Authorized
+                            BoardR _ ->
+                                if isWrite
+                                    then return requireAuthenticated
+                                    else return Authorized
+                            PostR _ -> return Authorized
+                            JobsR ->
+                                if not jobsEnabled
+                                    then return $ Unauthorized "Jobs are currently disabled."
+                                    else
+                                        if isWrite
+                                            then return requireAuthenticated
+                                            else return Authorized
+                            JobCloseR _ ->
+                                if not jobsEnabled
+                                    then return $ Unauthorized "Jobs are currently disabled."
+                                    else return requireAuthenticated
+                            CompaniesR ->
+                                if not companiesEnabled
+                                    then return $ Unauthorized "Companies are currently disabled."
+                                    else
+                                        if isWrite
+                                            then return requireAuthenticated
+                                            else return Authorized
+                            CompanyCategoriesR ->
+                                if not companiesEnabled
+                                    then return $ Unauthorized "Companies are currently disabled."
+                                    else return requireAuthenticated
+                            MapMarkersR ->
+                                if mapsEnabled
+                                    then return Authorized
+                                    else return $ Unauthorized "Maps are currently disabled."
+                            ChatsR -> return Authorized
+                            ChatsNewR ->
+                                if isWrite
+                                    then return requireAuthenticated
+                                    else return Authorized
+                            ChatRoomR _ -> return requireAuthenticated
+                            NotificationsR -> return requireAuthenticated
+                            NotificationsReadAllR -> return requireAuthenticated
+                            BookmarksR -> return requireAuthenticated
+                            UserFollowR _ -> return requireAuthenticated
+                            PostLikeR _ -> return requireAuthenticated
+                            PostReactR _ -> return requireAuthenticated
+                            PostBookmarkR _ -> return requireAuthenticated
+                            PostWatchR _ -> return requireAuthenticated
+                            PostFlagR _ ->
+                                if allowPostReporting
+                                    then return requireAuthenticated
+                                    else return $ Unauthorized "Post reporting is currently disabled."
+                            PostBlockR _ ->
+                                if allowUserBlocking
+                                    then return requireAuthenticated
+                                    else return $ Unauthorized "Blocking is currently disabled."
+                            RegisterR ->
+                                if allowUserRegistration
+                                    then return Authorized
+                                    else return $ Unauthorized "Registration is currently disabled."
+                            ProfileR -> return requireAuthenticated
+                            UploadR -> return requireAuthenticated
+                            SettingsR -> return requireAuthenticated
+                            SettingsAccountR -> return requireAuthenticated
+                            SettingsConnectionsR -> return requireAuthenticated
+                            SettingsBlockedAccountsR -> return requireAuthenticated
+                            SettingsSecurityEventsR -> return requireAuthenticated
+                            SettingsAboutR -> return requireAuthenticated
+                            -- Admin-only routes.
+                            AdminR -> isAdmin
+                            AdminBoardsR -> isAdmin
+                            AdminBoardNewR -> isAdmin
+                            AdminBoardR _ -> isAdmin
+                            AdminCompaniesR -> isAdmin
+                            AdminCompanyNewR -> isAdmin
+                            AdminCompanyR _ -> isAdmin
+                            AdminCompanyCategoriesR -> isAdmin
+                            AdminCompanyCategoryNewR -> isAdmin
+                            AdminCompanyCategoryR _ -> isAdmin
+                            AdminUsersR -> isAdmin
+                            AdminUserNewR -> isAdmin
+                            AdminUserR _ -> isAdmin
+                            AdminSettingsR -> isAdmin
+                            AdminSettingNewR -> isAdmin
+                            AdminSettingR _ -> isAdmin
+                            AdminAdsR -> isAdmin
+                            AdminAdNewR -> isAdmin
+                            AdminAdR _ -> isAdmin
+                            AdminModerationR -> isAdmin
+                            AdminModerationActionR -> isAdmin
+                            AdminModerationLogsR -> isAdmin
+                            _ -> return Authorized
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -322,6 +317,10 @@ instance YesodAuth App where
         case mRoute of
             Just (AuthR LoginR) -> liftHandler $ do
                 mmsg <- getMessage
+                settingRows <- runDB $ selectList [] []
+                let settingMap = siteSettingMapFromEntities settingRows
+                    authAllowUserRegistration = siteSettingBool "allow_user_registration" True settingMap
+                    authSiteTitle = siteSettingText "site_title" "HKForum" settingMap
                 defaultLayout $ do
                     setTitle "Login"
                     $(widgetFile "auth/login")
@@ -396,6 +395,46 @@ isAdminConsoleRoute route = case route of
     AdminModerationR -> True
     AdminModerationActionR -> True
     AdminModerationLogsR -> True
+    _ -> False
+
+isMaintenanceExemptRoute :: Route App -> Bool
+isMaintenanceExemptRoute route = case route of
+    AuthR _ -> True
+    FaviconR -> True
+    RobotsR -> True
+    AdminR -> True
+    AdminBoardsR -> True
+    AdminBoardNewR -> True
+    AdminBoardR _ -> True
+    AdminCompaniesR -> True
+    AdminCompanyNewR -> True
+    AdminCompanyR _ -> True
+    AdminCompanyCategoriesR -> True
+    AdminCompanyCategoryNewR -> True
+    AdminCompanyCategoryR _ -> True
+    AdminUsersR -> True
+    AdminUserNewR -> True
+    AdminUserR _ -> True
+    AdminSettingsR -> True
+    AdminSettingNewR -> True
+    AdminSettingR _ -> True
+    AdminAdsR -> True
+    AdminAdNewR -> True
+    AdminAdR _ -> True
+    AdminModerationR -> True
+    AdminModerationActionR -> True
+    AdminModerationLogsR -> True
+    _ -> False
+
+isAnonymousReadRoute :: Route App -> Bool
+isAnonymousReadRoute route = case route of
+    HomeR -> True
+    BoardsR -> True
+    BoardR _ -> True
+    PostR _ -> True
+    JobsR -> True
+    CompaniesR -> True
+    MapMarkersR -> True
     _ -> False
 
 

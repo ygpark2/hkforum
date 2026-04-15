@@ -2,6 +2,7 @@
 module Handler.Register where
 
 import Import
+import SiteSettings
 import Yesod.Auth.HashDB (setPassword)
 import Text.Blaze (preEscapedText)
 
@@ -14,11 +15,19 @@ renderRegister widget enctype = do
 
 getRegisterR :: Handler Html
 getRegisterR = do
+    settingRows <- runDB $ selectList [] []
+    let settingMap = siteSettingMapFromEntities settingRows
+    unless (siteSettingBool "allow_user_registration" True settingMap) $
+        permissionDenied "Registration is currently disabled."
     (widget, enctype) <- generateFormPost registerForm
     renderRegister widget enctype
 
 postRegisterR :: Handler Html
 postRegisterR = do
+    settingRows <- runDB $ selectList [] []
+    let settingMap = siteSettingMapFromEntities settingRows
+    unless (siteSettingBool "allow_user_registration" True settingMap) $
+        permissionDenied "Registration is currently disabled."
     ((result, widget), enctype) <- runFormPost registerForm
     case result of
         FormSuccess (ident, pwd) -> do

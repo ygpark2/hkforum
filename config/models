@@ -236,6 +236,8 @@ Ad
     body Text
     link Text Maybe
     isActive Bool
+    startDate Day Maybe
+    endDate Day Maybe
     position Text default='sidebar-right'
     sortOrder Int default=0
     createdAt UTCTime

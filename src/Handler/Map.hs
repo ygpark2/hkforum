@@ -5,8 +5,14 @@ module Handler.Map
     ) where
 
 import Import
+import SiteSettings
+
 getMapMarkersR :: Handler Value
 getMapMarkersR = do
+    settingRows <- runDB $ selectList [] []
+    let settingMap = siteSettingMapFromEntities settingRows
+    unless (siteSettingBool "maps_enabled" True settingMap) $
+        permissionDenied "Maps are currently disabled."
     renderUrl <- getUrlRender
     posts <- runDB $ selectList [PostLatitude !=. Nothing, PostLongitude !=. Nothing] [Desc PostCreatedAt, LimitTo 200]
     jobs <- runDB $ selectList [JobLatitude !=. Nothing, JobLongitude !=. Nothing] [Desc JobCreatedAt, LimitTo 200]

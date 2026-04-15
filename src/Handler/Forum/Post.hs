@@ -14,6 +14,7 @@ module Handler.Forum.Post
 
 import Import
 import Forum.Tag (loadPostTagsMap, parseTagList, syncPostTags)
+import SiteSettings
 import qualified Data.List as L
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
@@ -30,6 +31,11 @@ getPostR postId = do
     req <- getRequest
     let mCsrfToken = reqToken req
     now <- liftIO getCurrentTime
+    settingRows <- runDB $ selectList [] []
+    let settingMap = siteSettingMapFromEntities settingRows
+        commentsPerPage = max 1 (siteSettingInt "comments_per_page" 100 settingMap)
+        allowPostReporting = siteSettingBool "allow_post_reporting" True settingMap
+        allowUserBlocking = siteSettingBool "allow_user_blocking" True settingMap
     mViewerId <- maybeAuthId
     post <- runDB $ get404 postId
     runDB $ insert_ PostView
@@ -40,7 +46,7 @@ getPostR postId = do
         , postViewCreatedAt = now
         }
     board <- runDB $ get404 (postBoard post)
-    comments <- runDB $ selectList [CommentPost ==. postId] [Asc CommentCreatedAt]
+    comments <- runDB $ selectList [CommentPost ==. postId] [Asc CommentCreatedAt, LimitTo commentsPerPage]
     likes <- runDB $ count [PostLikePost ==. postId]
     views <- runDB $ count [PostViewPost ==. postId]
     tagsByPost <- runDB $ loadPostTagsMap [postId]
@@ -129,16 +135,31 @@ postPostEditR :: PostId -> Handler Html
 postPostEditR postId = do
     userId <- requireAuthId
     post <- runDB $ get404 postId
+    settingRows <- runDB $ selectList [] []
+    let settingMap = siteSettingMapFromEntities settingRows
+        maxPostTitleLength = max 1 (siteSettingInt "max_post_title_length" 120 settingMap)
+        maxPostBodyLength = max 1 (siteSettingInt "max_post_body_length" 10000 settingMap)
+        blockedWords = siteSettingCsv "blocked_words" settingMap
     if postAuthor post /= userId
         then permissionDenied (T.pack "Not allowed")
         else do
             title <- runInputPost $ ireq textField "title"
             content <- runInputPost $ ireq textField "content"
             mTags <- runInputPost $ iopt textField "tags"
+            let normalizedTitle = T.strip title
+                normalizedContent = T.strip content
+            when (T.null normalizedTitle) $ invalidArgs ["title is required"]
+            when (T.null normalizedContent) $ invalidArgs ["content is required"]
+            when (T.length normalizedTitle > maxPostTitleLength) $
+                invalidArgs ["title exceeds the configured maximum length"]
+            when (T.length normalizedContent > maxPostBodyLength) $
+                invalidArgs ["content exceeds the configured maximum length"]
+            when (textContainsBlockedTerm blockedWords (normalizedTitle <> " " <> normalizedContent)) $
+                invalidArgs ["content contains blocked terms"]
             now <- liftIO getCurrentTime
             runDB $ update postId
-                [ PostTitle =. T.strip title
-                , PostContent =. T.strip content
+                [ PostTitle =. normalizedTitle
+                , PostContent =. normalizedContent
                 , PostUpdatedAt =. now
                 ]
             runDB $ syncPostTags postId (parseTagList mTags)

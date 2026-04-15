@@ -63,9 +63,10 @@
             <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
           <input type=hidden name=action value="update">
           <div class="admin-form-row">
-            <div class="admin-form-col admin-form-col-half">
+            <div class="admin-form-col admin-form-col-full">
               <label class="admin-form-label" for="edit-company-name">Name</label>
               <input id="edit-company-name" type=text name=name value=#{companyName company} required class="admin-form-input">
+          <div class="admin-form-row">
             <div class="admin-form-col admin-form-col-half">
               <label class="admin-form-label" for="edit-company-major-category">Primary category</label>
               <div class="admin-form-select-wrap">
@@ -93,7 +94,8 @@
             <div class="admin-form-col admin-form-col-half">
               <label class="admin-form-label" for="edit-company-size">Team size</label>
               <input id="edit-company-size" type=text name=size value=#{fromMaybe "" (companySize company)} class="admin-form-input">
-            <div class="admin-form-col admin-form-col-half">
+          <div class="admin-form-row">
+            <div class="admin-form-col admin-form-col-full">
               <label class="admin-form-label" for="edit-company-created-by">Created by</label>
               <input id="edit-company-created-by" type=text value=#{fromMaybe "Unknown" categoryAuthorName} readonly class="admin-form-input">
           <div class="admin-form-row">
