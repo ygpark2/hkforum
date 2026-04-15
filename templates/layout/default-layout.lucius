@@ -19,6 +19,160 @@
   width: 100%;
 }
 
+.admin-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.admin-layout > aside,
+.admin-layout > section {
+  min-width: 0;
+}
+
+@media (min-width: 1000px) {
+  .admin-layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .admin-layout > aside {
+    position: sticky;
+    top: 12px;
+  }
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-form-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.admin-form-col {
+  min-width: 0;
+}
+
+.admin-form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.admin-form-input,
+.admin-form-textarea,
+.admin-form-select,
+.admin-layout form input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+.admin-layout form textarea,
+.admin-layout form select {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  box-sizing: border-box;
+}
+
+.admin-form-input,
+.admin-layout form input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+.admin-layout form select {
+  min-height: 48px;
+  padding: 0 14px;
+}
+
+.admin-form-textarea,
+.admin-layout form textarea {
+  min-height: 132px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.admin-form-select-wrap {
+  position: relative;
+}
+
+.admin-form-select-wrap::after {
+  content: "▾";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  pointer-events: none;
+  font-size: 0.85rem;
+}
+
+.admin-form-select,
+.admin-layout form select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 40px;
+}
+
+.admin-form-input::placeholder,
+.admin-form-textarea::placeholder,
+.admin-layout form input::placeholder,
+.admin-layout form textarea::placeholder {
+  color: #94a3b8;
+}
+
+.admin-form-input:focus,
+.admin-form-textarea:focus,
+.admin-form-select:focus,
+.admin-layout form input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):focus,
+.admin-layout form textarea:focus,
+.admin-layout form select:focus {
+  outline: none;
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+}
+
+.admin-form-input[readonly],
+.admin-form-textarea[readonly],
+.admin-form-select[readonly],
+.admin-layout form input[readonly],
+.admin-layout form textarea[readonly],
+.admin-layout form select[readonly] {
+  background: #f8fafc;
+  color: #475569;
+}
+
+.admin-layout form input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #0f172a;
+}
+
+@media (min-width: 768px) {
+  .admin-form-row {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .admin-form-col-half {
+    grid-column: span 6;
+  }
+
+  .admin-form-col-third {
+    grid-column: span 4;
+  }
+
+  .admin-form-col-full {
+    grid-column: 1 / -1;
+  }
+}
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

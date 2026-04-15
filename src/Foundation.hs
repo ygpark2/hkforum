@@ -68,19 +68,7 @@ instance Yesod App where
         req <- getRequest
         let layoutCsrfToken = reqToken req
         let showSidebarLayout = case mRoute of
-                Just AdminR -> False
-                Just AdminBoardsR -> False
-                Just AdminBoardNewR -> False
-                Just (AdminBoardR _) -> False
-                Just AdminUsersR -> False
-                Just AdminUserNewR -> False
-                Just (AdminUserR _) -> False
-                Just AdminSettingsR -> False
-                Just AdminSettingNewR -> False
-                Just (AdminSettingR _) -> False
-                Just AdminAdsR -> False
-                Just AdminAdNewR -> False
-                Just (AdminAdR _) -> False
+                Just route | isAdminConsoleRoute route -> False
                 Just RegisterR -> False
                 Just (AuthR LoginR) -> False
                 _ -> True
@@ -383,6 +371,32 @@ isAdmin = do
                     if userRole user == "admin"
                         then return Authorized
                         else return $ Unauthorized "Admin only"
+
+isAdminConsoleRoute :: Route App -> Bool
+isAdminConsoleRoute route = case route of
+    AdminR -> True
+    AdminBoardsR -> True
+    AdminBoardNewR -> True
+    AdminBoardR _ -> True
+    AdminCompaniesR -> True
+    AdminCompanyNewR -> True
+    AdminCompanyR _ -> True
+    AdminCompanyCategoriesR -> True
+    AdminCompanyCategoryNewR -> True
+    AdminCompanyCategoryR _ -> True
+    AdminUsersR -> True
+    AdminUserNewR -> True
+    AdminUserR _ -> True
+    AdminSettingsR -> True
+    AdminSettingNewR -> True
+    AdminSettingR _ -> True
+    AdminAdsR -> True
+    AdminAdNewR -> True
+    AdminAdR _ -> True
+    AdminModerationR -> True
+    AdminModerationActionR -> True
+    AdminModerationLogsR -> True
+    _ -> False
 
 
 -- This instance is required to use forms. You can modify renderMessage to
