@@ -23,6 +23,13 @@
             <label class="admin-form-label" for="ad-body">Body</label>
             <textarea id="ad-body" name=body rows=5 placeholder="Body" required class="admin-form-textarea"></textarea>
         <div class="admin-form-row">
+          <div class="admin-form-col admin-form-col-half">
+            <label class="admin-form-label" for="ad-start-date">Start date</label>
+            <input id="ad-start-date" type=date name=startDate class="admin-form-input">
+          <div class="admin-form-col admin-form-col-half">
+            <label class="admin-form-label" for="ad-end-date">End date</label>
+            <input id="ad-end-date" type=date name=endDate class="admin-form-input">
+        <div class="admin-form-row">
           <div class="admin-form-col admin-form-col-third">
             <label class="admin-form-label" for="ad-position">Position</label>
             <input id="ad-position" type=text name=position value="sidebar-right" required class="admin-form-input">
@@ -56,6 +63,13 @@
             <div class="admin-form-col admin-form-col-full">
               <label class="admin-form-label" for="edit-ad-body">Body</label>
               <textarea id="edit-ad-body" name=body rows=5 required class="admin-form-textarea">#{adBody ad}</textarea>
+          <div class="admin-form-row">
+            <div class="admin-form-col admin-form-col-half">
+              <label class="admin-form-label" for="edit-ad-start-date">Start date</label>
+              <input id="edit-ad-start-date" type=date name=startDate value=#{maybe "" tshow (adStartDate ad)} class="admin-form-input">
+            <div class="admin-form-col admin-form-col-half">
+              <label class="admin-form-label" for="edit-ad-end-date">End date</label>
+              <input id="edit-ad-end-date" type=date name=endDate value=#{maybe "" tshow (adEndDate ad)} class="admin-form-input">
           <div class="admin-form-row">
             <div class="admin-form-col admin-form-col-third">
               <label class="admin-form-label" for="edit-ad-position">Position</label>

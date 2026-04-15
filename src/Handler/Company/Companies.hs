@@ -10,6 +10,7 @@ module Handler.Company.Companies
 import Company.Categories
 import Company.Description (prepareCompanyDescription)
 import Import
+import SiteSettings
 import qualified Data.List as L
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
@@ -21,8 +22,12 @@ getCompaniesR :: Handler Html
 getCompaniesR = do
     req <- getRequest
     let mCsrfToken = reqToken req
+    settingRows <- runDB $ selectList [] []
+    let settingMap = siteSettingMapFromEntities settingRows
+        globalLocalRegionFilterEnabled = siteSettingBool "local_region_filter_enabled" True settingMap
+        mapsEnabled = siteSettingBool "maps_enabled" True settingMap
     mViewer <- maybeAuth
-    let localRegionFilterEnabled = maybe False (userLocalRegionOnly . entityVal) mViewer
+    let localRegionFilterEnabled = globalLocalRegionFilterEnabled && maybe False (userLocalRegionOnly . entityVal) mViewer
         mActiveLocalRegion = mViewer >>= (userRegionPair . entityVal)
         localRegionNotice =
             if localRegionFilterEnabled
@@ -116,6 +121,9 @@ postCompaniesR :: Handler Html
 postCompaniesR = do
     userId <- requireAuthId
     user <- runDB $ get404 userId
+    settingRows <- runDB $ selectList [] []
+    let settingMap = siteSettingMapFromEntities settingRows
+        blockedWords = siteSettingCsv "blocked_words" settingMap
     nameRaw <- runInputPost $ ireq textField "name"
     categoryIdRaw <- runInputPost $ ireq textField "categoryId"
     mWebsiteRaw <- runInputPost $ iopt textField "website"
@@ -138,6 +146,8 @@ postCompaniesR = do
             Left err -> invalidArgs [err]
             Right value -> pure value
     when (T.null name) $ invalidArgs ["name is required"]
+    when (textContainsBlockedTerm blockedWords (name <> " " <> description)) $
+        invalidArgs ["content contains blocked terms"]
     (mLatitudeValue, mLongitudeValue) <- requireCoordinatePair mLatitude mLongitude
     let (mCountryCodeValue, mStateValue) = userRegionFields user
     now <- liftIO getCurrentTime

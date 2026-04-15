@@ -13,25 +13,26 @@
           <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
         <div class="admin-form-row">
           <div class="admin-form-col admin-form-col-half">
+            <label class="admin-form-label" for="create-name">Name</label>
+            <input id="create-name" type=text name=name placeholder="Name" class="admin-form-input">
+          <div class="admin-form-col admin-form-col-half">
+            <label class="admin-form-label" for="create-role">Role</label>
+            <div class="admin-form-select-wrap">
+              <select id="create-role" name=role class="admin-form-select">
+                <option value="user" selected>User
+                <option value="admin">Admin
+        <div class="admin-form-row">
+          <div class="admin-form-col admin-form-col-half">
             <label class="admin-form-label" for="create-username">Username</label>
             <input id="create-username" type=text name=ident placeholder="Username" required class="admin-form-input">
           <div class="admin-form-col admin-form-col-half">
             <label class="admin-form-label" for="create-password">Password</label>
             <input id="create-password" type=password name=password placeholder="******************" required class="admin-form-input">
         <div class="admin-form-row">
-          <div class="admin-form-col admin-form-col-half">
-            <label class="admin-form-label" for="create-name">Name</label>
-            <input id="create-name" type=text name=name placeholder="Name" class="admin-form-input">
-          <div class="admin-form-col admin-form-col-half">
+          <div class="admin-form-col">
             <label class="admin-form-label" for="create-description">Description</label>
             <textarea id="create-description" name=description rows=5 placeholder="Description" class="admin-form-textarea"></textarea>
         <div class="admin-form-row">
-          <div class="admin-form-col admin-form-col-third">
-            <label class="admin-form-label" for="create-role">Role</label>
-            <div class="admin-form-select-wrap">
-              <select id="create-role" name=role class="admin-form-select">
-                <option value="user" selected>User
-                <option value="admin">Admin
           <div class="admin-form-col admin-form-col-third">
             <label class="admin-form-label">&nbsp;</label>
             <button class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Create</button>
@@ -44,25 +45,26 @@
           <input type=hidden name=action value="update">
           <div class="admin-form-row">
             <div class="admin-form-col admin-form-col-half">
-              <label class="admin-form-label" for="edit-username">Username</label>
-              <input id="edit-username" type=text name=ident value=#{userIdent user} required class="admin-form-input">
-            <div class="admin-form-col admin-form-col-half">
               <label class="admin-form-label" for="edit-name">Name</label>
               <input id="edit-name" type=text name=name value=#{fromMaybe "" (userName user)} class="admin-form-input">
-          <div class="admin-form-row">
             <div class="admin-form-col admin-form-col-half">
-              <label class="admin-form-label" for="edit-description">Description</label>
-              <textarea id="edit-description" name=description rows=5 class="admin-form-textarea">#{fromMaybe "" (userDescription user)}</textarea>
-            <div class="admin-form-col admin-form-col-half">
-              <label class="admin-form-label" for="edit-password">Password</label>
-              <input id="edit-password" type=password name=password placeholder="New password (optional)" class="admin-form-input">
-          <div class="admin-form-row">
-            <div class="admin-form-col admin-form-col-third">
               <label class="admin-form-label" for="edit-role">Role</label>
               <div class="admin-form-select-wrap">
                 <select id="edit-role" name=role class="admin-form-select">
                   <option value="user" :userRole user == "user":selected>User
                   <option value="admin" :userRole user == "admin":selected>Admin
+          <div class="admin-form-row">
+            <div class="admin-form-col admin-form-col-half">
+              <label class="admin-form-label" for="edit-username">Username</label>
+              <input id="edit-username" type=text name=ident value=#{userIdent user} required class="admin-form-input">
+            <div class="admin-form-col admin-form-col-half">
+              <label class="admin-form-label" for="edit-password">Password</label>
+              <input id="edit-password" type=password name=password placeholder="New password (optional)" class="admin-form-input">
+          <div class="admin-form-row">
+            <div class="admin-form-col">
+              <label class="admin-form-label" for="edit-description">Description</label>
+              <textarea id="edit-description" name=description rows=5 class="admin-form-textarea">#{fromMaybe "" (userDescription user)}</textarea>
+          <div class="admin-form-row">
             <div class="admin-form-col admin-form-col-third">
               <label class="admin-form-label">&nbsp;</label>
               <button class="rounded-xl border border-slate-900 px-4 py-2 text-sm font-semibold text-slate-900">Save</button>

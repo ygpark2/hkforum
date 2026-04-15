@@ -67,20 +67,27 @@ postAdminAdsR = do
     body <- runInputPost $ ireq textField "body"
     mLink <- runInputPost $ iopt textField "link"
     isActive <- runInputPost $ ireq checkBoxField "isActive"
+    mStartDate <- runInputPost $ iopt dayField "startDate"
+    mEndDate <- runInputPost $ iopt dayField "endDate"
     position <- runInputPost $ ireq textField "position"
     sortOrder <- runInputPost $ ireq intField "sortOrder"
     now <- liftIO getCurrentTime
-    _ <- runDB $ insert $ Ad
-        { adTitle = title
-        , adBody = body
-        , adLink = mLink
-        , adIsActive = isActive
-        , adPosition = position
-        , adSortOrder = sortOrder
-        , adCreatedAt = now
-        , adUpdatedAt = now
-        }
-    setMessage "Ad created."
+    if hasInvalidAdSchedule mStartDate mEndDate
+        then setMessage "Start date must be on or before end date."
+        else do
+            _ <- runDB $ insert $ Ad
+                { adTitle = title
+                , adBody = body
+                , adLink = mLink
+                , adIsActive = isActive
+                , adStartDate = mStartDate
+                , adEndDate = mEndDate
+                , adPosition = position
+                , adSortOrder = sortOrder
+                , adCreatedAt = now
+                , adUpdatedAt = now
+                }
+            setMessage "Ad created."
     redirect AdminAdsR
 
 postAdminAdR :: AdId -> Handler Html
@@ -96,20 +103,31 @@ postAdminAdR adId = do
             body <- runInputPost $ ireq textField "body"
             mLink <- runInputPost $ iopt textField "link"
             isActive <- runInputPost $ ireq checkBoxField "isActive"
+            mStartDate <- runInputPost $ iopt dayField "startDate"
+            mEndDate <- runInputPost $ iopt dayField "endDate"
             position <- runInputPost $ ireq textField "position"
             sortOrder <- runInputPost $ ireq intField "sortOrder"
             now <- liftIO getCurrentTime
-            runDB $ update adId
-                [ AdTitle =. title
-                , AdBody =. body
-                , AdLink =. mLink
-                , AdIsActive =. isActive
-                , AdPosition =. position
-                , AdSortOrder =. sortOrder
-                , AdUpdatedAt =. now
-                ]
-            setMessage "Ad updated."
+            if hasInvalidAdSchedule mStartDate mEndDate
+                then setMessage "Start date must be on or before end date."
+                else do
+                    runDB $ update adId
+                        [ AdTitle =. title
+                        , AdBody =. body
+                        , AdLink =. mLink
+                        , AdIsActive =. isActive
+                        , AdStartDate =. mStartDate
+                        , AdEndDate =. mEndDate
+                        , AdPosition =. position
+                        , AdSortOrder =. sortOrder
+                        , AdUpdatedAt =. now
+                        ]
+                    setMessage "Ad updated."
             redirect AdminAdsR
         _ -> do
             setMessage "Unknown action."
             redirect AdminAdsR
+
+hasInvalidAdSchedule :: Maybe Day -> Maybe Day -> Bool
+hasInvalidAdSchedule (Just startDate) (Just endDate) = startDate > endDate
+hasInvalidAdSchedule _ _ = False

@@ -4,6 +4,7 @@ module Handler.Forum.Board (getBoardR, postBoardR) where
 
 import Import
 import Forum.Tag (loadPostTagsMap, parseTagList, syncPostTags)
+import SiteSettings
 import qualified Data.List as L
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
@@ -14,9 +15,13 @@ import qualified Prelude as P
 getBoardR :: BoardId -> Handler Html
 getBoardR boardId = do
     board <- runDB $ get404 boardId
+    settingRows <- runDB $ selectList [] []
+    let settingMap = siteSettingMapFromEntities settingRows
+        postsPerPage = max 1 (siteSettingInt "posts_per_page" 100 settingMap)
+        globalLocalRegionFilterEnabled = siteSettingBool "local_region_filter_enabled" True settingMap
     mViewer <- maybeAuth
     let mViewerId = entityKey <$> mViewer
-        localRegionFilterEnabled = maybe False (userLocalRegionOnly . entityVal) mViewer
+        localRegionFilterEnabled = globalLocalRegionFilterEnabled && maybe False (userLocalRegionOnly . entityVal) mViewer
         mActiveLocalRegion = mViewer >>= (userRegionPair . entityVal)
         localRegionNotice =
             if localRegionFilterEnabled
@@ -31,9 +36,9 @@ getBoardR boardId = do
         case (localRegionFilterEnabled, mActiveLocalRegion) of
             (True, Nothing) -> pure []
             (True, Just (countryCodeValue, stateValue)) ->
-                runDB $ selectList [PostBoard ==. boardId, PostCountryCode ==. Just countryCodeValue, PostState ==. Just stateValue] [Desc PostCreatedAt]
+                runDB $ selectList [PostBoard ==. boardId, PostCountryCode ==. Just countryCodeValue, PostState ==. Just stateValue] [Desc PostCreatedAt, LimitTo postsPerPage]
             (False, _) ->
-                runDB $ selectList [PostBoard ==. boardId] [Desc PostCreatedAt]
+                runDB $ selectList [PostBoard ==. boardId] [Desc PostCreatedAt, LimitTo postsPerPage]
     let authorIds = L.nub $ map (postAuthor . entityVal) posts
     users <- if P.null authorIds
         then pure []
@@ -100,6 +105,11 @@ postBoardR :: BoardId -> Handler Html
 postBoardR boardId = do
     userId <- requireAuthId
     user <- runDB $ get404 userId
+    settingRows <- runDB $ selectList [] []
+    let settingMap = siteSettingMapFromEntities settingRows
+        maxPostTitleLength = max 1 (siteSettingInt "max_post_title_length" 120 settingMap)
+        maxPostBodyLength = max 1 (siteSettingInt "max_post_body_length" 10000 settingMap)
+        blockedWords = siteSettingCsv "blocked_words" settingMap
     _ <- runDB $ get404 boardId
     titleRaw <- runInputPost $ ireq textField "title"
     mTags <- runInputPost $ iopt textField "tags"
@@ -110,6 +120,12 @@ postBoardR boardId = do
         content = T.strip contentRaw
     when (T.null title) $ invalidArgs ["title is required"]
     when (T.null content) $ invalidArgs ["content is required"]
+    when (T.length title > maxPostTitleLength) $
+        invalidArgs ["title exceeds the configured maximum length"]
+    when (T.length content > maxPostBodyLength) $
+        invalidArgs ["content exceeds the configured maximum length"]
+    when (textContainsBlockedTerm blockedWords (title <> " " <> content)) $
+        invalidArgs ["content contains blocked terms"]
     (mLatitudeValue, mLongitudeValue) <- requireCoordinatePair mLatitude mLongitude
     let (mCountryCodeValue, mStateValue) = userRegionFields user
     now <- liftIO getCurrentTime

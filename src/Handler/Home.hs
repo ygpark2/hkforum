@@ -4,6 +4,7 @@ module Handler.Home (getHomeR, postHomeR) where
 
 import Import
 import Forum.Tag (loadPostTagsMap, parseTagList, syncPostTags)
+import SiteSettings
 import qualified Data.List as L
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
@@ -34,6 +35,14 @@ data PostTypeFilter
 getHomeR :: Handler Html
 getHomeR = do
     now <- liftIO getCurrentTime
+    settingRows <- runDB $ selectList [] []
+    let settingMap = siteSettingMapFromEntities settingRows
+        postsPerPage = max 1 (siteSettingInt "posts_per_page" 100 settingMap)
+        feedFetchLimit = max 100 (postsPerPage * 4)
+        globalLocalRegionFilterEnabled = siteSettingBool "local_region_filter_enabled" True settingMap
+        allowPostReporting = siteSettingBool "allow_post_reporting" True settingMap
+        allowUserBlocking = siteSettingBool "allow_user_blocking" True settingMap
+        homeFeedTitle = siteSettingText "home_feed_title" "Home" settingMap
     mViewer <- maybeAuth
     let mViewerId = entityKey <$> mViewer
         mViewerRegion = mViewer >>= (userRegionPair . entityVal)
@@ -75,16 +84,19 @@ getHomeR = do
         localRegionNotice =
             if feedTab == FeedLocal
                 then
-                    case mViewerRegion of
-                        Just (countryCodeValue, stateValue) ->
-                            Just ("내 지역 필터 적용 중: " <> stateValue <> ", " <> countryCodeValue)
-                        Nothing ->
-                            case mViewerId of
-                                Nothing -> Just ("로그인해야 내지역 탭을 사용할 수 있습니다." :: Text)
-                                Just _ -> Just ("프로필에 국가와 주를 저장해야 내지역 탭을 사용할 수 있습니다." :: Text)
+                    if not globalLocalRegionFilterEnabled
+                        then Just ("내지역 기능이 현재 비활성화되어 있습니다." :: Text)
+                        else
+                            case mViewerRegion of
+                                Just (countryCodeValue, stateValue) ->
+                                    Just ("내 지역 필터 적용 중: " <> stateValue <> ", " <> countryCodeValue)
+                                Nothing ->
+                                    case mViewerId of
+                                        Nothing -> Just ("로그인해야 내지역 탭을 사용할 수 있습니다." :: Text)
+                                        Just _ -> Just ("프로필에 국가와 주를 저장해야 내지역 탭을 사용할 수 있습니다." :: Text)
                 else Nothing
     boards <- runDB $ selectList [] [Asc BoardName]
-    allRecentPosts <- runDB $ selectList [] [Desc PostCreatedAt, LimitTo 300]
+    allRecentPosts <- runDB $ selectList [] [Desc PostCreatedAt, LimitTo feedFetchLimit]
     let allPostIds = map entityKey allRecentPosts
         allAuthorIds = L.nub $ map (postAuthor . entityVal) allRecentPosts
         boardMap = Map.fromList $ map (\(Entity bid b) -> (bid, b)) boards
@@ -248,15 +260,18 @@ getHomeR = do
                         (\(Entity _ p) -> postAuthor p == viewerId || Set.member (postAuthor p) followingSet)
                         allRecentPosts
         localPosts =
-            case mViewerRegion of
-                Nothing -> []
-                Just (countryCodeValue, stateValue) ->
-                    filter
-                        (\(Entity _ post) ->
-                            postCountryCode post == Just countryCodeValue
-                                && postState post == Just stateValue
-                        )
-                        allRecentPosts
+            if not globalLocalRegionFilterEnabled
+                then []
+                else
+                    case mViewerRegion of
+                        Nothing -> []
+                        Just (countryCodeValue, stateValue) ->
+                            filter
+                                (\(Entity _ post) ->
+                                    postCountryCode post == Just countryCodeValue
+                                        && postState post == Just stateValue
+                                )
+                                allRecentPosts
         interestsPosts =
             case mViewerId of
                 Nothing -> []
@@ -295,7 +310,7 @@ getHomeR = do
                     )
                     fullyFilteredPosts
                 else fullyFilteredPosts
-        posts = P.take 100 sortedPosts
+        posts = P.take postsPerPage sortedPosts
         selectedPostIds = map entityKey posts
         feedEmptyMessage =
             case mTagFilter of
@@ -470,6 +485,11 @@ postHomeR :: Handler Html
 postHomeR = do
     userId <- requireAuthId
     user <- runDB $ get404 userId
+    settingRows <- runDB $ selectList [] []
+    let settingMap = siteSettingMapFromEntities settingRows
+        maxPostTitleLength = max 1 (siteSettingInt "max_post_title_length" 120 settingMap)
+        maxPostBodyLength = max 1 (siteSettingInt "max_post_body_length" 10000 settingMap)
+        blockedWords = siteSettingCsv "blocked_words" settingMap
     boardId <- runInputPost $ ireq hiddenField "boardId"
     mTitle <- runInputPost $ iopt textField "title"
     mTags <- runInputPost $ iopt textField "tags"
@@ -483,8 +503,14 @@ postHomeR = do
                 Just t | not (T.null t) -> t
                 _ ->
                     let firstLine = T.takeWhile (/= '\n') content
-                    in if T.null firstLine then "Untitled" else T.take 80 firstLine
+                    in if T.null firstLine then "Untitled" else T.take (min 80 maxPostTitleLength) firstLine
     when (T.null content) $ invalidArgs ["content is required"]
+    when (T.length title > maxPostTitleLength) $
+        invalidArgs ["title exceeds the configured maximum length"]
+    when (T.length content > maxPostBodyLength) $
+        invalidArgs ["content exceeds the configured maximum length"]
+    when (textContainsBlockedTerm blockedWords (title <> " " <> content)) $
+        invalidArgs ["content contains blocked terms"]
     (mLatitudeValue, mLongitudeValue) <- requireCoordinatePair mLatitude mLongitude
     let (mCountryCodeValue, mStateValue) = userRegionFields user
     now <- liftIO getCurrentTime

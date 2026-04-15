@@ -82,11 +82,16 @@
               <div class="flex flex-col space-y-1">
                 <label for="company-website" class="text-sm font-semibold text-slate-700">Website
                 <input id="company-website" type="text" name="website" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900" placeholder="https://example.com">
-              <div class="flex flex-col space-y-1">
-                <label class="text-sm font-semibold text-slate-700">Coordinates
-                <button type="button" data-open-map-picker data-picker-title="Choose company coordinates" data-target-lat="company-latitude" data-target-lng="company-longitude" data-target-label="company-location-summary" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900">Choose on map
-            
-            <div id="company-location-summary" data-location-summary class="text-xs text-slate-500">No coordinates selected
+              $if mapsEnabled
+                <div class="flex flex-col space-y-1">
+                  <label class="text-sm font-semibold text-slate-700">Coordinates
+                  <button type="button" data-open-map-picker data-picker-title="Choose company coordinates" data-target-lat="company-latitude" data-target-lng="company-longitude" data-target-label="company-location-summary" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900">Choose on map
+              $else
+                <div class="flex flex-col justify-end">
+                  <div class="rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500">Maps are disabled.
+
+            $if mapsEnabled
+              <div id="company-location-summary" data-location-summary class="text-xs text-slate-500">No coordinates selected
 
             <div class="space-y-1">
               <div class="flex items-center justify-between gap-3">
