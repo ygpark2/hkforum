@@ -1,65 +1,58 @@
 /static StaticR Static appStatic
 /auth   AuthR   Auth   getAuth
 
+/ RootR GET
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/home HomeR GET POST
-/boards BoardsR GET
-/companies CompaniesR GET POST
-/companies/categories CompanyCategoriesR POST
-/jobs JobsR GET POST
-/jobs/#JobId/close JobCloseR POST
-/chats ChatsR GET
-/chats/new ChatsNewR GET POST
-/chats/room/#ChatRoomId ChatRoomR GET POST
-/notifications NotificationsR GET
-/notifications/read-all NotificationsReadAllR POST
-/bookmarks BookmarksR GET
-/user/#UserId/follow UserFollowR POST
-/settings SettingsR GET
-/settings/account SettingsAccountR GET
-/settings/connections SettingsConnectionsR GET
-/settings/blocked-accounts SettingsBlockedAccountsR GET
-/settings/security-events SettingsSecurityEventsR GET
-/settings/about SettingsAboutR GET
-/board/#BoardId BoardR GET POST
-/post/#PostId PostR GET
-/post/#PostId/comment PostCommentR POST
-/post/#PostId/edit PostEditR POST
-/post/#PostId/delete PostDeleteR POST
-/post/#PostId/block PostBlockR POST
-/post/#PostId/flag PostFlagR POST
-/post/#PostId/like PostLikeR POST
-/post/#PostId/react PostReactR POST
-/post/#PostId/bookmark PostBookmarkR POST
-/post/#PostId/watch PostWatchR POST
-/comment/#CommentId/edit CommentEditR POST
-/comment/#CommentId/delete CommentDeleteR POST
-/register RegisterR GET POST
-/profile ProfileR GET POST
-/upload UploadR POST
 /files/*Texts FileR GET
-/map/markers MapMarkersR GET
-/admin AdminR GET
-/admin/boards AdminBoardsR GET POST
-/admin/boards/new AdminBoardNewR GET
-/admin/boards/#BoardId/view AdminBoardR GET POST
-/admin/companies AdminCompaniesR GET POST
-/admin/companies/new AdminCompanyNewR GET
-/admin/companies/#CompanyId/view AdminCompanyR GET POST
-/admin/company-categories AdminCompanyCategoriesR GET POST
-/admin/company-categories/new AdminCompanyCategoryNewR GET
-/admin/company-categories/#CompanyGroupId/view AdminCompanyCategoryR GET POST
-/admin/users AdminUsersR GET POST
-/admin/users/new AdminUserNewR GET
-/admin/users/#UserId/view AdminUserR GET POST
-/admin/settings AdminSettingsR GET POST
-/admin/settings/new AdminSettingNewR GET
-/admin/settings/#SiteSettingId/view AdminSettingR GET
-/admin/ads AdminAdsR GET POST
-/admin/ads/new AdminAdNewR GET
-/admin/ads/#AdId/view AdminAdR GET POST
-/admin/moderation AdminModerationR GET
-/admin/moderation/action AdminModerationActionR POST
-/admin/moderation/logs AdminModerationLogsR GET
+/api/v1/auth/register ApiAuthRegisterR POST
+/api/v1/auth/login ApiAuthLoginR POST
+/api/v1/auth/logout ApiAuthLogoutR POST
+/api/v1/bootstrap ApiBootstrapR GET
+/api/v1/me ApiMeR GET
+/api/v1/me/security-events ApiMeSecurityEventsR GET
+/api/v1/me/profile ApiMeProfileR PATCH
+/api/v1/me/bookmarks ApiMeBookmarksR GET
+/api/v1/me/blocked-users ApiMeBlockedUsersR GET
+/api/v1/meta/regions ApiMetaRegionsR GET
+/api/v1/boards ApiBoardsR GET
+/api/v1/feed ApiFeedR GET
+/api/v1/boards/#BoardId/posts ApiBoardPostsR GET POST
+/api/v1/posts/#PostId ApiPostR GET PATCH DELETE
+/api/v1/posts/#PostId/comments ApiPostCommentsR GET POST
+/api/v1/comments/#CommentId ApiCommentR PATCH DELETE
+/api/v1/posts/#PostId/like ApiPostLikeR POST
+/api/v1/posts/#PostId/bookmark ApiPostBookmarkR POST
+/api/v1/posts/#PostId/watch ApiPostWatchR POST
+/api/v1/posts/#PostId/react ApiPostReactR POST
+/api/v1/posts/#PostId/flag ApiPostFlagR POST
+/api/v1/posts/#PostId/block ApiPostBlockR POST
+/api/v1/users ApiUsersR GET
+/api/v1/users/#UserId ApiUserR GET
+/api/v1/users/#UserId/block ApiUserBlockR POST
+/api/v1/users/#UserId/follow ApiUserFollowR POST
+/api/v1/notifications ApiNotificationsR GET
+/api/v1/notifications/read-all ApiNotificationsReadAllR POST
+/api/v1/chats ApiChatsR GET POST
+/api/v1/chats/#ChatRoomId/messages ApiChatMessagesR GET POST
+/api/v1/companies ApiCompaniesR GET POST
+/api/v1/companies/#CompanyId ApiCompanyR PATCH DELETE
+/api/v1/jobs ApiJobsR GET POST
+/api/v1/jobs/#JobId ApiJobR PATCH DELETE
+/api/v1/jobs/#JobId/close ApiJobCloseR POST
+/api/v1/uploads ApiUploadsR POST
+/api/v1/map/markers ApiMapMarkersR GET
+/api/v1/admin/bootstrap ApiAdminBootstrapR GET
+/api/v1/admin/boards ApiAdminBoardsR POST
+/api/v1/admin/boards/#BoardId ApiAdminBoardR POST
+/api/v1/admin/companies ApiAdminCompaniesR POST
+/api/v1/admin/companies/#CompanyId ApiAdminCompanyR POST
+/api/v1/admin/company-categories ApiAdminCompanyCategoriesR POST
+/api/v1/admin/company-categories/#CompanyGroupId ApiAdminCompanyCategoryR POST
+/api/v1/admin/users ApiAdminUsersR POST
+/api/v1/admin/users/#UserId ApiAdminUserR POST
+/api/v1/admin/settings ApiAdminSettingsR POST
+/api/v1/admin/ads ApiAdminAdsR POST
+/api/v1/admin/ads/#AdId ApiAdminAdR POST
+/api/v1/admin/moderation/action ApiAdminModerationActionR POST

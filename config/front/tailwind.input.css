@@ -2,5 +2,6 @@
 @source "../../templates/**/*.hamlet";
 @source "../../templates/**/*.lucius";
 @source "../../templates/**/*.julius";
+@source "../../frontend/src/**/*.{svelte,js}";
 @source "../../static/**/*.{js,css}";
 @source "../../src/**/*.hs";

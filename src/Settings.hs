@@ -70,6 +70,9 @@ data AppSettings = AppSettings
     , appNaverClientSecret      :: Maybe Text
     , appGoogleMapsApiKey       :: Maybe Text
     , appLocationRegionSeedSuffixes :: [Text]
+    , appJwtSecret              :: Text
+    , appJwtIssuer              :: Maybe Text
+    , appJwtExpiryMinutes       :: Int
     }
 
 instance FromJSON AppSettings where
@@ -121,6 +124,10 @@ instance FromJSON AppSettings where
         appGoogleMapsApiKey        <- mapsConfig .:? "google-api-key"
         locationSeedsConfig        <- o .:? "location-seeds" .!= mempty
         rawLocationSeedSuffixes    <- locationSeedsConfig .:? "suffixes" .!= ("ko" :: Text)
+        jwtConfig                  <- o .:? "jwt" .!= mempty
+        appJwtSecret               <- jwtConfig .:? "secret" .!= "dev-jwt-secret-change-me"
+        appJwtIssuer               <- jwtConfig .:? "issuer"
+        appJwtExpiryMinutes        <- jwtConfig .:? "expiry-minutes" .!= (60 * 24 * 30 :: Int)
         let appLocationRegionSeedSuffixes =
                 [ T.toLower trimmed
                 | value <- T.splitOn "," rawLocationSeedSuffixes

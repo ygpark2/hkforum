@@ -23,7 +23,6 @@ import Company.Categories                   (CompanyMinorCategory, companyMinorC
 import Location.Regions                     (CountrySeed (..), CountryStateSeed (..),
                                              countrySeedsForSuffixes,
                                              countryStateSeedsForSuffixes)
-import Data.Int                             (Int64)
 import Database.Persist.Sql                 (Single (..), rawExecute, rawSql)
 import Database.Persist.Sqlite              (createSqlitePool, runSqlPool,
                                              sqlDatabase, sqlPoolSize)
@@ -35,6 +34,7 @@ import Network.Wai.Handler.Warp             (Settings, defaultSettings,
                                              defaultShouldDisplayException,
                                              runSettings, setHost,
                                              setOnException, setPort, getPort)
+import qualified Network.Wai               as Wai
 import Network.Wai.Middleware.RequestLogger (Destination (Logger),
                                              IPAddrSource (..),
                                              OutputFormat (..), destination,
@@ -43,30 +43,15 @@ import qualified Data.Text as T
 import System.Directory                    (createDirectoryIfMissing, doesFileExist,
                                              makeAbsolute)
 import System.Environment                  (setEnv)
-import System.FilePath                     (takeDirectory)
+import System.FilePath                     (takeDirectory, takeExtension)
 import System.Log.FastLogger                (defaultBufSize, newStdoutLoggerSet,
                                              toLogStr)
 
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
-import Handler.Common
-import Handler.Forum.Boards
-import Handler.Company.Companies
-import Handler.Home
-import Handler.Job.Jobs
-import Handler.Map
-import Handler.Chat.Chats
-import Handler.Notification.Notifications
-import Handler.Forum.Bookmarks
-import Handler.Forum.Settings
-import Handler.User.User
-import Handler.Forum.Board
-import Handler.Forum.Comment
-import Handler.Forum.Post
 import Handler.Upload
-import Handler.Register
-import Handler.Admin
-import Handler.User.Profile
+import Handler.Root
+import Handler.Api
 import Storage (mkStorage, storageBackendType)
 
 -- This line actually creates our YesodDispatch instance. It is the second half
@@ -105,7 +90,8 @@ makeFoundation appSettings = do
     let rawDbPath = unpack $ sqlDatabase $ appDatabaseConf appSettings
     absDbPath <- makeAbsolute rawDbPath
     let dbDir = takeDirectory absDbPath
-        dbConf = (appDatabaseConf appSettings) { sqlDatabase = pack absDbPath }
+        dbText = pack absDbPath
+        dbPoolSize = sqlPoolSize (appDatabaseConf appSettings)
     when (dbDir /= "." && dbDir /= "") $
         createDirectoryIfMissing True dbDir
     flip runLoggingT logFunc $
@@ -113,8 +99,8 @@ makeFoundation appSettings = do
 
     -- Create the database connection pool
     pool <- flip runLoggingT logFunc $ createSqlitePool
-        (sqlDatabase dbConf)
-        (sqlPoolSize dbConf)
+        dbText
+        dbPoolSize
 
     companyMinorCategories <- loadAllCompanyMinorCategories
     let locationSeedSuffixes = appLocationRegionSeedSuffixes appSettings
@@ -305,7 +291,7 @@ makeApplication foundation = do
 
     -- Create the WAI application and apply middlewares
     appPlain <- toWaiAppPlain foundation
-    return $ logWare $ defaultMiddlewaresNoLogging appPlain
+    return $ logWare $ defaultMiddlewaresNoLogging $ frontendFallbackApp foundation appPlain
 
 -- | Warp settings for the given foundation value.
 warpSettings :: App -> Settings
@@ -363,8 +349,8 @@ appMain = do
 
 loadDotenv :: IO ()
 loadDotenv = do
-    exists <- doesFileExist ".env"
-    when exists $ do
+    envExists <- doesFileExist ".env"
+    when envExists $ do
         contents <- readFile ".env"
         forM_ (T.lines $ decodeUtf8 contents) $ \rawLine -> do
             let line = T.strip rawLine
@@ -411,3 +397,76 @@ handler h = getAppSettings >>= makeFoundation >>= flip unsafeHandler h
 -- | Run DB queries
 db :: ReaderT SqlBackend (HandlerFor App) a -> IO a
 db = handler P.. runDB
+
+frontendFallbackApp :: App -> Wai.Application -> Wai.Application
+frontendFallbackApp foundation appPlain req respond
+    | isFrontendAssetRequest req = do
+        let assetPath =
+                P.foldl
+                    (</>)
+                    (appStaticDir settings </> "app")
+                    (map unpack (Wai.pathInfo req))
+        assetExists <- doesFileExist assetPath
+        if assetExists
+            then
+                respond $
+                    Wai.responseFile
+                        status200
+                        [(hContentType, mimeTypeFor assetPath)]
+                        assetPath
+                        Nothing
+            else appPlain req respond
+    | shouldServeFrontendShell req = do
+        let appHtmlPath = appStaticDir settings </> "app" </> "app.html"
+        appHtmlExists <- doesFileExist appHtmlPath
+        if appHtmlExists
+            then
+                respond $
+                    Wai.responseFile
+                        status200
+                        [ (hContentType, "text/html; charset=utf-8")
+                        , (hCacheControl, "no-store")
+                        ]
+                        appHtmlPath
+                        Nothing
+            else appPlain req respond
+    | otherwise = appPlain req respond
+  where
+    settings = appSettings foundation
+
+isFrontendAssetRequest :: Wai.Request -> Bool
+isFrontendAssetRequest req =
+    Wai.requestMethod req `elem` ["GET", "HEAD"]
+        && case Wai.pathInfo req of
+            ("_app":_) -> True
+            _ -> False
+
+shouldServeFrontendShell :: Wai.Request -> Bool
+shouldServeFrontendShell req =
+    Wai.requestMethod req `elem` ["GET", "HEAD"]
+        && case Wai.pathInfo req of
+            [] -> True
+            ("_app":_) -> False
+            ("api":_) -> False
+            ("auth":_) -> False
+            ("files":_) -> False
+            ("static":_) -> False
+            ["favicon.ico"] -> False
+            ["robots.txt"] -> False
+            _ -> True
+
+mimeTypeFor :: FilePath -> ByteString
+mimeTypeFor filePath =
+    case takeExtension filePath of
+        ".js" -> "application/javascript; charset=utf-8"
+        ".css" -> "text/css; charset=utf-8"
+        ".json" -> "application/json; charset=utf-8"
+        ".map" -> "application/json; charset=utf-8"
+        ".svg" -> "image/svg+xml"
+        ".png" -> "image/png"
+        ".jpg" -> "image/jpeg"
+        ".jpeg" -> "image/jpeg"
+        ".webp" -> "image/webp"
+        ".woff" -> "font/woff"
+        ".woff2" -> "font/woff2"
+        _ -> "application/octet-stream"
