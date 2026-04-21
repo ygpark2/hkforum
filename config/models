@@ -198,6 +198,13 @@ UserFollow
     UniqueUserFollow follower following
     deriving Typeable
 
+UserBlock
+    blocker UserId
+    blocked UserId
+    createdAt UTCTime
+    UniqueUserBlock blocker blocked
+    deriving Typeable
+
 Notification
     user UserId
     actor UserId Maybe

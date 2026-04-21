@@ -6,6 +6,7 @@ module.exports = {
     path.join(root, "templates/**/*.hamlet"),
     path.join(root, "templates/**/*.lucius"),
     path.join(root, "templates/**/*.julius"),
+    path.join(root, "frontend/src/**/*.{svelte,js}"),
     path.join(root, "static/**/*.{js,css}"),
     path.join(root, "src/**/*.hs"),
   ],

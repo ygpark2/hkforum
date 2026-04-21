@@ -17,6 +17,7 @@ yesod-devel/
 cabal.sandbox.config
 config/front/node_modules/
 config/front/package-lock.json
+frontend/node_modules/
 data/
 
 *.hi

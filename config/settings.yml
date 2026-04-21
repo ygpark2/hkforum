@@ -50,5 +50,10 @@ maps:
 location-seeds:
   suffixes: "_env:LOCATION_REGION_SEED_SUFFIXES:ko"
 
+jwt:
+  secret: "_env:JWT_SECRET:dev-jwt-secret-change-me"
+  issuer: "_env:JWT_ISSUER:"
+  expiry-minutes: "_env:JWT_EXPIRY_MINUTES:43200"
+
 copyright: Insert copyright statement here
 #analytics: UA-YOURCODE

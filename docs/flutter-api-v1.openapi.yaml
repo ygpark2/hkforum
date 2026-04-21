@@ -1,0 +1,1756 @@
+openapi: 3.0.3
+info:
+  title: HKForum Mobile API
+  version: 1.0.0
+  description: |
+    Flutter/mobile integration contract for HKForum.
+
+    This document is a recommended `/api/v1` JSON API spec derived from the
+    current HKForum domain model and web flows. It is intended for mobile app
+    development, API planning, client code generation, and backend alignment.
+
+    Current server implementation supports both bearer JWT and session cookie
+    auth. Flutter clients should prefer bearer JWT via the Authorization header.
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+tags:
+  - name: Auth
+  - name: Me
+  - name: Boards
+  - name: Feed
+  - name: Posts
+  - name: Comments
+  - name: Users
+  - name: Notifications
+  - name: Chats
+  - name: Companies
+  - name: Jobs
+  - name: Uploads
+  - name: Map
+security:
+  - bearerAuth: []
+  - cookieAuth: []
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registration succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Login with username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout current user
+      responses:
+        '200':
+          description: Logout succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /me:
+    get:
+      tags: [Me]
+      summary: Get current user
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /me/profile:
+    patch:
+      tags: [Me]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /me/bookmarks:
+    get:
+      tags: [Me]
+      summary: Get bookmarked posts
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Bookmarked post list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /boards:
+    get:
+      tags: [Boards]
+      security: []
+      summary: Get boards
+      responses:
+        '200':
+          description: Board list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoardListResponse'
+
+  /feed:
+    get:
+      tags: [Feed]
+      security: []
+      summary: Get home feed
+      parameters:
+        - name: tab
+          in: query
+          schema:
+            type: string
+            enum: [unread, everything, local, trends, following, interests]
+        - name: tag
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [latest, trending]
+        - name: unread
+          in: query
+          schema:
+            type: boolean
+        - name: replies
+          in: query
+          schema:
+            type: boolean
+        - name: reactions
+          in: query
+          schema:
+            type: boolean
+        - name: sites
+          in: query
+          schema:
+            type: boolean
+        - name: media
+          in: query
+          schema:
+            type: boolean
+        - name: author
+          in: query
+          schema:
+            type: string
+        - name: lang
+          in: query
+          description: Comma-separated tag filters
+          schema:
+            type: string
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: postType
+          in: query
+          schema:
+            type: string
+            enum: [text, link, media]
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Feed post list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostListResponse'
+
+  /boards/{boardId}/posts:
+    get:
+      tags: [Boards]
+      security: []
+      summary: Get posts in a board
+      parameters:
+        - $ref: '#/components/parameters/BoardId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Board post list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Boards]
+      summary: Create a post in a board
+      parameters:
+        - $ref: '#/components/parameters/BoardId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostRequest'
+      responses:
+        '201':
+          description: Post created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /posts/{postId}:
+    get:
+      tags: [Posts]
+      security: []
+      summary: Get post detail
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Post detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Posts]
+      summary: Update a post
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePostRequest'
+      responses:
+        '200':
+          description: Post updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Posts]
+      summary: Delete a post
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Post deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /posts/{postId}/comments:
+    get:
+      tags: [Comments]
+      security: []
+      summary: Get comments for a post
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Comment list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Comments]
+      summary: Create a comment
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCommentRequest'
+      responses:
+        '201':
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /comments/{commentId}:
+    patch:
+      tags: [Comments]
+      summary: Update a comment
+      parameters:
+        - $ref: '#/components/parameters/CommentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCommentRequest'
+      responses:
+        '200':
+          description: Comment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Comments]
+      summary: Delete a comment
+      parameters:
+        - $ref: '#/components/parameters/CommentId'
+      responses:
+        '200':
+          description: Comment deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /posts/{postId}/like:
+    post:
+      tags: [Posts]
+      summary: Toggle post like
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Like toggled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountToggleResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /posts/{postId}/bookmark:
+    post:
+      tags: [Posts]
+      summary: Toggle post bookmark
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Bookmark toggled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateToggleResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /posts/{postId}/watch:
+    post:
+      tags: [Posts]
+      summary: Toggle post watch
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Watch toggled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateToggleResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /posts/{postId}/react:
+    post:
+      tags: [Posts]
+      summary: Toggle or update post reaction
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactToPostRequest'
+      responses:
+        '200':
+          description: Reaction updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostReactionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /posts/{postId}/flag:
+    post:
+      tags: [Posts]
+      summary: Flag a post
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Post flagged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /posts/{postId}/block:
+    post:
+      tags: [Posts]
+      summary: Block a post
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Post blocked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{userId}:
+    get:
+      tags: [Users]
+      security: []
+      summary: Get user summary or public profile
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: User detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{userId}/follow:
+    post:
+      tags: [Users]
+      summary: Toggle follow
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Follow toggled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowToggleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Get current user notifications
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Notification list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /notifications/read-all:
+    post:
+      tags: [Notifications]
+      summary: Mark all notifications as read
+      responses:
+        '200':
+          description: All notifications marked as read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /chats:
+    get:
+      tags: [Chats]
+      summary: Get chat rooms for current user
+      responses:
+        '200':
+          description: Chat room list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatRoomListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Chats]
+      summary: Create or reuse a chat room with peer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChatRequest'
+      responses:
+        '201':
+          description: Chat room created or reused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatRoomResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /chats/{roomId}/messages:
+    get:
+      tags: [Chats]
+      summary: Get messages for a chat room
+      parameters:
+        - $ref: '#/components/parameters/RoomId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Message list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectMessageListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Chats]
+      summary: Send a message
+      parameters:
+        - $ref: '#/components/parameters/RoomId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDirectMessageRequest'
+      responses:
+        '201':
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectMessageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /companies:
+    get:
+      tags: [Companies]
+      security: []
+      summary: Get companies
+      parameters:
+        - name: major
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Company list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyListResponse'
+    post:
+      tags: [Companies]
+      summary: Create company entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCompanyRequest'
+      responses:
+        '201':
+          description: Company created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /jobs:
+    get:
+      tags: [Jobs]
+      security: []
+      summary: Get jobs
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Job list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobListResponse'
+    post:
+      tags: [Jobs]
+      summary: Create job posting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJobRequest'
+      responses:
+        '201':
+          description: Job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /jobs/{jobId}/close:
+    post:
+      tags: [Jobs]
+      summary: Close a job posting
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: Job closed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /uploads:
+    post:
+      tags: [Uploads]
+      summary: Upload file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Upload succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          description: Upload too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '415':
+          description: Unsupported file type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /map/markers:
+    get:
+      tags: [Map]
+      security: []
+      summary: Get map markers
+      responses:
+        '200':
+          description: Map marker list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MapMarkersResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: _SESSION
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Size:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    BoardId:
+      name: boardId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    PostId:
+      name: postId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    CommentId:
+      name: commentId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    RoomId:
+      name: roomId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    JobId:
+      name: jobId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Permission denied
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          example: invalid_request
+        message:
+          type: string
+          example: title is required
+
+    MessageResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+
+    PaginationMeta:
+      type: object
+      required: [page, size, hasNext]
+      properties:
+        page:
+          type: integer
+        size:
+          type: integer
+        hasNext:
+          type: boolean
+
+    AuthTokenResponse:
+      type: object
+      required: [message, token, user]
+      properties:
+        message:
+          type: string
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserSummary'
+
+    RegisterRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+
+    UserSummary:
+      type: object
+      required: [id, ident, role]
+      properties:
+        id:
+          type: integer
+          format: int64
+        ident:
+          type: string
+        role:
+          type: string
+          example: user
+        name:
+          type: string
+          nullable: true
+
+    UserProfile:
+      allOf:
+        - $ref: '#/components/schemas/UserSummary'
+        - type: object
+          properties:
+            description:
+              type: string
+              nullable: true
+            countryCode:
+              type: string
+              nullable: true
+            state:
+              type: string
+              nullable: true
+            localRegionOnly:
+              type: boolean
+            latitude:
+              type: number
+              format: double
+              nullable: true
+            longitude:
+              type: number
+              format: double
+              nullable: true
+            followerCount:
+              type: integer
+            followingCount:
+              type: integer
+            isFollowing:
+              type: boolean
+              nullable: true
+
+    MeResponse:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    UserProfileResponse:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    UpdateProfileRequest:
+      type: object
+      required: [countryCode, state, localRegionOnly]
+      properties:
+        name:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        countryCode:
+          type: string
+        state:
+          type: string
+        localRegionOnly:
+          type: boolean
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+
+    BoardSummary:
+      type: object
+      required: [id, name, postCount, commentCount]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        postCount:
+          type: integer
+        commentCount:
+          type: integer
+
+    BoardListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoardSummary'
+
+    UserRef:
+      type: object
+      required: [id, ident]
+      properties:
+        id:
+          type: integer
+          format: int64
+        ident:
+          type: string
+        name:
+          type: string
+          nullable: true
+
+    BoardRef:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+
+    ReactionCount:
+      type: object
+      required: [emoji, count]
+      properties:
+        emoji:
+          type: string
+        count:
+          type: integer
+
+    Comment:
+      type: object
+      required: [id, content, author, postId, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        content:
+          type: string
+        author:
+          $ref: '#/components/schemas/UserRef'
+        postId:
+          type: integer
+          format: int64
+        parentCommentId:
+          type: integer
+          format: int64
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    PostSummary:
+      type: object
+      required:
+        - id
+        - title
+        - content
+        - author
+        - board
+        - tags
+        - likeCount
+        - commentCount
+        - viewCount
+        - isLiked
+        - isBookmarked
+        - isWatching
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        content:
+          type: string
+          description: HTML or rich text content
+        author:
+          $ref: '#/components/schemas/UserRef'
+        board:
+          $ref: '#/components/schemas/BoardRef'
+        tags:
+          type: array
+          items:
+            type: string
+        likeCount:
+          type: integer
+        commentCount:
+          type: integer
+        viewCount:
+          type: integer
+        isLiked:
+          type: boolean
+        isBookmarked:
+          type: boolean
+        isWatching:
+          type: boolean
+        viewerReaction:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PostDetail:
+      type: object
+      required: [post, reactions, comments]
+      properties:
+        post:
+          $ref: '#/components/schemas/PostSummary'
+        reactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReactionCount'
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+
+    PostListResponse:
+      type: object
+      required: [items, page, size, hasNext]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostSummary'
+        page:
+          type: integer
+        size:
+          type: integer
+        hasNext:
+          type: boolean
+
+    PostDetailResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/PostDetail'
+
+    CreatePostRequest:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+
+    UpdatePostRequest:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    CreateCommentRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+        parentCommentId:
+          type: integer
+          format: int64
+          nullable: true
+
+    UpdateCommentRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+
+    CommentResponse:
+      type: object
+      required: [comment]
+      properties:
+        comment:
+          $ref: '#/components/schemas/Comment'
+
+    CommentListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+
+    StateToggleResponse:
+      type: object
+      required: [message, state]
+      properties:
+        message:
+          type: string
+        state:
+          type: string
+
+    CountToggleResponse:
+      type: object
+      required: [message, state, count]
+      properties:
+        message:
+          type: string
+        state:
+          type: string
+        count:
+          type: integer
+
+    FollowToggleResponse:
+      type: object
+      required: [message, state, followerCount]
+      properties:
+        message:
+          type: string
+        state:
+          type: string
+        followerCount:
+          type: integer
+
+    ReactToPostRequest:
+      type: object
+      required: [emoji]
+      properties:
+        emoji:
+          type: string
+          enum: ["👍", "👎", "🎉", "😀", "😮", "❤️", "🚀", "👏", "🤯", "💸", "💯", "😂", "😢", "🤮"]
+
+    PostReactionResponse:
+      type: object
+      required: [message, reactions]
+      properties:
+        message:
+          type: string
+        selected:
+          type: string
+          nullable: true
+        reactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReactionCount'
+
+    Notification:
+      type: object
+      required: [id, kind, isRead, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        actor:
+          $ref: '#/components/schemas/UserRef'
+          nullable: true
+        kind:
+          type: string
+        postId:
+          type: integer
+          format: int64
+          nullable: true
+        commentId:
+          type: integer
+          format: int64
+          nullable: true
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        message:
+          type: string
+
+    NotificationListResponse:
+      type: object
+      required: [items, page, size, hasNext]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+        page:
+          type: integer
+        size:
+          type: integer
+        hasNext:
+          type: boolean
+
+    ChatRoomSummary:
+      type: object
+      required: [id, peer, preview, updatedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        peer:
+          $ref: '#/components/schemas/UserRef'
+        preview:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+
+    ChatRoomResponse:
+      type: object
+      required: [room]
+      properties:
+        room:
+          $ref: '#/components/schemas/ChatRoomSummary'
+
+    ChatRoomListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatRoomSummary'
+
+    CreateChatRequest:
+      type: object
+      required: [peerId]
+      properties:
+        peerId:
+          type: integer
+          format: int64
+
+    DirectMessage:
+      type: object
+      required: [id, roomId, author, content, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        roomId:
+          type: integer
+          format: int64
+        author:
+          $ref: '#/components/schemas/UserRef'
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    DirectMessageResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          $ref: '#/components/schemas/DirectMessage'
+
+    DirectMessageListResponse:
+      type: object
+      required: [items, page, size, hasNext]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DirectMessage'
+        page:
+          type: integer
+        size:
+          type: integer
+        hasNext:
+          type: boolean
+
+    CreateDirectMessageRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+
+    Company:
+      type: object
+      required: [id, name, categoryId, description, author, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        categoryId:
+          type: integer
+          format: int64
+        categoryName:
+          type: string
+          nullable: true
+        majorCode:
+          type: string
+          nullable: true
+        website:
+          type: string
+          nullable: true
+        size:
+          type: string
+          nullable: true
+        countryCode:
+          type: string
+          nullable: true
+        state:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+        description:
+          type: string
+        author:
+          $ref: '#/components/schemas/UserRef'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CompanyResponse:
+      type: object
+      required: [company]
+      properties:
+        company:
+          $ref: '#/components/schemas/Company'
+
+    CompanyListResponse:
+      type: object
+      required: [items, page, size, hasNext]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Company'
+        page:
+          type: integer
+        size:
+          type: integer
+        hasNext:
+          type: boolean
+
+    CreateCompanyRequest:
+      type: object
+      required: [name, categoryId, description]
+      properties:
+        name:
+          type: string
+        categoryId:
+          type: integer
+          format: int64
+        website:
+          type: string
+          nullable: true
+        size:
+          type: string
+          nullable: true
+        description:
+          type: string
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+
+    Job:
+      type: object
+      required: [id, title, company, content, isClosed, author, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        company:
+          type: string
+        salary:
+          type: string
+          nullable: true
+        workingHours:
+          type: string
+          nullable: true
+        deadline:
+          type: string
+          format: date
+          nullable: true
+        isClosed:
+          type: boolean
+        experience:
+          type: string
+          nullable: true
+        employmentType:
+          type: string
+          nullable: true
+        countryCode:
+          type: string
+          nullable: true
+        state:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+        content:
+          type: string
+        author:
+          $ref: '#/components/schemas/UserRef'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    JobResponse:
+      type: object
+      required: [job]
+      properties:
+        job:
+          $ref: '#/components/schemas/Job'
+
+    JobListResponse:
+      type: object
+      required: [items, page, size, hasNext]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
+        page:
+          type: integer
+        size:
+          type: integer
+        hasNext:
+          type: boolean
+
+    CreateJobRequest:
+      type: object
+      required: [title, company, content]
+      properties:
+        title:
+          type: string
+        company:
+          type: string
+        salary:
+          type: string
+          nullable: true
+        workingHours:
+          type: string
+          nullable: true
+        deadline:
+          type: string
+          format: date
+          nullable: true
+        experience:
+          type: string
+          nullable: true
+        employmentType:
+          type: string
+          nullable: true
+        content:
+          type: string
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+
+    UploadResponse:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+
+    MapMarker:
+      type: object
+      required: [kind, title, subtitle, latitude, longitude, url]
+      properties:
+        kind:
+          type: string
+          enum: [post, job, company]
+        title:
+          type: string
+        subtitle:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        url:
+          type: string
+
+    MapMarkersResponse:
+      type: object
+      required: [markers, count]
+      properties:
+        markers:
+          type: array
+          items:
+            $ref: '#/components/schemas/MapMarker'
+        count:
+          type: integer
