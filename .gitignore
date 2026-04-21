@@ -7,10 +7,18 @@
 .cabal-sandbox
 .DS_Store
 .env
+.env.*
+!.env.example
+.idea/
+.vscode/
+.direnv/
 
 dist*
+build/
 static/tmp/
 static/combined/
+static/app/
+static/frontend/
 config/client_session_key.aes
 cabal-dev/
 yesod-devel/
@@ -26,6 +34,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+hkforum.log
+hkforum.pid
 data/
 
 *.hi
