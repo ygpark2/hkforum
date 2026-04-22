@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { bootstrap } from '$lib/stores/bootstrap';
   import { apiFetch } from '$lib/utils/api';
+  import LeafletMap from '$lib/components/LeafletMap.svelte';
 
   let loading = true;
   let saving = false;
@@ -18,8 +19,44 @@
   let states = [];
   let error = '';
   let success = '';
+  let locationModalOpen = false;
+  let draftLatitude = null;
+  let draftLongitude = null;
 
   $: availableStates = states.filter((item) => item.countryCode === form.countryCode);
+
+  function parseCoordinate(value) {
+    if (value === '' || value == null) return null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+  }
+
+  function openLocationModal() {
+    draftLatitude = parseCoordinate(form.latitude);
+    draftLongitude = parseCoordinate(form.longitude);
+    locationModalOpen = true;
+  }
+
+  function closeLocationModal() {
+    locationModalOpen = false;
+  }
+
+  function applyLocationModal() {
+    form = {
+      ...form,
+      latitude: draftLatitude == null ? '' : String(draftLatitude),
+      longitude: draftLongitude == null ? '' : String(draftLongitude)
+    };
+    closeLocationModal();
+  }
+
+  function clearLocation() {
+    form = {
+      ...form,
+      latitude: '',
+      longitude: ''
+    };
+  }
 
   async function loadData() {
     loading = true;
@@ -112,13 +149,32 @@
               {/each}
             </select>
           </div>
-          <div>
-            <label for="profile-latitude" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Latitude</label>
-            <input id="profile-latitude" bind:value={form.latitude} class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900" />
-          </div>
-          <div>
-            <label for="profile-longitude" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Longitude</label>
-            <input id="profile-longitude" bind:value={form.longitude} class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900" />
+          <div class="md:col-span-2">
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Location</div>
+              <div class="flex items-center gap-2">
+                {#if form.latitude !== '' && form.longitude !== ''}
+                  <button type="button" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 hover:text-slate-900" on:click={clearLocation}>
+                    Clear
+                  </button>
+                {/if}
+                <button type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700" on:click={openLocationModal} disabled={!$bootstrap.site?.mapsEnabled}>
+                  Select on map
+                </button>
+              </div>
+            </div>
+            <div class="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+              {#if form.latitude !== '' && form.longitude !== ''}
+                <div class="text-sm font-semibold text-slate-900">{form.latitude}, {form.longitude}</div>
+                <div class="mt-1 text-xs text-slate-500">선택된 좌표가 프로필 위치로 저장됩니다.</div>
+              {:else if $bootstrap.site?.mapsEnabled}
+                <div class="text-sm text-slate-500">아직 선택된 위치가 없습니다. `Select on map`으로 좌표를 선택하세요.</div>
+              {:else}
+                <div class="text-sm text-slate-500">지도 기능이 비활성화되어 있어 좌표를 선택할 수 없습니다.</div>
+              {/if}
+            </div>
+            <input type="hidden" name="latitude" value={form.latitude} />
+            <input type="hidden" name="longitude" value={form.longitude} />
           </div>
         </div>
 
@@ -144,3 +200,54 @@
     </div>
   </div>
 </section>
+
+{#if locationModalOpen}
+  <div
+    class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 px-4"
+    role="button"
+    tabindex="0"
+    aria-label="Close location picker"
+    on:click={closeLocationModal}
+    on:keydown={(event) => {
+      if (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ') {
+        closeLocationModal();
+      }
+    }}
+  >
+    <div class="w-[min(92vw,52rem)] rounded-2xl bg-white p-6 shadow-xl" role="dialog" tabindex="-1" aria-modal="true" on:click|stopPropagation on:keydown|stopPropagation={() => {}}>
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-semibold text-slate-900">Select profile location</h2>
+          <p class="mt-1 text-sm text-slate-500">지도를 클릭해서 프로필에 저장할 좌표를 선택하세요.</p>
+        </div>
+        <button type="button" class="rounded-xl border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600" on:click={closeLocationModal}>
+          Close
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-4">
+        <LeafletMap bind:latitude={draftLatitude} bind:longitude={draftLongitude} interactive heightClass="h-[26rem]" />
+
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Latitude</div>
+            <div class="mt-2 text-sm font-semibold text-slate-900">{draftLatitude == null ? '-' : draftLatitude}</div>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Longitude</div>
+            <div class="mt-2 text-sm font-semibold text-slate-900">{draftLongitude == null ? '-' : draftLongitude}</div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <button type="button" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" on:click={() => { draftLatitude = null; draftLongitude = null; }}>
+            Clear
+          </button>
+          <button type="button" class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white" on:click={applyLocationModal}>
+            Apply
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}

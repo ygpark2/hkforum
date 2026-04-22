@@ -1,10 +1,10 @@
 <script>
   import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { page } from '$app/stores';
   import PageEmpty from '$lib/components/PageEmpty.svelte';
   import { bootstrap } from '$lib/stores/bootstrap';
-  import { apiFetch, sendJson } from '$lib/utils/api';
+  import { apiFetch, refreshBootstrap, sendJson } from '$lib/utils/api';
   import { relativeTime } from '$lib/utils/time';
 
   let payload = null;
@@ -13,6 +13,7 @@
   let commentContent = '';
   let commentSubmitting = false;
   let deleting = false;
+  let commentInput;
 
   function orderedComments(comments) {
     const children = new Map();
@@ -52,6 +53,20 @@
   $: if ($page.params.id) loadPost();
   $: comments = orderedComments(payload?.data?.comments || []);
   $: post = payload?.data?.post;
+  $: replyTargetComment = comments.find((comment) => comment.id === replyTarget) || null;
+
+  function replyPreview(content, limit = 96) {
+    const normalized = (content || '').replace(/\s+/g, ' ').trim();
+    if (!normalized) return '';
+    return normalized.length > limit ? `${normalized.slice(0, limit)}...` : normalized;
+  }
+
+  async function beginReply(comment) {
+    replyTarget = comment.id;
+    await tick();
+    commentInput?.focus();
+    commentInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 
   async function deletePost() {
     if (deleting) return;
@@ -60,6 +75,7 @@
 
     try {
       await apiFetch(`/api/v1/posts/${post.id}`, { method: 'DELETE' });
+      await refreshBootstrap();
       await goto(`/board/${post.board?.id || ''}`);
     } catch (error) {
       window.alert(error.message);
@@ -86,6 +102,7 @@
           comments: [...(payload.data?.comments || []), response.comment]
         }
       };
+      await refreshBootstrap();
       commentContent = '';
       replyTarget = null;
     } catch (error) {
@@ -144,7 +161,7 @@
         <div class="space-y-2">
           {#each comments as comment}
             <div class="relative" style={`margin-left:${Math.min(comment.depth, 8) * 18}px;`}>
-              <article class={`rounded-xl border p-3 text-sm text-slate-700 ${comment.depth === 0 ? 'border-slate-200 bg-slate-50/70' : comment.depth === 1 ? 'border-slate-300 bg-white' : 'border-slate-300 bg-slate-100/60'}`}>
+              <article class={`rounded-xl border p-3 text-sm text-slate-700 ${comment.depth === 0 ? 'border-slate-200 bg-slate-50/70' : comment.depth === 1 ? 'border-slate-300 bg-white' : 'border-slate-300 bg-slate-100/60'} ${replyTarget === comment.id ? 'ring-2 ring-slate-900/15' : ''}`}>
                 {#if comment.parent}
                   <p class="mb-1 text-xs text-slate-500">↳ reply to @{comment.parent.author?.ident}</p>
                 {/if}
@@ -153,7 +170,7 @@
                   <span>@{comment.author?.ident}</span>
                   <span>· {relativeTime(comment.createdAt)}</span>
                   {#if $bootstrap.auth?.isAuthenticated}
-                    <button type="button" class="rounded-lg border border-slate-200 px-2 py-1 font-semibold uppercase tracking-[0.2em] text-slate-600 hover:border-slate-900 hover:text-slate-900" on:click={() => (replyTarget = comment.id)}>
+                    <button type="button" class="rounded-lg border border-slate-200 px-2 py-1 font-semibold uppercase tracking-[0.2em] text-slate-600 hover:border-slate-900 hover:text-slate-900" on:click={() => beginReply(comment)}>
                       Reply
                     </button>
                   {/if}
@@ -168,7 +185,15 @@
     <section>
       {#if $bootstrap.auth?.isAuthenticated}
         <form class="space-y-3" on:submit|preventDefault={submitComment}>
-          <textarea bind:value={commentContent} required rows="5" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900" placeholder={replyTarget ? 'Write a reply…' : 'Add a comment…'}></textarea>
+          {#if replyTargetComment}
+            <div class="rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              <div class="font-semibold text-slate-900">Replying to @{replyTargetComment.author?.ident}</div>
+              {#if replyPreview(replyTargetComment.content)}
+                <div class="mt-1 text-xs text-slate-500">{replyPreview(replyTargetComment.content)}</div>
+              {/if}
+            </div>
+          {/if}
+          <textarea bind:this={commentInput} bind:value={commentContent} required rows="5" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900" placeholder={replyTarget ? 'Write a reply…' : 'Add a comment…'}></textarea>
           <div class="flex justify-end gap-2">
             {#if replyTarget}
               <button type="button" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600" on:click={() => (replyTarget = null)}>Cancel reply</button>

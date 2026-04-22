@@ -9,10 +9,13 @@
 
   let globalPostOpen = false;
   let logoutLoading = false;
+  let userMenuOpen = false;
+  let userMenuElement;
 
   $: pathname = $page.url.pathname;
   $: isAuthPage = pathname === '/login' || pathname === '/register';
   $: isAdminPage = pathname === '/admin' || pathname.startsWith('/admin/');
+  $: if (pathname) userMenuOpen = false;
 
   const adminLinks = [
     { href: '/admin', label: 'Overview' },
@@ -28,6 +31,17 @@
 
   function isActive(currentPath, href) {
     return currentPath === href || currentPath.startsWith(`${href}/`);
+  }
+
+  function isAdminActive(currentPath, href) {
+    if (href === '/admin') return currentPath === href;
+    if (!isActive(currentPath, href)) return false;
+
+    const moreSpecificMatch = adminLinks.some(
+      (link) => link.href !== href && link.href.startsWith(`${href}/`) && isActive(currentPath, link.href)
+    );
+
+    return !moreSpecificMatch;
   }
 
   async function toggleFollow(userId) {
@@ -63,6 +77,21 @@
       logoutLoading = false;
     }
   }
+
+  function toggleUserMenu() {
+    userMenuOpen = !userMenuOpen;
+  }
+
+  function closeUserMenu() {
+    userMenuOpen = false;
+  }
+
+  function handleWindowClick(event) {
+    if (!userMenuOpen || !userMenuElement) return;
+    if (!userMenuElement.contains(event.target)) {
+      closeUserMenu();
+    }
+  }
 </script>
 
 <svelte:head>
@@ -71,6 +100,8 @@
     <meta name="description" content={$bootstrap.site.description} />
   {/if}
 </svelte:head>
+
+<svelte:window on:click={handleWindowClick} />
 
 <div class="min-h-screen">
   {#if isAuthPage}
@@ -93,7 +124,7 @@
               {#each adminLinks as link}
                 <a
                   href={link.href}
-                  class={`block rounded-xl px-3 py-2 text-sm font-medium transition ${isActive(pathname, link.href) ? 'bg-white text-slate-900' : 'text-slate-300 hover:bg-slate-900 hover:text-white'}`}
+                  class={`block rounded-xl px-3 py-2 text-sm font-medium transition ${isAdminActive(pathname, link.href) ? 'bg-white text-slate-900' : 'text-slate-300 hover:bg-slate-900 hover:text-white'}`}
                 >
                   {link.label}
                 </a>
@@ -125,10 +156,10 @@
       {/if}
     </main>
   {:else}
-    <main class="mx-auto w-full max-w-[1216px] px-2 py-3 md:px-3">
+    <main class="mx-auto w-full max-w-[1128px] px-2 py-3 md:px-3">
       {#if $bootstrap.ready}
-        <div class="forum-layout-grid grid min-h-[calc(100vh-7rem)] grid-cols-1 overflow-hidden rounded-xl border border-slate-200 bg-[#f4f5f6] min-[1000px]:h-[calc(100vh-2.5rem)] min-[1000px]:grid-cols-[280px_minmax(0,1fr)_280px]">
-          <aside class="border-b border-slate-200 bg-[#f4f5f6] px-6 py-6 min-[1000px]:h-full min-[1000px]:overflow-y-auto min-[1000px]:border-b-0 min-[1000px]:border-r">
+        <div class="forum-layout-grid grid min-h-[calc(100vh-7rem)] grid-cols-1 overflow-hidden rounded-xl border border-slate-200 bg-[#f4f5f6] min-[1000px]:h-[calc(100vh-2.5rem)] min-[1000px]:grid-cols-[210px_minmax(0,1fr)_280px]">
+          <aside class="border-b border-slate-200 bg-[#f4f5f6] px-3 py-6 min-[1000px]:h-full min-[1000px]:overflow-y-auto min-[1000px]:border-b-0 min-[1000px]:border-r">
             <div class="flex h-full flex-col">
               <a href="/home" class="mx-auto mb-6 inline-flex items-center justify-center">
                 {#if $bootstrap.site?.logoUrl}
@@ -138,9 +169,12 @@
                 {/if}
               </a>
 
-              <nav class="mx-auto w-full max-w-[186px] space-y-1.5">
+              <nav class="mx-auto w-full max-w-[172px] space-y-1.5">
                 <a href="/home" class={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium transition ${isActive(pathname, '/home') ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-700 hover:bg-white hover:text-slate-900'}`}>Home</a>
                 <a href="/boards" class={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium transition ${isActive(pathname, '/boards') ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-700 hover:bg-white hover:text-slate-900'}`}>Boards</a>
+                {#if $bootstrap.site?.mapsEnabled}
+                  <a href="/map" class={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium transition ${isActive(pathname, '/map') ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-700 hover:bg-white hover:text-slate-900'}`}>Map</a>
+                {/if}
                 {#if $bootstrap.site?.showCompaniesNav}
                   <a href="/companies" class={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium transition ${isActive(pathname, '/companies') ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-700 hover:bg-white hover:text-slate-900'}`}>Company</a>
                 {/if}
@@ -162,32 +196,55 @@
               </nav>
 
               {#if $bootstrap.auth?.isAuthenticated}
-                <button type="button" class="mx-auto mt-5 inline-flex w-full max-w-[170px] items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800" on:click={() => (globalPostOpen = true)}>
+                <button type="button" class="mx-auto mt-5 inline-flex w-full max-w-[172px] items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800" on:click={() => (globalPostOpen = true)}>
                   New Post
                 </button>
               {:else}
-                <a href="/login" class="mx-auto mt-5 inline-flex w-full max-w-[170px] items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">
+                <a href="/login" class="mx-auto mt-5 inline-flex w-full max-w-[172px] items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">
                   New Post
                 </a>
               {/if}
 
               {#if $bootstrap.viewer}
-                <div class="mx-auto mt-auto w-full max-w-[170px] rounded-xl border border-slate-200 bg-white px-2.5 py-2">
-                  <div class="truncate text-sm font-semibold text-slate-900">{$bootstrap.viewer.name || $bootstrap.viewer.ident}</div>
-                  <div class="truncate text-xs text-slate-500">@{$bootstrap.viewer.ident}</div>
-                  <div class="mt-3 flex flex-col gap-2">
-                    <a href="/profile" class="text-sm text-slate-700 hover:text-slate-900">Profile</a>
-                    <a href="/settings" class="text-sm text-slate-700 hover:text-slate-900">Settings</a>
-                    {#if $bootstrap.viewer.role === 'admin'}
-                      <a href="/admin" class="text-sm text-slate-700 hover:text-slate-900">Admin</a>
-                    {/if}
-                    <button type="button" class="text-left text-sm text-slate-700 hover:text-slate-900" on:click={logout} disabled={logoutLoading}>
-                      {logoutLoading ? 'Logging out…' : 'Log Out'}
-                    </button>
-                  </div>
+                <div bind:this={userMenuElement} class="mx-auto mt-auto w-full max-w-[172px] rounded-xl border border-slate-200 bg-white">
+                  <button
+                    type="button"
+                    class="flex w-full items-center justify-between gap-3 rounded-xl px-2.5 py-2 text-left transition hover:bg-slate-50"
+                    aria-expanded={userMenuOpen}
+                    on:click|stopPropagation={toggleUserMenu}
+                  >
+                    <div class="min-w-0">
+                      <div class="truncate text-sm font-semibold text-slate-900">{$bootstrap.viewer.name || $bootstrap.viewer.ident}</div>
+                      <div class="truncate text-xs text-slate-500">@{$bootstrap.viewer.ident}</div>
+                    </div>
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+                      {#if userMenuOpen}
+                        <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true">
+                          <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      {:else}
+                        <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true">
+                          <path d="M5 12.5L10 7.5L15 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      {/if}
+                    </span>
+                  </button>
+
+                  {#if userMenuOpen}
+                    <div class="flex flex-col gap-2 border-t border-slate-200 px-3 py-3">
+                      <a href="/profile" class="text-sm text-slate-700 hover:text-slate-900" on:click={closeUserMenu}>Profile</a>
+                      <a href="/settings" class="text-sm text-slate-700 hover:text-slate-900" on:click={closeUserMenu}>Settings</a>
+                      {#if $bootstrap.viewer.role === 'admin'}
+                        <a href="/admin" class="text-sm text-slate-700 hover:text-slate-900" on:click={closeUserMenu}>Admin</a>
+                      {/if}
+                      <button type="button" class="text-left text-sm text-slate-700 hover:text-slate-900" on:click={logout} disabled={logoutLoading}>
+                        {logoutLoading ? 'Logging out…' : 'Log Out'}
+                      </button>
+                    </div>
+                  {/if}
                 </div>
               {:else}
-                <a href="/login" class="mx-auto mt-auto flex w-full max-w-[170px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-2 transition hover:border-slate-300">
+                <a href="/login" class="mx-auto mt-auto flex w-full max-w-[172px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-2 transition hover:border-slate-300">
                   <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">G</div>
                   <div class="min-w-0 flex-1">
                     <div class="truncate text-sm font-semibold text-slate-900">Guest</div>
@@ -294,7 +351,7 @@
   {/if}
 
   {#if $bootstrap.site?.footerText}
-    <footer class="mx-auto w-full max-w-[1216px] px-2 py-4 text-center text-xs text-slate-500 md:px-3">
+    <footer class="mx-auto w-full max-w-[1128px] px-2 py-4 text-center text-xs text-slate-500 md:px-3">
       {$bootstrap.site.footerText}
     </footer>
   {/if}

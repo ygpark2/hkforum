@@ -63,6 +63,8 @@ getApiAdminBootstrapR = do
 
     let userMap = Map.fromList $ map (\ent@(Entity userId _) -> (userId, ent)) (users <> companyAuthorRows)
         categoryMap = Map.fromList $ map (\(Entity categoryId category) -> (categoryId, category)) (categories <> companyCategoryRows)
+        categoryNameByCode = Map.fromList $ map (\(Entity _ category) -> (companyGroupCode category, companyGroupName category)) categories
+        categoryIdByCode = Map.fromList $ map (\(Entity categoryId category) -> (companyGroupCode category, categoryId)) categories
         postMap = Map.fromList $ map (\ent@(Entity postId _) -> (postId, ent)) moderationPostRows
         userPostCountMap =
             Map.fromListWith (+) $
@@ -73,6 +75,13 @@ getApiAdminBootstrapR = do
         companyCountMap =
             Map.fromListWith (+) $
                 map (\(Entity _ company) -> (companyCategory company, 1 :: Int)) companies
+        childCountMap =
+            Map.fromListWith (+) $
+                mapMaybe
+                    (\(Entity _ category) ->
+                        (\parentId -> (parentId, 1 :: Int)) <$> (companyGroupMajorCode category >>= (`Map.lookup` categoryIdByCode))
+                    )
+                    categories
         settingMap = siteSettingMapFromEntities settingsRows
     returnJson $
         object
@@ -92,7 +101,7 @@ getApiAdminBootstrapR = do
             , "boards" .= map boardSummaryValue boards
             , "users" .= map (adminUserValue userPostCountMap userCommentCountMap) users
             , "companies" .= map (adminCompanyValue userMap categoryMap) companies
-            , "companyCategories" .= map (adminCategoryValue userMap companyCountMap) categories
+            , "companyCategories" .= map (adminCategoryValue userMap companyCountMap childCountMap categoryIdByCode categoryNameByCode) categories
             , "ads" .= map adminAdValue ads
             , "settings" .= adminSettingsValue settingMap
             , "moderation" .= object
@@ -223,8 +232,7 @@ postApiAdminCompanyCategoriesR = do
     nameRaw <- runInputPost $ ireq textField "name"
     codeRaw <- runInputPost $ ireq textField "code"
     description <- runInputPost $ iopt textareaField "description"
-    mParentCategoryId <- runInputPost $ iopt hiddenField "parentCategoryId"
-    mParentCategory <- traverse (\parentId -> requireDbEntity parentId "category_not_found" "Category not found.") mParentCategoryId
+    mParentMajorCode <- parsePostedParentMajorCode
     now <- liftIO getCurrentTime
     let name = T.strip nameRaw
         code = T.strip codeRaw
@@ -233,8 +241,9 @@ postApiAdminCompanyCategoriesR = do
         jsonError status400 "invalid_name" "Category name is required."
     when (T.null code) $
         jsonError status400 "invalid_code" "Category code is required."
+    validateParentMajorCode Nothing mParentMajorCode
     inserted <- runDB $ insertBy $
-        CompanyGroup name mDescription adminId now code (companyGroupCode . entityVal <$> mParentCategory) 0 False
+        CompanyGroup name mDescription adminId now code mParentMajorCode 0 False
     case inserted of
         Left _ -> jsonError status400 "category_code_exists" "Company category code already exists."
         Right _ -> returnJson $ object ["message" .= ("Company category created." :: Text)]
@@ -247,10 +256,13 @@ postApiAdminCompanyCategoryR categoryId = do
     case action of
         "delete" -> do
             companyCount <- runDB $ count [CompanyCategory ==. categoryId]
+            childCount <- runDB $ count [CompanyGroupMajorCode ==. Just (companyGroupCode (entityVal category))]
             when (companyGroupIsSystem (entityVal category)) $
                 jsonError status400 "system_category" "System category cannot be deleted."
             when (companyCount > 0) $
                 jsonError status400 "category_not_empty" "Category has companies and cannot be deleted."
+            when (childCount > 0) $
+                jsonError status400 "category_has_children" "Major category has child categories and cannot be deleted."
             runDB $ delete categoryId
             returnJson $ object ["message" .= ("Company category deleted." :: Text)]
         "update" -> do
@@ -260,6 +272,7 @@ postApiAdminCompanyCategoryR categoryId = do
             nameRaw <- runInputPost $ ireq textField "name"
             codeRaw <- runInputPost $ ireq textField "code"
             description <- runInputPost $ iopt textareaField "description"
+            mParentMajorCode <- parsePostedParentMajorCode
             let name = T.strip nameRaw
                 code = T.strip codeRaw
                 mDescription = normalizeOptionalTextarea description
@@ -267,16 +280,26 @@ postApiAdminCompanyCategoryR categoryId = do
                 jsonError status400 "invalid_name" "Category name is required."
             when (T.null code) $
                 jsonError status400 "invalid_code" "Category code is required."
+            validateParentMajorCode (Just category) mParentMajorCode
+            childCount <- runDB $ count [CompanyGroupMajorCode ==. Just (companyGroupCode currentCategory)]
+            when (isJust mParentMajorCode && childCount > 0) $
+                jsonError status400 "category_has_children" "Major category with child categories cannot become a subcategory."
             mExistingCode <- runDB $ getBy $ UniqueCompanyGroupCode code
             case mExistingCode of
                 Just (Entity existingId _) | existingId /= categoryId ->
                     jsonError status400 "category_code_exists" "Company category code already exists."
                 _ -> do
-                    runDB $ update categoryId
-                        [ CompanyGroupName =. name
-                        , CompanyGroupCode =. code
-                        , CompanyGroupDescription =. mDescription
-                        ]
+                    runDB $ do
+                        update categoryId
+                            [ CompanyGroupName =. name
+                            , CompanyGroupCode =. code
+                            , CompanyGroupDescription =. mDescription
+                            , CompanyGroupMajorCode =. mParentMajorCode
+                            ]
+                        when (isNothing (companyGroupMajorCode currentCategory) && companyGroupCode currentCategory /= code) $
+                            updateWhere
+                                [CompanyGroupMajorCode ==. Just (companyGroupCode currentCategory)]
+                                [CompanyGroupMajorCode =. Just code]
                     returnJson $ object ["message" .= ("Company category updated." :: Text)]
         _ -> jsonError status400 "unknown_action" "Unknown action."
 
@@ -515,20 +538,62 @@ adminCompanyValue userMap categoryMap (Entity companyId company) =
         , "updatedAt" .= companyUpdatedAt company
         ]
 
-adminCategoryValue :: Map.Map UserId (Entity User) -> Map.Map CompanyGroupId Int -> Entity CompanyGroup -> Value
-adminCategoryValue userMap companyCountMap (Entity categoryId category) =
+adminCategoryValue
+    :: Map.Map UserId (Entity User)
+    -> Map.Map CompanyGroupId Int
+    -> Map.Map CompanyGroupId Int
+    -> Map.Map Text CompanyGroupId
+    -> Map.Map Text Text
+    -> Entity CompanyGroup
+    -> Value
+adminCategoryValue userMap companyCountMap childCountMap categoryIdByCode categoryNameByCode (Entity categoryId category) =
     object
         [ "id" .= keyToInt categoryId
         , "name" .= companyGroupName category
         , "description" .= companyGroupDescription category
         , "code" .= companyGroupCode category
         , "majorCode" .= companyGroupMajorCode category
-        , "majorName" .= (companyGroupMajorCode category >>= fmap companyMajorCategoryName . findCompanyMajorCategory)
+        , "majorName" .= ((companyGroupMajorCode category >>= fmap companyMajorCategoryName . findCompanyMajorCategory) <|> (companyGroupMajorCode category >>= (`Map.lookup` categoryNameByCode)))
+        , "parentCategoryId" .= fmap keyToInt (companyGroupMajorCode category >>= (`Map.lookup` categoryIdByCode))
+        , "isMajor" .= isNothing (companyGroupMajorCode category)
         , "sortOrder" .= companyGroupSortOrder category
         , "isSystem" .= companyGroupIsSystem category
         , "companyCount" .= Map.findWithDefault 0 categoryId companyCountMap
+        , "childCount" .= Map.findWithDefault 0 categoryId childCountMap
         , "author" .= maybe Null userRefValue (Map.lookup (companyGroupAuthor category) userMap)
         ]
+
+parsePostedParentMajorCode :: Handler (Maybe Text)
+parsePostedParentMajorCode = do
+    mParentMajorCodeRaw <- runInputPost $ iopt textField "parentMajorCode"
+    case normalizeOptionalText mParentMajorCodeRaw of
+        Just majorCode -> pure (Just majorCode)
+        Nothing -> do
+            mParentCategoryIdRaw <- runInputPost $ iopt textField "parentCategoryId"
+            case normalizeOptionalText mParentCategoryIdRaw of
+                Nothing -> pure Nothing
+                Just rawParentId ->
+                    case fromPathPiece rawParentId of
+                        Nothing -> jsonError status400 "invalid_parent_category" "Parent category is invalid."
+                        Just parentCategoryId -> do
+                            parentCategory <- requireDbEntity parentCategoryId "category_not_found" "Category not found."
+                            pure (Just (companyGroupCode (entityVal parentCategory)))
+
+validateParentMajorCode :: Maybe (Entity CompanyGroup) -> Maybe Text -> Handler ()
+validateParentMajorCode mCurrentCategory Nothing = pure ()
+validateParentMajorCode mCurrentCategory (Just parentMajorCode) = do
+    when (maybe False ((== parentMajorCode) . companyGroupCode . entityVal) mCurrentCategory) $
+        jsonError status400 "invalid_parent_category" "Category cannot be its own parent."
+    mExistingParent <- runDB $ getBy $ UniqueCompanyGroupCode parentMajorCode
+    case mExistingParent of
+        Just (Entity parentCategoryId parentCategory) -> do
+            when (maybe False ((== parentCategoryId) . entityKey) mCurrentCategory) $
+                jsonError status400 "invalid_parent_category" "Category cannot be its own parent."
+            when (isJust (companyGroupMajorCode parentCategory)) $
+                jsonError status400 "invalid_parent_category" "Parent category must be a major category."
+        Nothing ->
+            when (isNothing (findCompanyMajorCategory parentMajorCode)) $
+                jsonError status400 "invalid_parent_category" "Parent category is invalid."
 
 adminAdValue :: Entity Ad -> Value
 adminAdValue (Entity adId ad) =

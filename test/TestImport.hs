@@ -20,7 +20,7 @@ import Yesod.Test            as X
 import Database.Persist.Sqlite              (sqlDatabase, wrapConnection, createSqlPool)
 import qualified Database.Sqlite as Sqlite
 import Control.Monad.Logger                 (runLoggingT)
-import Settings (appDatabaseConf)
+import Settings (AppDatabaseConf (..), appDatabaseConf)
 import Yesod.Core (messageLoggerSource)
 
 runDB :: SqlPersistM a -> YesodExample App a
@@ -43,26 +43,30 @@ withApp = before $ do
 -- spec to run in.
 wipeDB :: App -> IO ()
 wipeDB app = do
-    -- In order to wipe the database, we need to temporarily disable foreign key checks.
-    -- Unfortunately, disabling FK checks in a transaction is a noop in SQLite.
-    -- Normal Persistent functions will wrap your SQL in a transaction,
-    -- so we create a raw SQLite connection to disable foreign keys.
-    -- Foreign key checks are per-connection, so this won't effect queries outside this function.
-
-    -- Aside: SQLite by default *does not enable foreign key checks*
-    -- (disabling foreign keys is only necessary for those who specifically enable them).
     let settings = appSettings app   
-    sqliteConn <- rawConnection (sqlDatabase $ appDatabaseConf settings)    
-    disableForeignKeys sqliteConn
+    case appDatabaseConf settings of
+        AppDatabaseSqlite sqliteConf -> do
+            -- In order to wipe the database, we need to temporarily disable
+            -- foreign key checks. Doing that inside a normal Persistent
+            -- transaction is a noop in SQLite, so we use a raw connection.
+            sqliteConn <- rawConnection (sqlDatabase sqliteConf)
+            disableForeignKeys sqliteConn
 
-    let logFunc = messageLoggerSource app (appLogger app)
-    pool <- runLoggingT (createSqlPool (wrapConnection sqliteConn) 1) logFunc
+            let logFunc = messageLoggerSource app (appLogger app)
+            pool <- runLoggingT (createSqlPool (wrapConnection sqliteConn) 1) logFunc
 
-    flip runSqlPersistMPool pool $ do
-        tables <- getTables
-        let quotedName t = "\"" <> t <> "\""
-            queries = P.map (\t -> "DELETE FROM " <> quotedName t) tables
-        forM_ queries (\q -> rawExecute q [])
+            flip runSqlPersistMPool pool $ do
+                tables <- getSqliteTables
+                let quotedName t = "\"" <> t <> "\""
+                    queries = P.map (\t -> "DELETE FROM " <> quotedName t) tables
+                forM_ queries (\q -> rawExecute q [])
+        AppDatabasePostgres _ ->
+            flip runSqlPersistMPool (appConnPool app) $ do
+                tables <- getPostgresTables
+                unless (null tables) $
+                    rawExecute
+                        ("TRUNCATE TABLE " <> intercalate ", " (map (\t -> "\"" <> t <> "\"") tables) <> " RESTART IDENTITY CASCADE")
+                        []
 
 rawConnection :: Text -> IO Sqlite.Connection
 rawConnection t = Sqlite.open t
@@ -70,7 +74,12 @@ rawConnection t = Sqlite.open t
 disableForeignKeys :: Sqlite.Connection -> IO ()
 disableForeignKeys conn = Sqlite.prepare conn "PRAGMA foreign_keys = OFF;" >>= (\stmt -> void (Sqlite.step stmt))
 
-getTables :: MonadIO m => ReaderT SqlBackend m [Text]
-getTables = do
+getSqliteTables :: MonadIO m => ReaderT SqlBackend m [Text]
+getSqliteTables = do
     tables <- rawSql "SELECT name FROM sqlite_master WHERE type = 'table';" []
+    return (fmap unSingle tables)
+
+getPostgresTables :: MonadIO m => ReaderT SqlBackend m [Text]
+getPostgresTables = do
+    tables <- rawSql "SELECT tablename FROM pg_tables WHERE schemaname = 'public';" []
     return (fmap unSingle tables)

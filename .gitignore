@@ -19,6 +19,7 @@ static/tmp/
 static/combined/
 static/app/
 static/frontend/
+static/css/tailwind.css
 config/client_session_key.aes
 cabal-dev/
 yesod-devel/

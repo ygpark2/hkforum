@@ -52,6 +52,78 @@
   $: selectedCategory = data?.companyCategories?.find((item) => item.id === selectedId);
   $: selectedUser = data?.users?.find((item) => item.id === selectedId);
   $: selectedAd = data?.ads?.find((item) => item.id === selectedId);
+  $: companyCategoryOptions = (data?.companyCategories || []).filter((item) => item.majorCode);
+  $: allCompanyCategories = data?.companyCategories || [];
+  $: majorCategoryRows = allCompanyCategories.filter((item) => item.isMajor);
+  $: minorCategoryRows = allCompanyCategories.filter((item) => item.majorCode);
+  $: majorCategoryByCode = new Map(majorCategoryRows.map((item) => [item.code, item]));
+  $: syntheticMajorGroups = Array.from(
+    minorCategoryRows.reduce((groups, item) => {
+      if (!item.majorCode || majorCategoryByCode.has(item.majorCode)) return groups;
+      if (!groups.has(item.majorCode)) {
+        groups.set(item.majorCode, {
+          categoryId: null,
+          code: item.majorCode,
+          name: item.majorName || item.majorCode,
+          description: '',
+          isSystem: true,
+          isSynthetic: true,
+          sortOrder: item.sortOrder || 0,
+          companyCount: 0,
+          childCount: 0
+        });
+      }
+      const current = groups.get(item.majorCode);
+      current.companyCount += item.companyCount || 0;
+      current.childCount += 1;
+      current.sortOrder = Math.min(current.sortOrder, item.sortOrder || current.sortOrder || 0);
+      return groups;
+    }, new Map()).values()
+  ).sort(sortCategoriesByOrder);
+  $: majorGroups = [
+    ...majorCategoryRows.map((item) => ({
+      ...item,
+      categoryId: item.id,
+      isSynthetic: false
+    })),
+    ...syntheticMajorGroups
+  ].sort(sortCategoriesByOrder);
+  $: requestedMajorCode = $page.url.searchParams.get('major') || (selectedCategory ? (selectedCategory.isMajor ? selectedCategory.code : selectedCategory.majorCode) : '');
+  $: selectedMajorCode = majorGroups.some((item) => item.code === requestedMajorCode) ? requestedMajorCode : (majorGroups[0]?.code || '');
+  $: selectedMajorGroup = majorGroups.find((item) => item.code === selectedMajorCode) || null;
+  $: selectedMajorChildren = minorCategoryRows.filter((item) => item.majorCode === selectedMajorCode).sort(sortCategoriesByOrder);
+  $: categoryEditorKind = selectedCategory ? (selectedCategory.isMajor ? 'major' : 'minor') : ($page.url.searchParams.get('kind') === 'minor' ? 'minor' : 'major');
+  $: categoryFormMajorCode = selectedCategory ? (selectedCategory.isMajor ? selectedCategory.code : selectedCategory.majorCode) : ($page.url.searchParams.get('major') || selectedMajorCode || '');
+  $: selectedMajorCompanyTotal = (selectedMajorGroup?.companyCount || 0) + selectedMajorChildren.reduce((sum, item) => sum + (item.companyCount || 0), 0);
+
+  function companyCategoryLabel(category) {
+    const majorLabel = category.majorName || category.majorCode;
+    return majorLabel ? `${majorLabel} > ${category.name}` : category.name;
+  }
+
+  function sortCategoriesByOrder(left, right) {
+    return (left.sortOrder || 0) - (right.sortOrder || 0) || (left.name || '').localeCompare(right.name || '');
+  }
+
+  function companyCategoriesHref(majorCode = '') {
+    return majorCode ? `/admin/company-categories?major=${encodeURIComponent(majorCode)}` : '/admin/company-categories';
+  }
+
+  function majorGroupHref(group) {
+    return group.categoryId ? `/admin/company-categories/${group.categoryId}/view?major=${encodeURIComponent(group.code)}` : companyCategoriesHref(group.code);
+  }
+
+  function newMinorCategoryHref(majorCode) {
+    return `/admin/company-categories/new?kind=minor&major=${encodeURIComponent(majorCode)}`;
+  }
+
+  function editMinorCategoryHref(category) {
+    return `/admin/company-categories/${category.id}/view?major=${encodeURIComponent(category.majorCode || selectedMajorCode)}`;
+  }
+
+  function majorGroupCompanyTotal(groupCode) {
+    return (majorCategoryByCode.get(groupCode)?.companyCount || 0) + minorCategoryRows.filter((item) => item.majorCode === groupCode).reduce((sum, item) => sum + (item.companyCount || 0), 0);
+  }
 
   function hiddenCsrf() {
     return $bootstrap.auth?.csrfParam && $bootstrap.auth?.csrfToken;
@@ -247,8 +319,8 @@
               <div>
                 <label for="company-category" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Category</label>
                 <select id="company-category" name="categoryId" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
-                  {#each data.companyCategories || [] as category}
-                    <option value={category.id} selected={category.id === selectedCompany?.categoryId}>{category.name}</option>
+                  {#each companyCategoryOptions as category}
+                    <option value={category.id} selected={category.id === selectedCompany?.categoryId}>{companyCategoryLabel(category)}</option>
                   {/each}
                 </select>
               </div>
@@ -289,59 +361,243 @@
           </div>
         {/if}
       {:else if section === 'company-categories'}
-        {#if isNew || selectedCategory}
-          <form method="post" action={isNew ? '/api/v1/admin/company-categories' : `/api/v1/admin/company-categories/${selectedCategory.id}`} class="rounded-2xl border border-slate-200 bg-white p-6" on:submit|preventDefault={(event) => submitAdminForm(event, { redirectTo: '/admin/company-categories' })}>
-            {#if hiddenCsrf()}
-              <input type="hidden" name={$bootstrap.auth.csrfParam} value={$bootstrap.auth.csrfToken} />
-            {/if}
-            {#if selectedCategory}
-              <input type="hidden" name="action" value="update" />
-            {/if}
-            {#if isNew && $page.url.searchParams.get('parent')}
-              <input type="hidden" name="parentCategoryId" value={$page.url.searchParams.get('parent')} />
-            {/if}
-            <div class="grid gap-4 md:grid-cols-2">
-              <div>
-                <label for="category-name" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Name</label>
-                <input id="category-name" name="name" value={selectedCategory?.name || ''} class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900" />
-              </div>
-              <div>
-                <label for="category-code" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Code</label>
-                <input id="category-code" name="code" value={selectedCategory?.code || ''} class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900" disabled={selectedCategory?.isSystem} />
-              </div>
-              <div class="md:col-span-2">
-                <label for="category-description" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Description</label>
-                <textarea id="category-description" name="description" class="mt-2 min-h-[160px] w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900" disabled={selectedCategory?.isSystem}>{selectedCategory?.description || ''}</textarea>
-              </div>
+        <div class="space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Category Structure</div>
+              <div class="mt-1 text-sm text-slate-500">대분류를 고르면 가운데에서 하위 분류를 보고, 오른쪽에서 바로 CRUD를 처리합니다.</div>
             </div>
-            <div class="mt-5 flex flex-wrap gap-3">
-              <button class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white" disabled={selectedCategory?.isSystem}>{isNew ? 'Create' : 'Save'}</button>
-              {#if selectedCategory}
-                <button formaction={`/api/v1/admin/company-categories/${selectedCategory.id}`} name="action" value="delete" class="rounded-xl border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700" disabled={selectedCategory.isSystem || selectedCategory.companyCount > 0}>Delete</button>
-              {/if}
-              <a href="/admin/company-categories" class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Back</a>
-            </div>
-          </form>
-        {:else}
-          <div class="flex items-center justify-between gap-3">
-            <div class="text-sm text-slate-500">System and custom category tree.</div>
-            <a href="/admin/company-categories/new" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">New Category</a>
+            <a href="/admin/company-categories/new?kind=major" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">New Major</a>
           </div>
-          <div class="grid gap-4 xl:grid-cols-2">
-            {#each data.companyCategories || [] as item}
-              <a href={`/admin/company-categories/${item.id}/view`} class="rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-slate-300">
-                <div class="flex items-center justify-between gap-3">
-                  <div class="text-lg font-semibold text-slate-900">{item.name}</div>
-                  {#if item.isSystem}
-                    <span class="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">System</span>
+
+          <div class="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_360px]">
+            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+              <div class="border-b border-slate-200 px-5 py-4">
+                <div class="text-lg font-semibold text-slate-900">Major Categories</div>
+                <div class="mt-1 text-sm text-slate-500">대분류별 하위 분류와 회사 수를 확인합니다.</div>
+              </div>
+              <div class="max-h-[calc(100vh-16rem)] overflow-y-auto divide-y divide-slate-200">
+                {#if !majorGroups.length}
+                  <div class="px-5 py-6 text-sm text-slate-500">아직 대분류가 없습니다.</div>
+                {:else}
+                  {#each majorGroups as item}
+                    <a
+                      href={majorGroupHref(item)}
+                      class={`block px-5 py-4 transition ${selectedMajorCode === item.code ? 'bg-slate-900 text-white' : 'hover:bg-slate-50'}`}
+                    >
+                      <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                          <div class={`truncate text-base font-semibold ${selectedMajorCode === item.code ? 'text-white' : 'text-slate-900'}`}>{item.name}</div>
+                          <div class={`mt-1 text-xs uppercase tracking-[0.18em] ${selectedMajorCode === item.code ? 'text-slate-300' : 'text-slate-500'}`}>{item.code}</div>
+                        </div>
+                        <div class="flex shrink-0 flex-wrap justify-end gap-2 text-[11px] font-semibold">
+                          {#if item.isSystem}
+                            <span class={`rounded-full px-2.5 py-1 ${selectedMajorCode === item.code ? 'bg-white/15 text-white' : 'bg-slate-900 text-white'}`}>System</span>
+                          {/if}
+                          {#if item.isSynthetic}
+                            <span class={`rounded-full px-2.5 py-1 ${selectedMajorCode === item.code ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-700'}`}>Seed Group</span>
+                          {/if}
+                        </div>
+                      </div>
+                      <div class={`mt-3 flex flex-wrap gap-3 text-xs ${selectedMajorCode === item.code ? 'text-slate-300' : 'text-slate-500'}`}>
+                        <span>{item.childCount || 0} subcategories</span>
+                        <span>{majorGroupCompanyTotal(item.code)} companies</span>
+                      </div>
+                    </a>
+                  {/each}
+                {/if}
+              </div>
+            </div>
+
+            <div class="space-y-5">
+              <div class="rounded-2xl border border-slate-200 bg-white p-5">
+                {#if selectedMajorGroup}
+                  <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div class="min-w-0">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <h2 class="text-xl font-semibold text-slate-900">{selectedMajorGroup.name}</h2>
+                        {#if selectedMajorGroup.isSystem}
+                          <span class="rounded-full bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white">System</span>
+                        {/if}
+                        {#if selectedMajorGroup.isSynthetic}
+                          <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">Seed Group</span>
+                        {/if}
+                      </div>
+                      <div class="mt-2 text-sm text-slate-500">{selectedMajorGroup.code}</div>
+                      <div class="mt-3 grid gap-3 sm:grid-cols-3">
+                        <div class="rounded-xl bg-slate-50 px-4 py-3">
+                          <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Subcategories</div>
+                          <div class="mt-2 text-2xl font-semibold text-slate-900">{selectedMajorChildren.length}</div>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-4 py-3">
+                          <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Companies</div>
+                          <div class="mt-2 text-2xl font-semibold text-slate-900">{selectedMajorCompanyTotal}</div>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-4 py-3">
+                          <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Type</div>
+                          <div class="mt-2 text-sm font-semibold text-slate-900">{selectedMajorGroup.isSynthetic ? 'Seed-linked major' : 'Managed major'}</div>
+                        </div>
+                      </div>
+                      <div class="mt-4 text-sm text-slate-600">{selectedMajorGroup.description || '선택된 대분류에 대한 설명이 없습니다.'}</div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <a href={newMinorCategoryHref(selectedMajorGroup.code)} class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Add Subcategory</a>
+                      {#if selectedMajorGroup.categoryId}
+                        <a href={majorGroupHref(selectedMajorGroup)} class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Edit Major</a>
+                      {/if}
+                    </div>
+                  </div>
+                {:else}
+                  <div class="text-sm text-slate-500">왼쪽에서 대분류를 선택하면 가운데에 하위 분류 목록이 표시됩니다.</div>
+                {/if}
+              </div>
+
+              <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+                  <div>
+                    <div class="text-lg font-semibold text-slate-900">Subcategories</div>
+                    <div class="mt-1 text-sm text-slate-500">선택된 대분류 아래 분류를 바로 수정하거나 새로 추가합니다.</div>
+                  </div>
+                  {#if selectedMajorGroup}
+                    <a href={newMinorCategoryHref(selectedMajorGroup.code)} class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">New Subcategory</a>
                   {/if}
                 </div>
-                <div class="mt-1 text-sm text-slate-500">{item.code} · {item.companyCount} companies</div>
-                <div class="mt-3 text-sm text-slate-600">{item.description || 'No description'}</div>
-              </a>
-            {/each}
+                {#if !selectedMajorGroup}
+                  <div class="px-5 py-6 text-sm text-slate-500">대분류를 먼저 선택하세요.</div>
+                {:else if !selectedMajorChildren.length}
+                  <div class="px-5 py-6 text-sm text-slate-500">이 대분류에 속한 분류가 아직 없습니다.</div>
+                {:else}
+                  <div class="divide-y divide-slate-200">
+                    {#each selectedMajorChildren as item}
+                      <div class="flex flex-wrap items-start justify-between gap-4 px-5 py-4">
+                        <div class="min-w-0">
+                          <div class="flex flex-wrap items-center gap-2">
+                            <div class="text-base font-semibold text-slate-900">{item.name}</div>
+                            {#if item.isSystem}
+                              <span class="rounded-full bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white">System</span>
+                            {/if}
+                          </div>
+                          <div class="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">{item.code}</div>
+                          <div class="mt-2 text-sm text-slate-600">{item.description || '설명이 없습니다.'}</div>
+                          <div class="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
+                            <span>{item.companyCount} companies</span>
+                            <span>Sort {item.sortOrder || 0}</span>
+                            <span>Major {item.majorName || item.majorCode}</span>
+                          </div>
+                        </div>
+                        <div class="flex shrink-0 flex-wrap gap-2">
+                          <a href={editMinorCategoryHref(item)} class="rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700">Edit</a>
+                        </div>
+                      </div>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+            </div>
+
+            <div class="xl:sticky xl:top-6 xl:self-start">
+              {#if isNew || selectedCategory}
+                <form
+                  method="post"
+                  action={isNew ? '/api/v1/admin/company-categories' : `/api/v1/admin/company-categories/${selectedCategory.id}`}
+                  class="rounded-2xl border border-slate-200 bg-white p-6"
+                  on:submit|preventDefault={(event) =>
+                    submitAdminForm(event, {
+                      redirectTo:
+                        categoryEditorKind === 'minor' && categoryFormMajorCode
+                          ? companyCategoriesHref(categoryFormMajorCode)
+                          : '/admin/company-categories'
+                    })}
+                >
+                  {#if hiddenCsrf()}
+                    <input type="hidden" name={$bootstrap.auth.csrfParam} value={$bootstrap.auth.csrfToken} />
+                  {/if}
+                  {#if selectedCategory}
+                    <input type="hidden" name="action" value="update" />
+                  {/if}
+
+                  <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div class="text-lg font-semibold text-slate-900">
+                        {selectedCategory ? `Edit ${categoryEditorKind === 'major' ? 'Major Category' : 'Subcategory'}` : `New ${categoryEditorKind === 'major' ? 'Major Category' : 'Subcategory'}`}
+                      </div>
+                      <div class="mt-1 text-sm text-slate-500">
+                        {#if categoryEditorKind === 'major'}
+                          대분류를 만들거나 이름, 코드, 설명을 수정합니다.
+                        {:else}
+                          분류를 만들거나 대분류 소속을 변경합니다.
+                        {/if}
+                      </div>
+                    </div>
+                    <a href={categoryEditorKind === 'minor' && categoryFormMajorCode ? companyCategoriesHref(categoryFormMajorCode) : '/admin/company-categories'} class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Close</a>
+                  </div>
+
+                  <div class="mt-5 space-y-4">
+                    {#if categoryEditorKind === 'minor'}
+                      <div>
+                        <label for="category-parent-major" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Major category</label>
+                        <select id="category-parent-major" name="parentMajorCode" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900" disabled={selectedCategory?.isSystem}>
+                          {#each majorGroups as item}
+                            <option value={item.code} selected={item.code === categoryFormMajorCode}>{item.name} ({item.code})</option>
+                          {/each}
+                        </select>
+                      </div>
+                    {/if}
+                    <div>
+                      <label for="category-name" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Name</label>
+                      <input id="category-name" name="name" value={selectedCategory?.name || ''} class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900" disabled={selectedCategory?.isSystem} />
+                    </div>
+                    <div>
+                      <label for="category-code" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Code</label>
+                      <input id="category-code" name="code" value={selectedCategory?.code || ''} class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900" disabled={selectedCategory?.isSystem} />
+                    </div>
+                    <div>
+                      <label for="category-description" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Description</label>
+                      <textarea id="category-description" name="description" class="mt-2 min-h-[180px] w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900" disabled={selectedCategory?.isSystem}>{selectedCategory?.description || ''}</textarea>
+                    </div>
+                  </div>
+
+                  <div class="mt-5 flex flex-wrap gap-3">
+                    <button class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white" disabled={selectedCategory?.isSystem}>
+                      {selectedCategory ? 'Save' : 'Create'}
+                    </button>
+                    {#if selectedCategory}
+                      <button
+                        formaction={`/api/v1/admin/company-categories/${selectedCategory.id}`}
+                        name="action"
+                        value="delete"
+                        class="rounded-xl border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700"
+                        disabled={selectedCategory.isSystem || selectedCategory.companyCount > 0 || selectedCategory.childCount > 0}
+                      >
+                        Delete
+                      </button>
+                    {/if}
+                  </div>
+
+                  {#if selectedCategory}
+                    <div class="mt-4 flex flex-wrap gap-3 text-xs text-slate-500">
+                      <span>{selectedCategory.companyCount} companies</span>
+                      <span>{selectedCategory.childCount || 0} child categories</span>
+                      {#if selectedCategory.isSystem}
+                        <span>System category is read-only</span>
+                      {/if}
+                    </div>
+                  {/if}
+                </form>
+              {:else}
+                <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6">
+                  <div class="text-lg font-semibold text-slate-900">Editor Panel</div>
+                  <div class="mt-2 text-sm text-slate-600">왼쪽에서 대분류를 고르고, 가운데에서 분류를 선택하면 이 패널에서 바로 생성, 수정, 삭제할 수 있습니다.</div>
+                  <div class="mt-5 space-y-3 text-sm text-slate-500">
+                    <div class="rounded-xl bg-white px-4 py-3">`New Major`로 새 대분류 생성</div>
+                    <div class="rounded-xl bg-white px-4 py-3">가운데 `New Subcategory`로 하위 분류 추가</div>
+                    <div class="rounded-xl bg-white px-4 py-3">목록의 `Edit`으로 기존 분류 수정</div>
+                  </div>
+                </div>
+              {/if}
+            </div>
           </div>
-        {/if}
+        </div>
       {:else if section === 'users'}
         {#if isNew || selectedUser}
           <form method="post" action={isNew ? '/api/v1/admin/users' : `/api/v1/admin/users/${selectedUser.id}`} class="rounded-2xl border border-slate-200 bg-white p-6" on:submit|preventDefault={(event) => submitAdminForm(event, { redirectTo: '/admin/users' })}>
