@@ -18,8 +18,13 @@ ip-from-header: "_env:IP_FROM_HEADER:false"
 # skip-combining: false
 
 database:
-  database: "_env:SQLITE_DATABASE:data/hkforum.sqlite3"
-  poolsize: "_env:SQLITE_POOLSIZE:10"
+  backend: "_env:DB_BACKEND:sqlite" # "sqlite" | "postgres"
+  sqlite:
+    database: "_env:SQLITE_DATABASE:data/hkforum.sqlite3"
+    poolsize: "_env:SQLITE_POOLSIZE:10"
+  postgres:
+    connstr: "_env:POSTGRES_CONNSTR:"
+    poolsize: "_env:POSTGRES_POOLSIZE:10"
 
 storage:
   backend: "_env:STORAGE_BACKEND:local" # "local" | "s3"

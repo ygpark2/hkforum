@@ -4,7 +4,7 @@ module Handler.Root (getRootR, getFaviconR, getRobotsR) where
 import Import
 
 getRootR :: Handler Html
-getRootR = notFound
+getRootR = redirect ("/home" :: Text)
 
 getFaviconR :: Handler TypedContent
 getFaviconR = sendFile "image/x-icon" "config/favicon.ico"

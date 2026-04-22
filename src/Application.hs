@@ -23,9 +23,10 @@ import Company.Categories                   (CompanyMinorCategory, companyMinorC
 import Location.Regions                     (CountrySeed (..), CountryStateSeed (..),
                                              countrySeedsForSuffixes,
                                              countryStateSeedsForSuffixes)
-import Database.Persist.Sql                 (Single (..), rawExecute, rawSql)
-import Database.Persist.Sqlite              (createSqlitePool, runSqlPool,
-                                             sqlDatabase, sqlPoolSize)
+import Database.Persist.Postgresql          (createPostgresqlPool)
+import Database.Persist.Sql                 (Single (..), rawExecute, rawSql,
+                                             runSqlPool)
+import Database.Persist.Sqlite              (SqliteConf (..), createSqlitePool)
 import Import hiding ((.), (++))
 import qualified Prelude as P
 import Yesod.Auth.HashDB                    (setPassword)
@@ -42,7 +43,7 @@ import Network.Wai.Middleware.RequestLogger (Destination (Logger),
 import qualified Data.Text as T
 import System.Directory                    (createDirectoryIfMissing, doesFileExist,
                                              makeAbsolute)
-import System.Environment                  (setEnv)
+import System.Environment                  (lookupEnv, setEnv)
 import System.FilePath                     (takeDirectory, takeExtension)
 import System.Log.FastLogger                (defaultBufSize, newStdoutLoggerSet,
                                              toLogStr)
@@ -87,20 +88,24 @@ makeFoundation appSettings = do
         tempFoundation = mkFoundation $ error "connPool forced in tempFoundation"
         logFunc = messageLoggerSource tempFoundation appLogger
 
-    let rawDbPath = unpack $ sqlDatabase $ appDatabaseConf appSettings
-    absDbPath <- makeAbsolute rawDbPath
-    let dbDir = takeDirectory absDbPath
-        dbText = pack absDbPath
-        dbPoolSize = sqlPoolSize (appDatabaseConf appSettings)
-    when (dbDir /= "." && dbDir /= "") $
-        createDirectoryIfMissing True dbDir
-    flip runLoggingT logFunc $
-        $(logInfo) $ "Using SQLite database at: " <> pack absDbPath
-
-    -- Create the database connection pool
-    pool <- flip runLoggingT logFunc $ createSqlitePool
-        dbText
-        dbPoolSize
+    pool <-
+        case appDatabaseConf appSettings of
+            AppDatabaseSqlite sqliteConf -> do
+                let rawDbPath = unpack $ sqlDatabase sqliteConf
+                absDbPath <- makeAbsolute rawDbPath
+                let dbDir = takeDirectory absDbPath
+                    dbText = pack absDbPath
+                when (dbDir /= "." && dbDir /= "") $
+                    createDirectoryIfMissing True dbDir
+                flip runLoggingT logFunc $
+                    $(logInfo) $ "Using SQLite database at: " <> pack absDbPath
+                flip runLoggingT logFunc $
+                    createSqlitePool dbText (sqlPoolSize sqliteConf)
+            AppDatabasePostgres postgresConf -> do
+                flip runLoggingT logFunc $
+                    $(logInfo) $ "Using PostgreSQL database with pool size " <> tshow (appPostgresPoolSize postgresConf)
+                flip runLoggingT logFunc $
+                    createPostgresqlPool (Import.encodeUtf8 $ appPostgresConnStr postgresConf) (appPostgresPoolSize postgresConf)
 
     companyMinorCategories <- loadAllCompanyMinorCategories
     let locationSeedSuffixes = appLocationRegionSeedSuffixes appSettings
@@ -116,7 +121,7 @@ makeFoundation appSettings = do
     -- Perform database migration using our application's logging settings.
     runLoggingT
         ( runSqlPool
-            (prepareCompanyGroupSchemaForCodeNotNull companyMinorCategories >> runMigration migrateAll >> seedDefaults companyMinorCategories countries states)
+            (prepareCompanyGroupSchemaForCodeNotNull (appDatabaseConf appSettings) companyMinorCategories >> runMigration migrateAll >> seedDefaults companyMinorCategories countries states)
             pool
         )
         logFunc
@@ -170,8 +175,8 @@ seedCountryStates states =
             , CountryStateSortOrder =. countryStateSeedSortOrder stateSeed
             ]
 
-prepareCompanyGroupSchemaForCodeNotNull :: [CompanyMinorCategory] -> SqlPersistT (LoggingT IO) ()
-prepareCompanyGroupSchemaForCodeNotNull companyMinorCategories = do
+prepareCompanyGroupSchemaForCodeNotNull :: AppDatabaseConf -> [CompanyMinorCategory] -> SqlPersistT (LoggingT IO) ()
+prepareCompanyGroupSchemaForCodeNotNull (AppDatabaseSqlite _) companyMinorCategories = do
     tableRows <- rawSql "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'company_group'" []
     when (not (null (tableRows :: [Single Text]))) $ do
         columns <- rawSql "SELECT name FROM pragma_table_info('company_group')" []
@@ -185,6 +190,26 @@ prepareCompanyGroupSchemaForCodeNotNull companyMinorCategories = do
             rawExecute "ALTER TABLE company_group ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0" []
         unless (hasColumn "is_system") $
             rawExecute "ALTER TABLE company_group ADD COLUMN is_system BOOLEAN NOT NULL DEFAULT 0" []
+        rawBackfillLegacySystemCompanyGroupCodes companyMinorCategories
+        missingRows <- rawSql "SELECT name FROM company_group WHERE code IS NULL OR TRIM(code) = '' ORDER BY name" []
+        unless (null (missingRows :: [Single Text])) $
+            error $
+                "CompanyGroup code is required before NOT NULL migration. Missing codes for: "
+                    <> unpack (T.intercalate ", " (map unSingle (missingRows :: [Single Text])))
+prepareCompanyGroupSchemaForCodeNotNull (AppDatabasePostgres _) companyMinorCategories = do
+    tableRows <- rawSql "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'company_group'" []
+    when (not (null (tableRows :: [Single Text]))) $ do
+        columns <- rawSql "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'company_group'" []
+        let columnNames = map unSingle (columns :: [Single Text])
+            hasColumn columnName = columnName `elem` columnNames
+        unless (hasColumn "code") $
+            rawExecute "ALTER TABLE company_group ADD COLUMN code VARCHAR NULL" []
+        unless (hasColumn "major_code") $
+            rawExecute "ALTER TABLE company_group ADD COLUMN major_code VARCHAR NULL" []
+        unless (hasColumn "sort_order") $
+            rawExecute "ALTER TABLE company_group ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0" []
+        unless (hasColumn "is_system") $
+            rawExecute "ALTER TABLE company_group ADD COLUMN is_system BOOLEAN NOT NULL DEFAULT FALSE" []
         rawBackfillLegacySystemCompanyGroupCodes companyMinorCategories
         missingRows <- rawSql "SELECT name FROM company_group WHERE code IS NULL OR TRIM(code) = '' ORDER BY name" []
         unless (null (missingRows :: [Single Text])) $
@@ -361,8 +386,11 @@ loadDotenv = do
                             else line
                     (key, rest) = T.breakOn "=" line'
                     value = T.drop 1 rest
-                when (not (T.null key) && not (T.null rest)) $
-                    setEnv (T.unpack key) (T.unpack $ stripQuotes $ T.strip value)
+                when (not (T.null key) && not (T.null rest)) $ do
+                    let envKey = T.unpack key
+                    existing <- lookupEnv envKey
+                    when (isNothing existing) $
+                        setEnv envKey (T.unpack $ stripQuotes $ T.strip value)
   where
     stripQuotes s =
         case T.uncons s of

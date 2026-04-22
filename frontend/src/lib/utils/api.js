@@ -37,6 +37,16 @@ export async function apiFetch(url, options = {}) {
   return payload;
 }
 
+export async function refreshBootstrap() {
+  const payload = await apiFetch('/api/v1/bootstrap');
+  bootstrap.set({
+    ready: true,
+    loading: false,
+    ...payload
+  });
+  return payload;
+}
+
 export async function sendJson(url, { method = 'POST', body, headers = {}, ...options } = {}) {
   return apiFetch(url, {
     method,

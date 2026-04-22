@@ -3,10 +3,14 @@ TAILWIND_INPUT=$(TAILWIND_DIR)/tailwind.input.css
 TAILWIND_CONFIG=$(TAILWIND_DIR)/tailwind.config.js
 TAILWIND_OUTPUT=./static/css/tailwind.css
 FRONTEND_DIR=./frontend
-PORT ?= 3004
+PORT ?= 3700
 APPROOT ?= http://localhost:$(PORT)
 APP_ENV = PORT=$(PORT) APPROOT=$(APPROOT)
 FRONTEND_URL = $(APPROOT)/home
+DEV_PORT ?= 3700
+DEV_APPROOT = http://localhost:$(DEV_PORT)
+DEV_APP_ENV = PORT=$(DEV_PORT) APPROOT=$(DEV_APPROOT)
+DEV_FRONTEND_URL = $(DEV_APPROOT)/home
 
 .PHONY: tailwind
 tailwind:
@@ -33,7 +37,7 @@ start:
 .PHONY: dev-start
 dev-start: build-assets
 	# @stack exec -- yesod devel
-	@/bin/zsh -lc 'trap '\''echo ""; echo "Frontend URL: $(FRONTEND_URL)"'\'' EXIT; $(APP_ENV) stack build --flag hkforum:dev && $(APP_ENV) stack exec hkforum'
+	@/bin/zsh -lc 'exit_code=0; $(DEV_APP_ENV) stack build --flag hkforum:dev && $(DEV_APP_ENV) stack exec hkforum || exit_code=$$?; echo ""; echo "Frontend URL: $(DEV_FRONTEND_URL)"; exit $$exit_code'
 
 .PHONY: start-bg
 start-bg:

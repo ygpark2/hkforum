@@ -15,23 +15,59 @@
   let size = '';
   let description = '';
   let categoryId = '';
+  let formMajorCode = '';
   let submitting = false;
   let deletingCompanyId = null;
   let editingCompanyId = null;
+  let filterMajor = '';
+  let filterCategory = '';
+  let lastFilterSearch = null;
 
   $: categories = $bootstrap.companyCategories || [];
   $: majorGroups = Array.from(new Map(categories.filter((item) => item.majorCode).map((item) => [item.majorCode, item.majorName || item.majorCode])).entries()).map(([code, label]) => ({ code, label }));
-  $: selectedMajor = $page.url.searchParams.get('major') || '';
-  $: selectedCategory = $page.url.searchParams.get('category') || '';
-  $: filteredCategories = selectedMajor ? categories.filter((item) => item.majorCode === selectedMajor) : categories;
-  $: if (!categoryId && filteredCategories[0]) categoryId = String(filteredCategories[0].id);
+  $: filteredCategories = filterMajor ? categories.filter((item) => item.majorCode === filterMajor) : categories;
+  $: {
+    const nextSearch = $page.url.searchParams.toString();
+    if (nextSearch !== lastFilterSearch) {
+      filterMajor = $page.url.searchParams.get('major') || '';
+      filterCategory = $page.url.searchParams.get('category') || '';
+      lastFilterSearch = nextSearch;
+    }
+  }
+  $: if (filterCategory && !filteredCategories.some((category) => String(category.id) === String(filterCategory))) {
+    filterCategory = '';
+  }
+
+  function findCategoryById(id) {
+    return categories.find((item) => String(item.id) === String(id));
+  }
+
+  function categoriesForMajor(majorCode) {
+    return majorCode ? categories.filter((item) => item.majorCode === majorCode) : categories;
+  }
+
+  function setFormMajorCode(nextMajorCode) {
+    formMajorCode = nextMajorCode || '';
+    const nextCategories = categoriesForMajor(formMajorCode);
+    categoryId = nextCategories[0] ? String(nextCategories[0].id) : '';
+  }
+
+  function setFilterMajor(nextMajorCode) {
+    filterMajor = nextMajorCode || '';
+    const nextCategories = filterMajor ? categories.filter((item) => item.majorCode === filterMajor) : categories;
+    if (!nextCategories.some((category) => String(category.id) === String(filterCategory))) {
+      filterCategory = '';
+    }
+  }
 
   function resetForm() {
     name = '';
     website = '';
     size = '';
     description = '';
-    categoryId = categories[0] ? String(categories[0].id) : '';
+    const firstCategory = categories[0];
+    formMajorCode = firstCategory?.majorCode || '';
+    categoryId = firstCategory ? String(firstCategory.id) : '';
     editingCompanyId = null;
   }
 
@@ -81,11 +117,13 @@
   }
 
   function openEditCompany(company) {
+    const selectedCategory = findCategoryById(company.categoryId);
     editingCompanyId = company.id;
     name = company.name || '';
     website = company.website || '';
     size = company.size || '';
     description = company.description || '';
+    formMajorCode = selectedCategory?.majorCode || '';
     categoryId = String(company.categoryId || '');
     open = true;
   }
@@ -128,19 +166,19 @@
     <form method="get" action="/companies" class="mt-4 flex flex-wrap items-end gap-3 lg:max-w-3xl">
       <div class="min-w-[140px] flex-1 space-y-1">
         <label for="company-major-filter" class="text-sm font-semibold text-slate-700">대분류</label>
-        <select id="company-major-filter" name="major" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900">
+        <select id="company-major-filter" name="major" bind:value={filterMajor} class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900" on:change={(event) => setFilterMajor(event.currentTarget.value)}>
           <option value="">전체 대분류</option>
           {#each majorGroups as major}
-            <option value={major.code} selected={selectedMajor === major.code}>{major.label}</option>
+            <option value={major.code}>{major.label}</option>
           {/each}
         </select>
       </div>
       <div class="min-w-[140px] flex-1 space-y-1">
         <label for="company-category-filter" class="text-sm font-semibold text-slate-700">분류</label>
-        <select id="company-category-filter" name="category" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900">
+        <select id="company-category-filter" name="category" bind:value={filterCategory} class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900">
           <option value="">전체 분류</option>
           {#each filteredCategories as category}
-            <option value={category.id} selected={selectedCategory === String(category.id)}>{category.name}</option>
+            <option value={String(category.id)}>{category.name}</option>
           {/each}
         </select>
       </div>
@@ -233,11 +271,7 @@
         <div class="grid grid-cols-2 gap-3 !grid">
           <div class="flex flex-col space-y-1">
             <label class="text-sm font-semibold text-slate-700" for="company-create-major">대분류</label>
-            <select id="company-create-major" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900" on:change={(event) => {
-              const next = event.currentTarget.value;
-              const nextCategories = next ? categories.filter((item) => item.majorCode === next) : categories;
-              categoryId = nextCategories[0] ? String(nextCategories[0].id) : '';
-            }}>
+            <select id="company-create-major" bind:value={formMajorCode} class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900" on:change={(event) => setFormMajorCode(event.currentTarget.value)}>
               <option value="">대분류를 선택하세요</option>
               {#each majorGroups as major}
                 <option value={major.code}>{major.label}</option>
@@ -247,7 +281,7 @@
           <div class="flex flex-col space-y-1">
             <label class="text-sm font-semibold text-slate-700" for="company-create-category">분류</label>
             <select id="company-create-category" bind:value={categoryId} class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900">
-              {#each categories as category}
+              {#each categoriesForMajor(formMajorCode) as category}
                 <option value={String(category.id)}>{category.name}</option>
               {/each}
             </select>

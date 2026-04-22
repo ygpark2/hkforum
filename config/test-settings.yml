@@ -1,2 +1,5 @@
 database:
-  database: data/hkforum_test.sqlite3
+  backend: sqlite
+  sqlite:
+    database: data/hkforum_test.sqlite3
+    poolsize: 1

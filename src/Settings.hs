@@ -13,7 +13,7 @@ import Data.Aeson                  (Result (..), fromJSON, withObject, (.!=),
 import Data.FileEmbed              (embedFile)
 import qualified Data.Text as T
 import Data.Yaml                   (decodeEither')
-import Database.Persist.Sqlite     (SqliteConf)
+import Database.Persist.Sqlite     (SqliteConf (..))
 import Language.Haskell.TH.Syntax  (Exp, Name, Q)
 import Network.Wai.Handler.Warp    (HostPreference)
 import Yesod.Default.Config2       (applyEnvValue, configSettingsYml)
@@ -26,7 +26,7 @@ import Yesod.Default.Util          (WidgetFileSettings, widgetFileNoReload,
 data AppSettings = AppSettings
     { appStaticDir              :: String
     -- ^ Directory from which to serve static files.
-    , appDatabaseConf           :: SqliteConf
+    , appDatabaseConf           :: AppDatabaseConf
     -- ^ Configuration settings for accessing the database.
     , appRoot                   :: Text
     -- ^ Base for all generated URLs.
@@ -74,6 +74,15 @@ data AppSettings = AppSettings
     , appJwtIssuer              :: Maybe Text
     , appJwtExpiryMinutes       :: Int
     }
+
+data AppPostgresConf = AppPostgresConf
+    { appPostgresConnStr :: Text
+    , appPostgresPoolSize :: Int
+    }
+
+data AppDatabaseConf
+    = AppDatabaseSqlite SqliteConf
+    | AppDatabasePostgres AppPostgresConf
 
 instance FromJSON AppSettings where
     parseJSON = withObject "AppSettings" $ \o -> do
@@ -136,6 +145,25 @@ instance FromJSON AppSettings where
                 ]
 
         return AppSettings {..}
+
+instance FromJSON AppDatabaseConf where
+    parseJSON = withObject "AppDatabaseConf" $ \o -> do
+        backend <- T.toLower <$> o .:? "backend" .!= ("sqlite" :: Text)
+        case backend of
+            "sqlite" -> do
+                sqlite <- o .:? "sqlite" .!= mempty
+                database <- sqlite .:? "database" .!= ("data/hkforum.sqlite3" :: Text)
+                poolsize <- sqlite .:? "poolsize" .!= (10 :: Int)
+                pure $ AppDatabaseSqlite $ SqliteConf database poolsize
+            "postgres" -> do
+                postgres <- o .:? "postgres" .!= mempty
+                connStr <- T.strip <$> (postgres .:? "connstr" .!= ("" :: Text))
+                when (T.null connStr) $
+                    fail "database.postgres.connstr is required when database.backend is postgres"
+                poolsize <- postgres .:? "poolsize" .!= (10 :: Int)
+                pure $ AppDatabasePostgres $ AppPostgresConf connStr poolsize
+            other ->
+                fail $ "Unsupported database backend: " <> unpack other
 
 -- | Settings for 'widgetFile', such as which template languages to support and
 -- default Hamlet settings.

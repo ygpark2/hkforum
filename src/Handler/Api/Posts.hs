@@ -118,7 +118,10 @@ deleteApiPostR postId = do
         commentRows <- selectList [CommentPost ==. postId] []
         let commentIds = map entityKey commentRows
             commentCount = P.length commentRows
-        unless (P.null commentIds) $
+        unless (P.null commentIds) $ do
+            -- Break comment self-references before bulk delete so SQLite
+            -- does not fail when parent comments are deleted before children.
+            updateWhere [CommentPost ==. postId] [CommentParentComment =. Nothing]
             deleteWhere [NotificationComment <-. map Just commentIds]
         deleteWhere [NotificationPost ==. Just postId]
         deleteWhere [PostTagMapPost ==. postId]
@@ -258,9 +261,11 @@ deleteApiCommentR commentId = do
     when (commentAuthor (entityVal comment) /= viewerId) $
         jsonError status403 "forbidden" "Not allowed."
     post <- requireDbEntity (commentPost (entityVal comment)) "post_not_found" "Post not found."
-    runDB $ updateWhere [CommentParentComment ==. Just commentId] [CommentParentComment =. Nothing]
-    runDB $ delete commentId
-    runDB $ update (postBoard (entityVal post)) [BoardCommentCount -=. 1]
+    runDB $ do
+        updateWhere [CommentParentComment ==. Just commentId] [CommentParentComment =. Nothing]
+        deleteWhere [NotificationComment ==. Just commentId]
+        delete commentId
+        update (postBoard (entityVal post)) [BoardCommentCount -=. 1]
     returnJson $ object ["message" .= ("Comment deleted." :: Text)]
 
 postApiPostLikeR :: PostId -> Handler Value

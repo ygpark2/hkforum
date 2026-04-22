@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import PageEmpty from '$lib/components/PageEmpty.svelte';
+  import LeafletMap from '$lib/components/LeafletMap.svelte';
   import PostCard from '$lib/components/PostCard.svelte';
   import RichEditor from '$lib/components/RichEditor.svelte';
   import { bootstrap } from '$lib/stores/bootstrap';
@@ -15,6 +16,9 @@
   let title = '';
   let tags = '';
   let content = '';
+  let latitude = null;
+  let longitude = null;
+  let locationOpen = false;
   let submitting = false;
 
   async function loadBoard() {
@@ -38,6 +42,19 @@
         ? '프로필에 국가와 주를 저장해야 내 지역 필터를 사용할 수 있습니다.'
         : null;
 
+  function normalizeTags(rawTags) {
+    const items = (rawTags || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+    return items.length ? items : null;
+  }
+
+  function closeComposer() {
+    locationOpen = false;
+    open = false;
+  }
+
   async function submitPost() {
     if (submitting) return;
     submitting = true;
@@ -47,14 +64,19 @@
         body: {
           title,
           content,
-          tags: tags || null
+          tags: normalizeTags(tags),
+          latitude,
+          longitude
         }
       });
       const postId = payload?.data?.post?.id;
       title = '';
       tags = '';
       content = '';
-      open = false;
+      latitude = null;
+      longitude = null;
+      locationOpen = false;
+      closeComposer();
       await loadBoard();
       if (postId) {
         await goto(`/post/${postId}`);
@@ -107,21 +129,21 @@
 
 {#if open}
   <div
-    class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 px-4"
+    class="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-slate-900/40 px-4 py-6 sm:items-center"
     role="button"
     tabindex="0"
     aria-label="Close new post dialog"
-    on:click={() => (open = false)}
+    on:click={closeComposer}
     on:keydown={(event) => {
       if (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ') {
-        open = false;
+        closeComposer();
       }
     }}
   >
-    <div class="w-[min(90vw,42rem)] rounded-2xl bg-white p-6 shadow-xl" role="dialog" tabindex="-1" aria-modal="true" on:click|stopPropagation on:keydown|stopPropagation={() => {}}>
+    <div class="max-h-[calc(100vh-3rem)] w-[min(90vw,42rem)] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" role="dialog" tabindex="-1" aria-modal="true" on:click|stopPropagation on:keydown|stopPropagation={() => {}}>
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold text-slate-900">New post</h2>
-        <button type="button" class="rounded-xl border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600" on:click={() => (open = false)}>Close</button>
+        <button type="button" class="rounded-xl border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600" on:click={closeComposer}>Close</button>
       </div>
       <form class="mt-4 space-y-4" on:submit|preventDefault={submitPost}>
         <div class="space-y-1">
@@ -132,6 +154,55 @@
           <div class="text-sm font-semibold text-slate-700">Content</div>
           <RichEditor bind:value={content} name="content" placeholder="Share your thoughts" />
         </div>
+        <div class="rounded-2xl border border-slate-200 bg-slate-50">
+          <button type="button" class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left" on:click={() => (locationOpen = !locationOpen)}>
+            <div>
+              <div class="text-sm font-semibold text-slate-700">Location</div>
+              <div class="mt-1 text-xs text-slate-500">
+                {#if latitude != null && longitude != null}
+                  {latitude}, {longitude}
+                {:else}
+                  No location selected
+                {/if}
+              </div>
+            </div>
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-slate-600">
+              {#if locationOpen}
+                <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true">
+                  <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              {:else}
+                <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true">
+                  <path d="M5 12.5L10 7.5L15 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              {/if}
+            </span>
+          </button>
+
+          {#if locationOpen}
+            <div class="space-y-2 border-t border-slate-200 px-4 py-4">
+              <div class="flex items-center justify-end gap-3">
+                {#if latitude != null && longitude != null}
+                  <button type="button" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 hover:text-slate-900" on:click={() => { latitude = null; longitude = null; }}>
+                    Clear
+                  </button>
+                {/if}
+              </div>
+              <LeafletMap bind:latitude bind:longitude interactive heightClass="h-56" />
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500" for="board-post-latitude">Latitude</label>
+                  <input id="board-post-latitude" bind:value={latitude} class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900" readonly />
+                </div>
+                <div>
+                  <label class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500" for="board-post-longitude">Longitude</label>
+                  <input id="board-post-longitude" bind:value={longitude} class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900" readonly />
+                </div>
+              </div>
+              <div class="text-xs text-slate-500">지도를 클릭하면 게시글 위치를 선택할 수 있습니다.</div>
+            </div>
+          {/if}
+        </div>
         <div class="space-y-1">
           <label class="text-sm font-semibold text-slate-700" for="board-post-tags">Tags</label>
           <input id="board-post-tags" name="tags" bind:value={tags} class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900" placeholder="tag1, tag2" />
@@ -140,7 +211,7 @@
           <button type="submit" class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white" disabled={submitting}>
             {submitting ? 'Posting…' : 'Post'}
           </button>
-          <button type="button" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600" on:click={() => (open = false)}>Cancel</button>
+          <button type="button" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600" on:click={closeComposer}>Cancel</button>
         </div>
       </form>
     </div>
