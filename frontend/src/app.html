@@ -1,19 +1,87 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="forum">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <base href="/" />
     <link rel="icon" href="/favicon.ico" />
     <link rel="stylesheet" href="/static/css/tailwind.css" />
+    <script>
+      (() => {
+        const storageKey = 'hkforum-theme';
+        const defaultTheme = 'forum';
+        const validThemes = new Set(['forum', 'forest', 'midnight']);
+        const normalizeTheme = (theme) => (validThemes.has(theme) ? theme : defaultTheme);
+
+        try {
+          const storedTheme = normalizeTheme(window.localStorage.getItem(storageKey));
+          document.documentElement.dataset.theme = storedTheme;
+          document.documentElement.style.colorScheme = storedTheme === 'midnight' ? 'dark' : 'light';
+        } catch (_error) {
+          document.documentElement.dataset.theme = defaultTheme;
+          document.documentElement.style.colorScheme = 'light';
+        }
+      })();
+    </script>
     %sveltekit.head%
     <style>
+      :root {
+        --theme-app-bg: #eceeee;
+        --theme-app-chrome: #f4f5f6;
+        --theme-surface-0: #f8fafc;
+        --theme-surface-1: #ffffff;
+        --theme-surface-2: #e2e8f0;
+        --theme-border: #e2e8f0;
+        --theme-border-strong: #cbd5e1;
+        --theme-text-strong: #0f172a;
+        --theme-text: #334155;
+        --theme-text-soft: #64748b;
+        --theme-text-faint: #94a3b8;
+        --theme-primary: #0f172a;
+        --theme-primary-hover: #1e293b;
+        --theme-primary-contrast: #ffffff;
+      }
+
+      html[data-theme='forest'] {
+        --theme-app-bg: #ece6d8;
+        --theme-app-chrome: #f4efe2;
+        --theme-surface-0: #fbf6ea;
+        --theme-surface-1: #fffaf0;
+        --theme-surface-2: #e7dcc6;
+        --theme-border: #d9ccb4;
+        --theme-border-strong: #c3b395;
+        --theme-text-strong: #1d2b24;
+        --theme-text: #395244;
+        --theme-text-soft: #617565;
+        --theme-text-faint: #8b9f90;
+        --theme-primary: #2d5a45;
+        --theme-primary-hover: #244b39;
+        --theme-primary-contrast: #f8f7f2;
+      }
+
+      html[data-theme='midnight'] {
+        --theme-app-bg: #09111f;
+        --theme-app-chrome: #0f172a;
+        --theme-surface-0: #111c31;
+        --theme-surface-1: #162033;
+        --theme-surface-2: #243149;
+        --theme-border: #31425d;
+        --theme-border-strong: #41567b;
+        --theme-text-strong: #e6edf8;
+        --theme-text: #c8d3e8;
+        --theme-text-soft: #96a9c8;
+        --theme-text-faint: #7286a8;
+        --theme-primary: #8fb7ff;
+        --theme-primary-hover: #7ba8fc;
+        --theme-primary-contrast: #08111f;
+      }
+
       html,
       body {
         margin: 0;
         min-height: 100%;
-        background: #eceeee;
-        color: #0f172a;
+        background: var(--theme-app-bg);
+        color: var(--theme-text-strong);
       }
 
       body {
@@ -24,6 +92,80 @@
           BlinkMacSystemFont,
           "Segoe UI",
           sans-serif;
+      }
+
+      .theme-app-chrome {
+        background-color: var(--theme-app-chrome) !important;
+      }
+
+      html[data-theme] .bg-white {
+        background-color: var(--theme-surface-1) !important;
+      }
+
+      html[data-theme] .bg-slate-50 {
+        background-color: var(--theme-surface-0) !important;
+      }
+
+      html[data-theme] .bg-slate-100,
+      html[data-theme] .bg-slate-200 {
+        background-color: var(--theme-surface-2) !important;
+      }
+
+      html[data-theme] .bg-slate-900,
+      html[data-theme] .bg-slate-950 {
+        background-color: var(--theme-primary) !important;
+      }
+
+      html[data-theme] .border-slate-200 {
+        border-color: var(--theme-border) !important;
+      }
+
+      html[data-theme] .border-slate-300,
+      html[data-theme] .border-slate-800 {
+        border-color: var(--theme-border-strong) !important;
+      }
+
+      html[data-theme] .text-slate-900 {
+        color: var(--theme-text-strong) !important;
+      }
+
+      html[data-theme] .text-slate-700,
+      html[data-theme] .text-slate-600 {
+        color: var(--theme-text) !important;
+      }
+
+      html[data-theme] .text-slate-500,
+      html[data-theme] .text-slate-400,
+      html[data-theme] .text-slate-300 {
+        color: var(--theme-text-soft) !important;
+      }
+
+      html[data-theme] .text-white {
+        color: var(--theme-primary-contrast) !important;
+      }
+
+      html[data-theme] .hover\:bg-slate-50:hover,
+      html[data-theme] .hover\:bg-slate-100:hover {
+        background-color: var(--theme-surface-0) !important;
+      }
+
+      html[data-theme] .hover\:bg-slate-900:hover,
+      html[data-theme] .hover\:bg-slate-800:hover {
+        background-color: var(--theme-primary-hover) !important;
+      }
+
+      html[data-theme] .hover\:text-slate-900:hover {
+        color: var(--theme-text-strong) !important;
+      }
+
+      html[data-theme] .hover\:text-white:hover {
+        color: var(--theme-primary-contrast) !important;
+      }
+
+      html[data-theme='midnight'] .shadow-sm,
+      html[data-theme='midnight'] .shadow-lg,
+      html[data-theme='midnight'] .shadow-xl {
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.32) !important;
       }
     </style>
   </head>

@@ -144,6 +144,25 @@
     return booleanKeys.has(key);
   }
 
+  function settingOptions(key) {
+    if (key === 'site_template') {
+      const templates = $bootstrap.site?.availableTemplates || ['base', 'eu', 'anz'];
+      return templates.map((value) => ({
+        value,
+        label:
+          value === 'base'
+            ? 'Base'
+            : value === 'anz'
+              ? 'ANZ'
+              : value === 'eu'
+                ? 'EU'
+                : value.toUpperCase()
+      }));
+    }
+
+    return null;
+  }
+
   async function loadData() {
     loading = true;
     loadError = '';
@@ -683,6 +702,12 @@
                       <select id={key} name={key} class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900">
                         <option value="false" selected={settingValue(key) !== 'true'}>false</option>
                         <option value="true" selected={settingValue(key) === 'true'}>true</option>
+                      </select>
+                    {:else if settingOptions(key)}
+                      <select id={key} name={key} class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900">
+                        {#each settingOptions(key) as option}
+                          <option value={option.value} selected={settingValue(key) === option.value}>{option.label}</option>
+                        {/each}
                       </select>
                     {:else}
                       <input id={key} name={key} value={settingValue(key)} class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" />

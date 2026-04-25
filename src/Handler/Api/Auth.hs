@@ -25,7 +25,7 @@ postApiAuthRegisterR = do
     case existing of
         Just _ -> jsonError status400 "user_exists" "Username already exists."
         Nothing -> do
-            user <- liftIO $ setPassword password (User username Nothing "user" Nothing Nothing Nothing Nothing False Nothing Nothing)
+            user <- liftIO $ setPassword password (User username Nothing "user" Nothing Nothing Nothing Nothing False Nothing Nothing Nothing)
             userId <- runDB $ insert user
             setCreds False (Creds "hashdb" username [])
             created <- requireDbEntity userId "user_not_found" "User not found."

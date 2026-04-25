@@ -13,6 +13,7 @@
 /api/v1/me ApiMeR GET
 /api/v1/me/security-events ApiMeSecurityEventsR GET
 /api/v1/me/profile ApiMeProfileR PATCH
+/api/v1/me/preferences ApiMePreferencesR PATCH
 /api/v1/me/bookmarks ApiMeBookmarksR GET
 /api/v1/me/blocked-users ApiMeBlockedUsersR GET
 /api/v1/meta/regions ApiMetaRegionsR GET

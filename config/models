@@ -9,6 +9,7 @@ User
     localRegionOnly Bool default=False
     latitude Double Maybe
     longitude Double Maybe
+    theme Text Maybe
     UniqueUser ident
     deriving Typeable
 Country

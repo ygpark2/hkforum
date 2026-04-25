@@ -34,6 +34,7 @@ siteBasicsSettingKeys =
     , "site_subtitle"
     , "site_description"
     , "site_keywords"
+    , "site_template"
     , "site_logo_url"
     , "site_favicon_url"
     , "footer_text"

@@ -16,6 +16,7 @@ import Database.Persist.Sql (fromSqlKey, toSqlKey)
 import Forum.Tag (loadPostTagsMap)
 import Import
 import SiteSettings
+import Theme (userThemeKey)
 import qualified Data.Text as T
 import qualified Prelude as P
 
@@ -48,6 +49,14 @@ instance FromJSON UpdateProfilePayload where
             <*> o .: "localRegionOnly"
             <*> o .:? "latitude"
             <*> o .:? "longitude"
+
+data UpdatePreferencesPayload = UpdatePreferencesPayload
+    { updatePreferencesTheme :: Text
+    }
+
+instance FromJSON UpdatePreferencesPayload where
+    parseJSON = withObject "UpdatePreferencesPayload" $ \o ->
+        UpdatePreferencesPayload <$> o .: "theme"
 
 data PostPayload = PostPayload
     { postPayloadTitle :: Text
@@ -586,6 +595,7 @@ userProfileValue mViewerId (Entity userId user) followerCount followingCount mIs
         , "localRegionOnly" .= userLocalRegionOnly user
         , "latitude" .= userLatitude user
         , "longitude" .= userLongitude user
+        , "theme" .= userThemeKey user
         , "followerCount" .= followerCount
         , "followingCount" .= followingCount
         , "isFollowing" .= case mViewerId of

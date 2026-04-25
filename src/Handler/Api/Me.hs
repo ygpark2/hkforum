@@ -8,6 +8,7 @@ import qualified Data.Text as T
 import Data.Time (NominalDiffTime, addUTCTime)
 import Handler.Api.Common
 import Import
+import Theme (normalizeThemeKey, userThemeKey)
 import qualified Prelude as P
 
 getApiMeR :: Handler Value
@@ -76,6 +77,26 @@ patchApiMeProfileR = do
   where
     stripText = T.strip
     toUpperText = T.toUpper . T.strip
+
+patchApiMePreferencesR :: Handler Value
+patchApiMePreferencesR = do
+    viewerId <- requireApiAuthId
+    _ <- requireDbEntity viewerId "user_not_found" "User not found."
+    payload <- requireCheckJsonBody :: Handler UpdatePreferencesPayload
+    themeKey <-
+        case normalizeThemeKey (updatePreferencesTheme payload) of
+            Just value -> pure value
+            Nothing -> jsonError status400 "invalid_theme" "Invalid theme."
+    runDB $ update viewerId [UserTheme =. Just themeKey]
+    updated <- requireDbEntity viewerId "user_not_found" "User not found."
+    returnJson $
+        object
+            [ "theme" .= userThemeKey (entityVal updated)
+            , "user" .= object
+                [ "id" .= keyToInt viewerId
+                , "theme" .= userThemeKey (entityVal updated)
+                ]
+            ]
 
 getApiMeBookmarksR :: Handler Value
 getApiMeBookmarksR = do
