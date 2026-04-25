@@ -10,7 +10,9 @@ import qualified Data.Text as T
 import Data.Time (getCurrentTime, utctDay)
 import Handler.Api.Common
 import Import
+import SiteTemplate (availableSiteTemplateKeys, defaultSiteTemplateKey, normalizeSiteTemplateKey)
 import SiteSettings
+import Theme (availableThemeKeys, defaultThemeKey, userThemeKey)
 import qualified Prelude as P
 
 getApiBootstrapR :: Handler Value
@@ -23,6 +25,9 @@ getApiBootstrapR = do
         siteSubtitle = siteSettingText "site_subtitle" "x.com inspired discussion hub" settingMap
         siteDescription = siteSettingText "site_description" siteSubtitle settingMap
         siteKeywords = siteSettingText "site_keywords" "" settingMap
+        siteTemplate =
+            fromMaybe defaultSiteTemplateKey $
+                siteSettingMaybeText "site_template" settingMap >>= normalizeSiteTemplateKey
         siteLogoUrl = siteSettingMaybeText "site_logo_url" settingMap
         siteFaviconUrl = siteSettingMaybeText "site_favicon_url" settingMap
         footerText = siteSettingText "footer_text" siteTitle settingMap
@@ -106,10 +111,14 @@ getApiBootstrapR = do
                 , "subtitle" .= siteSubtitle
                 , "description" .= siteDescription
                 , "keywords" .= siteKeywords
+                , "template" .= siteTemplate
+                , "availableTemplates" .= availableSiteTemplateKeys
                 , "logoUrl" .= siteLogoUrl
                 , "faviconUrl" .= siteFaviconUrl
                 , "footerText" .= footerText
                 , "defaultLocale" .= defaultLocale
+                , "availableThemes" .= availableThemeKeys
+                , "defaultTheme" .= defaultThemeKey
                 , "allowUserRegistration" .= allowUserRegistration
                 , "allowPostReporting" .= allowPostReporting
                 , "allowUserBlocking" .= allowUserBlocking
@@ -149,6 +158,7 @@ getApiBootstrapR = do
             , "localRegionOnly" .= userLocalRegionOnly viewer
             , "latitude" .= userLatitude viewer
             , "longitude" .= userLongitude viewer
+            , "theme" .= userThemeKey viewer
             , "authProvider" .= authProviderForUser viewer
             ]
 

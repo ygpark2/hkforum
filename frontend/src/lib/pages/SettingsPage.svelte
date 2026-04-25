@@ -1,15 +1,19 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { page } from '$app/stores';
   import { bootstrap } from '$lib/stores/bootstrap';
   import { apiFetch } from '$lib/utils/api';
+  import { applyTheme, DEFAULT_THEME, syncTheme, THEMES } from '$lib/utils/theme';
   import { formatDate, relativeTime } from '$lib/utils/time';
 
   let loading = false;
   let blockedLoading = false;
+  let themeSaving = false;
   let securityEvents = [];
   let blockedUsers = [];
   let blockingUserId = null;
+  let selectedTheme = DEFAULT_THEME;
+  let savedTheme = DEFAULT_THEME;
 
   $: section = getSection($page.url.pathname);
   $: viewer = $bootstrap.viewer;
@@ -17,6 +21,7 @@
   $: providers = $bootstrap.auth?.providers || [];
   $: currentProvider = viewer?.authProvider || 'password';
   $: currentProviderLabel = providerLabel(currentProvider);
+  $: currentTheme = viewer?.theme || $bootstrap.site?.defaultTheme || DEFAULT_THEME;
 
   function getSection(pathname) {
     const parts = pathname.split('/').filter(Boolean);
@@ -69,10 +74,59 @@
     return 'Password';
   }
 
+  function selectTheme(themeKey) {
+    selectedTheme = themeKey;
+    applyTheme(themeKey);
+  }
+
+  function themeDirty() {
+    return selectedTheme !== savedTheme;
+  }
+
+  async function saveTheme() {
+    if (themeSaving || !themeDirty()) return;
+    themeSaving = true;
+    const previousTheme = savedTheme;
+    try {
+      const payload = await apiFetch('/api/v1/me/preferences', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: selectedTheme })
+      });
+      const nextTheme = syncTheme(payload.theme);
+      savedTheme = nextTheme;
+      selectedTheme = nextTheme;
+      bootstrap.update((state) => ({
+        ...state,
+        viewer: state.viewer ? { ...state.viewer, theme: nextTheme } : state.viewer
+      }));
+    } catch (error) {
+      syncTheme(previousTheme);
+      savedTheme = previousTheme;
+      selectedTheme = previousTheme;
+      window.alert(error.message);
+    } finally {
+      themeSaving = false;
+    }
+  }
+
   onMount(() => {
+    savedTheme = currentTheme;
+    selectedTheme = currentTheme;
+    syncTheme(currentTheme);
     loadSecurityEvents();
     loadBlockedUsers();
   });
+
+  onDestroy(() => {
+    if (selectedTheme !== savedTheme) {
+      applyTheme(savedTheme);
+    }
+  });
+  $: if (section !== 'appearance' && themeDirty()) {
+    selectedTheme = savedTheme;
+    applyTheme(savedTheme);
+  }
   $: if (section === 'security-events' && $bootstrap.ready) {
     loadSecurityEvents();
   }
@@ -82,6 +136,7 @@
 
   const links = [
     { href: '/settings', key: 'index', label: 'Overview' },
+    { href: '/settings/appearance', key: 'appearance', label: 'Appearance' },
     { href: '/settings/account', key: 'account', label: 'Account' },
     { href: '/settings/connections', key: 'connections', label: 'Connections' },
     { href: '/settings/blocked-accounts', key: 'blocked-accounts', label: 'Blocked Accounts' },
@@ -132,8 +187,54 @@
           <div class="text-lg font-semibold text-slate-900">Quick actions</div>
           <div class="mt-4 flex flex-wrap gap-3">
             <a href="/profile" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Edit Profile</a>
+            <a href="/settings/appearance" class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Appearance</a>
             <a href="/settings/security-events" class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Security Events</a>
             <a href="/bookmarks" class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Bookmarks</a>
+          </div>
+        </div>
+      {:else if section === 'appearance'}
+        <div class="rounded-2xl border border-slate-200 bg-white p-6">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="text-lg font-semibold text-slate-900">Appearance</div>
+              <p class="mt-1 text-sm text-slate-500">Choose a theme and sync it to your account.</p>
+            </div>
+            <button
+              type="button"
+              class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+              on:click={saveTheme}
+              disabled={themeSaving || !themeDirty()}
+            >
+              {themeSaving ? 'Saving…' : 'Save theme'}
+            </button>
+          </div>
+
+          <div class="mt-5 grid gap-3 md:grid-cols-3">
+            {#each THEMES as theme}
+              <button
+                type="button"
+                class={`rounded-2xl border p-4 text-left transition ${selectedTheme === theme.key ? 'border-slate-900 bg-slate-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'}`}
+                on:click={() => selectTheme(theme.key)}
+                aria-pressed={selectedTheme === theme.key}
+              >
+                <div class="flex items-center justify-between gap-3">
+                  <div class="text-base font-semibold text-slate-900">{theme.label}</div>
+                  {#if savedTheme === theme.key}
+                    <span class="rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white">Saved</span>
+                  {/if}
+                </div>
+                <div class="mt-3 flex gap-2">
+                  {#each theme.preview as swatch}
+                    <span class="h-10 flex-1 rounded-xl border border-black/5" style={`background:${swatch}`}></span>
+                  {/each}
+                </div>
+                <p class="mt-3 text-sm text-slate-600">{theme.description}</p>
+              </button>
+            {/each}
+          </div>
+
+          <div class="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+            Active theme: <span class="font-semibold text-slate-900">{THEMES.find((theme) => theme.key === savedTheme)?.label || 'Forum'}</span>
           </div>
         </div>
       {:else if section === 'account'}

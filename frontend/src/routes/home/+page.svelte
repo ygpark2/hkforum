@@ -24,7 +24,12 @@
 
   $: activeTab = $page.url.searchParams.get('tab') || 'everything';
   $: activeTag = $page.url.searchParams.get('tag') || '';
+  $: siteTemplate = $bootstrap.site?.template || 'base';
+  $: isEuTemplate = siteTemplate === 'eu';
+  $: isAnzTemplate = siteTemplate === 'anz';
   $: localRegionNotice = getLocalRegionNotice();
+  $: featuredPosts = items.slice(0, 3);
+  $: remainingPosts = items.slice(3);
 
   function getLocalRegionNotice() {
     if (activeTab !== 'local') return null;
@@ -76,45 +81,173 @@
   }
 </script>
 
-<section class="flex h-full min-h-0 flex-col bg-[#f6f7f8]">
-  <div class="shrink-0 border-b border-slate-200 bg-white px-4 py-2.5">
-    <div class="mb-2">
-      <h1 class="text-xl font-semibold text-slate-900">Home</h1>
-    </div>
-    <div class="flex items-center justify-between gap-3">
-      <nav class="flex items-center gap-5 overflow-x-auto whitespace-nowrap text-[15px] font-semibold text-slate-500 no-scrollbar">
-        {#each tabs as tab}
-          <a href={`/home?tab=${tab.key}`} class={`pb-2 transition ${activeTab === tab.key ? 'border-b-2 border-slate-900 text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}>{tab.label}</a>
-        {/each}
-        {#each customTabs as tab}
-          <a href={`/home?tag=${encodeURIComponent(tab.tag)}`} class={`pb-2 transition ${activeTag === tab.tag ? 'border-b-2 border-slate-900 text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}>{tab.label}</a>
-        {/each}
-      </nav>
-      <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-700 transition hover:bg-slate-100 hover:text-slate-900" on:click={() => (addTabOpen = true)}>+</button>
-    </div>
-    {#if localRegionNotice}
-      <div class="mt-2">
-        <span class="inline-flex rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">{localRegionNotice}</span>
+{#if isEuTemplate}
+  <section class="min-h-full bg-slate-50">
+    <div class="border-b border-slate-200 bg-white px-5 py-5">
+      <div class="flex items-center justify-between gap-3">
+        <nav class="flex items-center gap-3 overflow-x-auto whitespace-nowrap text-sm font-semibold text-slate-500 no-scrollbar">
+          {#each tabs as tab}
+            <a href={`/home?tab=${tab.key}`} class={`rounded-full px-3 py-2 transition ${activeTab === tab.key ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}>{tab.label}</a>
+          {/each}
+          {#each customTabs as tab}
+            <a href={`/home?tag=${encodeURIComponent(tab.tag)}`} class={`rounded-full px-3 py-2 transition ${activeTag === tab.tag ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}>{tab.label}</a>
+          {/each}
+        </nav>
+        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900" on:click={() => (addTabOpen = true)}>+</button>
       </div>
-    {/if}
-  </div>
 
-  <div class="min-h-0 flex-1 overflow-y-auto no-scrollbar bg-white">
-    {#if loading}
-      <div class="flex h-full items-center justify-center px-6 text-center text-slate-500">Loading feed…</div>
-    {:else if !items.length}
-      <PageEmpty title="No posts yet." description="Feed results will appear here." />
-    {:else}
-      <ul class="divide-y divide-slate-200">
-        {#each items as post}
-          <li class="px-4 py-4">
-            <PostCard {post} />
-          </li>
-        {/each}
-      </ul>
-    {/if}
-  </div>
-</section>
+      {#if localRegionNotice}
+        <div class="mt-4">
+          <span class="inline-flex rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">{localRegionNotice}</span>
+        </div>
+      {/if}
+    </div>
+
+    <div class="space-y-5 px-5 py-5">
+      {#if loading}
+        <div class="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center text-slate-500">Loading feed…</div>
+      {:else if !items.length}
+        <div class="rounded-2xl border border-slate-200 bg-white">
+          <PageEmpty title="No posts yet." description="Feed results will appear here." />
+        </div>
+      {:else}
+        <div class="space-y-4">
+          {#each items as post, index}
+            <article class="rounded-2xl border border-slate-200 bg-white p-5">
+              <div class="flex items-center justify-between gap-3">
+                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{index === 0 ? 'Lead story' : 'Featured'}</div>
+                <a href={`/post/${post.id}`} class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-700 hover:text-slate-900">Open</a>
+              </div>
+              <div class="mt-3">
+                <PostCard {post} />
+              </div>
+            </article>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  </section>
+{:else if isAnzTemplate}
+  <section class="min-h-full bg-slate-50">
+    <div class="border-b border-slate-200 bg-white px-5 py-5">
+      <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">ANZ Template</div>
+          <h1 class="mt-2 text-3xl font-semibold text-slate-900">{$bootstrap.site?.homeFeedTitle || 'Home'} Pulse</h1>
+          <p class="mt-2 max-w-3xl text-sm text-slate-600">A community dashboard view that prioritizes local context, active discussion lanes, and quick scanning.</p>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-3">
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Template</div>
+            <div class="mt-2 text-lg font-semibold text-slate-900">ANZ</div>
+          </div>
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Focus</div>
+            <div class="mt-2 text-lg font-semibold text-slate-900">{activeTag || activeTab}</div>
+          </div>
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Live posts</div>
+            <div class="mt-2 text-lg font-semibold text-slate-900">{items.length}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 flex items-center justify-between gap-3">
+        <nav class="flex items-center gap-3 overflow-x-auto whitespace-nowrap text-sm font-semibold text-slate-500 no-scrollbar">
+          {#each tabs as tab}
+            <a href={`/home?tab=${tab.key}`} class={`rounded-full px-3 py-2 transition ${activeTab === tab.key ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}>{tab.label}</a>
+          {/each}
+          {#each customTabs as tab}
+            <a href={`/home?tag=${encodeURIComponent(tab.tag)}`} class={`rounded-full px-3 py-2 transition ${activeTag === tab.tag ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}>{tab.label}</a>
+          {/each}
+        </nav>
+        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900" on:click={() => (addTabOpen = true)}>+</button>
+      </div>
+
+      {#if localRegionNotice}
+        <div class="mt-4">
+          <span class="inline-flex rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">{localRegionNotice}</span>
+        </div>
+      {/if}
+    </div>
+
+    <div class="space-y-5 px-5 py-5">
+      {#if loading}
+        <div class="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center text-slate-500">Loading feed…</div>
+      {:else if !items.length}
+        <div class="rounded-2xl border border-slate-200 bg-white">
+          <PageEmpty title="No posts yet." description="Feed results will appear here." />
+        </div>
+      {:else}
+        <div>
+          <article class="rounded-2xl border border-slate-200 bg-white p-5">
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Community lead</div>
+              {#if featuredPosts[0]}
+                <a href={`/post/${featuredPosts[0].id}`} class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-700 hover:text-slate-900">Open</a>
+              {/if}
+            </div>
+            {#if featuredPosts[0]}
+              <div class="mt-4">
+                <PostCard post={featuredPosts[0]} />
+              </div>
+            {/if}
+          </article>
+        </div>
+
+        {#if remainingPosts.length}
+          <div class="grid gap-4 lg:grid-cols-2">
+            {#each remainingPosts as post}
+              <article class="rounded-2xl border border-slate-200 bg-white p-5">
+                <PostCard {post} />
+              </article>
+            {/each}
+          </div>
+        {/if}
+      {/if}
+    </div>
+  </section>
+{:else}
+  <section class="flex h-full min-h-0 flex-col bg-[#f6f7f8]">
+    <div class="shrink-0 border-b border-slate-200 bg-white px-4 py-2.5">
+      <div class="mb-2">
+        <h1 class="text-xl font-semibold text-slate-900">Home</h1>
+      </div>
+      <div class="flex items-center justify-between gap-3">
+        <nav class="flex items-center gap-5 overflow-x-auto whitespace-nowrap text-[15px] font-semibold text-slate-500 no-scrollbar">
+          {#each tabs as tab}
+            <a href={`/home?tab=${tab.key}`} class={`pb-2 transition ${activeTab === tab.key ? 'border-b-2 border-slate-900 text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}>{tab.label}</a>
+          {/each}
+          {#each customTabs as tab}
+            <a href={`/home?tag=${encodeURIComponent(tab.tag)}`} class={`pb-2 transition ${activeTag === tab.tag ? 'border-b-2 border-slate-900 text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}>{tab.label}</a>
+          {/each}
+        </nav>
+        <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-700 transition hover:bg-slate-100 hover:text-slate-900" on:click={() => (addTabOpen = true)}>+</button>
+      </div>
+      {#if localRegionNotice}
+        <div class="mt-2">
+          <span class="inline-flex rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">{localRegionNotice}</span>
+        </div>
+      {/if}
+    </div>
+
+    <div class="min-h-0 flex-1 overflow-y-auto no-scrollbar bg-white">
+      {#if loading}
+        <div class="flex h-full items-center justify-center px-6 text-center text-slate-500">Loading feed…</div>
+      {:else if !items.length}
+        <PageEmpty title="No posts yet." description="Feed results will appear here." />
+      {:else}
+        <ul class="divide-y divide-slate-200">
+          {#each items as post}
+            <li class="px-4 py-4">
+              <PostCard {post} />
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </div>
+  </section>
+{/if}
 
 {#if addTabOpen}
   <div

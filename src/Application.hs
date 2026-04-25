@@ -132,11 +132,21 @@ makeFoundation appSettings = do
 seedDefaults :: [CompanyMinorCategory] -> [CountrySeed] -> [CountryStateSeed] -> SqlPersistT (LoggingT IO) ()
 seedDefaults companyMinorCategories countries states = do
     void $ insertBy $ Board "general" (Just "General discussion") 0 0
+    migrateLegacySiteTemplate
     adminId <- seedAdmin
     seedCountries countries
     seedCountryStates states
     seedSystemCompanyGroups companyMinorCategories adminId
     ensureAllCompanyGroupsHaveCodes
+
+migrateLegacySiteTemplate :: SqlPersistT (LoggingT IO) ()
+migrateLegacySiteTemplate =
+    updateWhere
+        [ SiteSettingKey ==. "site_template"
+        , SiteSettingValue ==. "anz"
+        ]
+        [ SiteSettingValue =. "base"
+        ]
 
 seedCountries :: [CountrySeed] -> SqlPersistT (LoggingT IO) ()
 seedCountries countries =
@@ -225,7 +235,7 @@ seedAdmin = do
             update userId [UserRole =. "admin"]
             pure userId
         Nothing -> do
-            user <- liftIO $ setPassword "1234" (User "ygpark2" Nothing "admin" Nothing Nothing Nothing Nothing False Nothing Nothing)
+            user <- liftIO $ setPassword "1234" (User "ygpark2" Nothing "admin" Nothing Nothing Nothing Nothing False Nothing Nothing Nothing)
             insert user
 
 seedSystemCompanyGroups :: [CompanyMinorCategory] -> UserId -> SqlPersistT (LoggingT IO) ()

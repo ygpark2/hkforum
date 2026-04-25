@@ -11,6 +11,7 @@ import qualified Prelude as P
 import Database.Persist.Sql (fromSqlKey, toSqlKey)
 import Handler.Api.Common
 import Import
+import SiteTemplate (normalizeSiteTemplateKey)
 import SiteSettings
 import Text.Read (readMaybe)
 import Yesod.Auth.HashDB (setPassword)
@@ -319,7 +320,7 @@ postApiAdminUsersR = do
     case mExisting of
         Just _ -> jsonError status400 "user_exists" "User already exists."
         Nothing -> do
-            user <- liftIO $ setPassword password (User ident Nothing role name description Nothing Nothing False Nothing Nothing)
+            user <- liftIO $ setPassword password (User ident Nothing role name description Nothing Nothing False Nothing Nothing Nothing)
             void $ runDB $ insert user
             returnJson $ object ["message" .= ("User created." :: Text)]
 
@@ -476,13 +477,24 @@ saveSettingGroup :: [Text] -> Text -> Handler Value
 saveSettingGroup settingKeys successMessage = do
     (params, _) <- runRequestBody
     let paramMap = Map.fromList params
-        settingPairs = map (\key -> (key, T.strip (fromMaybe "" (Map.lookup key paramMap)))) settingKeys
+        settingPairs =
+            map
+                (\key ->
+                    let rawValue = T.strip (fromMaybe "" (Map.lookup key paramMap))
+                    in (key, normalizeAdminSettingValue key rawValue)
+                )
+                settingKeys
     runDB $
         forM_ settingPairs $ \(key, value) ->
             if T.null value
                 then deleteBy (UniqueSiteSetting key)
                 else void $ upsert (SiteSetting key value) [SiteSettingValue =. value]
     returnJson $ object ["message" .= successMessage]
+
+normalizeAdminSettingValue :: Text -> Text -> Text
+normalizeAdminSettingValue "site_template" raw =
+    fromMaybe "" (normalizeSiteTemplateKey raw)
+normalizeAdminSettingValue _ raw = raw
 
 normalizeOptionalTextarea :: Maybe Textarea -> Maybe Text
 normalizeOptionalTextarea = normalizeOptionalText . fmap unTextarea
