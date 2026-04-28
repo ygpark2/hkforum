@@ -54,8 +54,8 @@ LOCATION_REGION_SEED_SUFFIXES=ko,eu make seed-data
 LOCATION_REGION_SEED_SUFFIXES=ko,anz make render-seed-sql SEED_DB=postgres SEED_SQL_OUT=/tmp/hkforum-seeds.sql
 ```
 
-자세한 내용은 [docs/seeds.md](/Users/ygpark2/pjt/projects/hkforum/docs/seeds.md:1)를 보면 됩니다.
+자세한 내용은 `$HOME/pjt/projects/hkforum/docs/seeds.md`를 보면 됩니다.
 
-Job 운영 정책과 인덱스는 [docs/job-operations.md](/Users/ygpark2/pjt/projects/hkforum/docs/job-operations.md:1)를 보면 됩니다.
+Job 운영 정책과 인덱스는 `$HOME/pjt/projects/hkforum/docs/job-operations.md`를 보면 됩니다.
 
-부동산 메뉴와 DB 설계는 [docs/real-estate.md](/Users/ygpark2/pjt/projects/hkforum/docs/real-estate.md:1)를 보면 됩니다.
+부동산 메뉴와 DB 설계는 `$HOME/pjt/projects/hkforum/docs/real-estate.md`를 보면 됩니다.
