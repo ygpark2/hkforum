@@ -20,7 +20,7 @@ export async function apiFetch(url, options = {}) {
     ...options
   });
 
-  if (response.redirected && response.url.includes('/auth/')) {
+  if (response.redirected && response.url.includes('/api/v1/oauth/')) {
     throw new Error('로그인이 필요합니다.');
   }
 

@@ -25,7 +25,7 @@
   - `GET /notifications`
   - `GET /chats`
 - Yesod 유지:
-  - `/auth/*`
+  - `/api/v1/oauth/*`
   - `/api/v1/*`
   - `/files/*`
   - `/static/*`

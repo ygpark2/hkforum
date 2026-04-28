@@ -32,7 +32,7 @@ security:
   - bearerAuth: []
   - cookieAuth: []
 paths:
-  /auth/register:
+  /api/v1/auth/register:
     post:
       tags: [Auth]
       security: []
@@ -53,7 +53,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /auth/login:
+  /api/v1/auth/login:
     post:
       tags: [Auth]
       security: []
@@ -74,7 +74,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /auth/logout:
+  /api/v1/auth/logout:
     post:
       tags: [Auth]
       summary: Logout current user
@@ -88,7 +88,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /me:
+  /api/v1/me:
     get:
       tags: [Me]
       summary: Get current user
@@ -102,7 +102,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /me/profile:
+  /api/v1/me/profile:
     patch:
       tags: [Me]
       summary: Update current user profile
@@ -124,7 +124,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /me/bookmarks:
+  /api/v1/me/bookmarks:
     get:
       tags: [Me]
       summary: Get bookmarked posts
@@ -141,7 +141,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /boards:
+  /api/v1/boards:
     get:
       tags: [Boards]
       security: []
@@ -154,7 +154,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/BoardListResponse'
 
-  /feed:
+  /api/v1/feed:
     get:
       tags: [Feed]
       security: []
@@ -222,7 +222,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PostListResponse'
 
-  /boards/{boardId}/posts:
+  /api/v1/boards/{boardId}/posts:
     get:
       tags: [Boards]
       security: []
@@ -265,7 +265,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /posts/{postId}:
+  /api/v1/posts/{postId}:
     get:
       tags: [Posts]
       security: []
@@ -326,7 +326,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /posts/{postId}/comments:
+  /api/v1/posts/{postId}/comments:
     get:
       tags: [Comments]
       security: []
@@ -367,7 +367,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /comments/{commentId}:
+  /api/v1/comments/{commentId}:
     patch:
       tags: [Comments]
       summary: Update a comment
@@ -413,7 +413,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /posts/{postId}/like:
+  /api/v1/posts/{postId}/like:
     post:
       tags: [Posts]
       summary: Toggle post like
@@ -431,7 +431,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /posts/{postId}/bookmark:
+  /api/v1/posts/{postId}/bookmark:
     post:
       tags: [Posts]
       summary: Toggle post bookmark
@@ -449,7 +449,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /posts/{postId}/watch:
+  /api/v1/posts/{postId}/watch:
     post:
       tags: [Posts]
       summary: Toggle post watch
@@ -467,7 +467,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /posts/{postId}/react:
+  /api/v1/posts/{postId}/react:
     post:
       tags: [Posts]
       summary: Toggle or update post reaction
@@ -493,7 +493,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /posts/{postId}/flag:
+  /api/v1/posts/{postId}/flag:
     post:
       tags: [Posts]
       summary: Flag a post
@@ -511,7 +511,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /posts/{postId}/block:
+  /api/v1/posts/{postId}/block:
     post:
       tags: [Posts]
       summary: Block a post
@@ -529,7 +529,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /users/{userId}:
+  /api/v1/users/{userId}:
     get:
       tags: [Users]
       security: []
@@ -546,7 +546,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /users/{userId}/follow:
+  /api/v1/users/{userId}/follow:
     post:
       tags: [Users]
       summary: Toggle follow
@@ -566,7 +566,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /notifications:
+  /api/v1/notifications:
     get:
       tags: [Notifications]
       summary: Get current user notifications
@@ -583,7 +583,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /notifications/read-all:
+  /api/v1/notifications/read-all:
     post:
       tags: [Notifications]
       summary: Mark all notifications as read
@@ -597,7 +597,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /chats:
+  /api/v1/chats:
     get:
       tags: [Chats]
       summary: Get chat rooms for current user
@@ -633,7 +633,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /chats/{roomId}/messages:
+  /api/v1/chats/{roomId}/messages:
     get:
       tags: [Chats]
       summary: Get messages for a chat room
@@ -681,7 +681,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /companies:
+  /api/v1/companies:
     get:
       tags: [Companies]
       security: []
@@ -726,7 +726,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /jobs:
+  /api/v1/jobs:
     get:
       tags: [Jobs]
       security: []
@@ -762,7 +762,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /jobs/{jobId}/close:
+  /api/v1/jobs/{jobId}/close:
     post:
       tags: [Jobs]
       summary: Close a job posting
@@ -782,7 +782,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /uploads:
+  /api/v1/uploads:
     post:
       tags: [Uploads]
       summary: Upload file
@@ -821,7 +821,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /map/markers:
+  /api/v1/map/markers:
     get:
       tags: [Map]
       security: []
