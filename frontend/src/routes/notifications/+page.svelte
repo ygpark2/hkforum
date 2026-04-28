@@ -30,6 +30,12 @@
   }
 
   onMount(loadData);
+
+  function notificationHref(item) {
+    if (item.jobId) return `/jobs/${item.jobId}`;
+    if (item.postId) return `/post/${item.postId}`;
+    return '/home';
+  }
 </script>
 
 <section class="min-h-full bg-slate-50">
@@ -51,7 +57,7 @@
     {:else}
       <div class="space-y-3">
         {#each items as item}
-          <a href={item.postId ? `/post/${item.postId}` : '/home'} class={`block rounded-2xl border px-5 py-4 transition ${item.isRead ? 'border-slate-200 bg-white' : 'border-slate-900 bg-slate-900 text-white'}`}>
+          <a href={notificationHref(item)} class={`block rounded-2xl border px-5 py-4 transition ${item.isRead ? 'border-slate-200 bg-white' : 'border-slate-900 bg-slate-900 text-white'}`}>
             <div class="text-sm font-semibold">{item.message}</div>
             <div class={`mt-2 text-sm ${item.isRead ? 'text-slate-500' : 'text-slate-300'}`}>{relativeTime(item.createdAt)}</div>
           </a>

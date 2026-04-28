@@ -12,6 +12,7 @@ module Handler.Api
     , module Handler.Api.Uploads
     , module Handler.Api.Map
     , module Handler.Api.Meta
+    , module Handler.Api.RealEstate
     , module Handler.Api.Admin
     ) where
 
@@ -27,5 +28,6 @@ import Handler.Api.Meta
 import Handler.Api.Me
 import Handler.Api.Notifications
 import Handler.Api.Posts
+import Handler.Api.RealEstate
 import Handler.Api.Uploads
 import Handler.Api.Users

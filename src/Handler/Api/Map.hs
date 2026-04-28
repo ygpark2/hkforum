@@ -16,6 +16,7 @@ getApiMapMarkersR = do
     posts <- runDB $ selectList [PostLatitude !=. Nothing, PostLongitude !=. Nothing] [Desc PostCreatedAt, LimitTo 200]
     jobs <- runDB $ selectList [JobLatitude !=. Nothing, JobLongitude !=. Nothing] [Desc JobCreatedAt, LimitTo 200]
     companies <- runDB $ selectList [CompanyLatitude !=. Nothing, CompanyLongitude !=. Nothing] [Desc CompanyCreatedAt, LimitTo 200]
+    realEstateListings <- runDB $ selectList [RealEstateListingLatitude !=. Nothing, RealEstateListingLongitude !=. Nothing, RealEstateListingStatus ==. "published"] [Desc RealEstateListingCreatedAt, LimitTo 200]
     let postMarkers =
             flip mapMaybe posts $ \(Entity postId post) ->
                 case (postLatitude post, postLongitude post) of
@@ -58,8 +59,22 @@ getApiMapMarkersR = do
                                 , "url" .= ("/companies" :: Text)
                                 ]
                     _ -> Nothing
+        realEstateMarkers =
+            flip mapMaybe realEstateListings $ \(Entity _ listing) ->
+                case (realEstateListingLatitude listing, realEstateListingLongitude listing) of
+                    (Just lat, Just lng) ->
+                        Just $
+                            object
+                                [ "kind" .= ("real-estate" :: Text)
+                                , "title" .= realEstateListingTitle listing
+                                , "subtitle" .= realEstateListingSuburb listing
+                                , "latitude" .= lat
+                                , "longitude" .= lng
+                                , "url" .= ("/real-estate" :: Text)
+                                ]
+                    _ -> Nothing
     returnJson $
         object
-            [ "markers" .= (postMarkers <> jobMarkers <> companyMarkers)
-            , "count" .= (Prelude.length postMarkers + Prelude.length jobMarkers + Prelude.length companyMarkers)
+            [ "markers" .= (postMarkers <> jobMarkers <> companyMarkers <> realEstateMarkers)
+            , "count" .= (Prelude.length postMarkers + Prelude.length jobMarkers + Prelude.length companyMarkers + Prelude.length realEstateMarkers)
             ]

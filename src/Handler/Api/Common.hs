@@ -6,7 +6,7 @@
 module Handler.Api.Common where
 
 import Auth.Jwt (bearerTokenFromHeader, verifyJwt)
-import Data.Aeson (withObject, (.:?))
+import Data.Aeson (withObject, (.!=), (.:?))
 import qualified Data.List as L
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
@@ -23,11 +23,19 @@ import qualified Prelude as P
 data AuthPayload = AuthPayload
     { authPayloadUsername :: Text
     , authPayloadPassword :: Text
+    , authPayloadAccountType :: Text
+    , authPayloadEmployerPlan :: Maybe Text
+    , authPayloadRealEstatePlan :: Maybe Text
     }
 
 instance FromJSON AuthPayload where
     parseJSON = withObject "AuthPayload" $ \o ->
-        AuthPayload <$> o .: "username" <*> o .: "password"
+        AuthPayload
+            <$> o .: "username"
+            <*> o .: "password"
+            <*> o .:? "accountType" .!= "personal"
+            <*> o .:? "employerPlan"
+            <*> o .:? "realEstatePlan"
 
 data UpdateProfilePayload = UpdateProfilePayload
     { updateProfileName :: Maybe Text
@@ -171,11 +179,22 @@ instance FromJSON UpdateCompanyPayload where
 data CreateJobPayload = CreateJobPayload
     { createJobTitle :: Text
     , createJobCompany :: Text
+    , createJobCompanyId :: Maybe CompanyId
     , createJobSalary :: Maybe Text
+    , createJobSalaryMin :: Maybe Int
+    , createJobSalaryMax :: Maybe Int
+    , createJobSalaryCurrency :: Maybe Text
+    , createJobSalaryPeriod :: Maybe Text
     , createJobWorkingHours :: Maybe Text
     , createJobDeadline :: Maybe Day
     , createJobExperience :: Maybe Text
-    , createJobEmploymentType :: Maybe Text
+    , createJobSeniority :: Maybe Text
+    , createJobEmploymentType :: Text
+    , createJobWorkplaceType :: Maybe Text
+    , createJobApplyUrl :: Maybe Text
+    , createJobApplyEmail :: Maybe Text
+    , createJobSkills :: [Text]
+    , createJobBenefits :: [Text]
     , createJobContent :: Text
     , createJobLatitude :: Maybe Double
     , createJobLongitude :: Maybe Double
@@ -186,11 +205,22 @@ instance FromJSON CreateJobPayload where
         CreateJobPayload
             <$> o .: "title"
             <*> o .: "company"
+            <*> o .:? "companyId"
             <*> o .:? "salary"
+            <*> o .:? "salaryMin"
+            <*> o .:? "salaryMax"
+            <*> o .:? "salaryCurrency"
+            <*> o .:? "salaryPeriod"
             <*> o .:? "workingHours"
             <*> o .:? "deadline"
             <*> o .:? "experience"
-            <*> o .:? "employmentType"
+            <*> o .:? "seniority"
+            <*> o .:? "employmentType" .!= "full_time"
+            <*> o .:? "workplaceType"
+            <*> o .:? "applyUrl"
+            <*> o .:? "applyEmail"
+            <*> o .:? "skills" .!= []
+            <*> o .:? "benefits" .!= []
             <*> o .: "content"
             <*> o .:? "latitude"
             <*> o .:? "longitude"
@@ -198,11 +228,22 @@ instance FromJSON CreateJobPayload where
 data UpdateJobPayload = UpdateJobPayload
     { updateJobTitle :: Text
     , updateJobCompany :: Text
+    , updateJobCompanyId :: Maybe CompanyId
     , updateJobSalary :: Maybe Text
+    , updateJobSalaryMin :: Maybe Int
+    , updateJobSalaryMax :: Maybe Int
+    , updateJobSalaryCurrency :: Maybe Text
+    , updateJobSalaryPeriod :: Maybe Text
     , updateJobWorkingHours :: Maybe Text
     , updateJobDeadline :: Maybe Day
     , updateJobExperience :: Maybe Text
-    , updateJobEmploymentType :: Maybe Text
+    , updateJobSeniority :: Maybe Text
+    , updateJobEmploymentType :: Text
+    , updateJobWorkplaceType :: Maybe Text
+    , updateJobApplyUrl :: Maybe Text
+    , updateJobApplyEmail :: Maybe Text
+    , updateJobSkills :: [Text]
+    , updateJobBenefits :: [Text]
     , updateJobContent :: Text
     , updateJobLatitude :: Maybe Double
     , updateJobLongitude :: Maybe Double
@@ -213,14 +254,47 @@ instance FromJSON UpdateJobPayload where
         UpdateJobPayload
             <$> o .: "title"
             <*> o .: "company"
+            <*> o .:? "companyId"
             <*> o .:? "salary"
+            <*> o .:? "salaryMin"
+            <*> o .:? "salaryMax"
+            <*> o .:? "salaryCurrency"
+            <*> o .:? "salaryPeriod"
             <*> o .:? "workingHours"
             <*> o .:? "deadline"
             <*> o .:? "experience"
-            <*> o .:? "employmentType"
+            <*> o .:? "seniority"
+            <*> o .:? "employmentType" .!= "full_time"
+            <*> o .:? "workplaceType"
+            <*> o .:? "applyUrl"
+            <*> o .:? "applyEmail"
+            <*> o .:? "skills" .!= []
+            <*> o .:? "benefits" .!= []
             <*> o .: "content"
             <*> o .:? "latitude"
             <*> o .:? "longitude"
+
+data ApplyJobPayload = ApplyJobPayload
+    { applyJobNote :: Maybe Text
+    }
+
+instance FromJSON ApplyJobPayload where
+    parseJSON = withObject "ApplyJobPayload" $ \o ->
+        ApplyJobPayload
+            <$> o .:? "note"
+
+data UpdateJobApplicationPayload = UpdateJobApplicationPayload
+    { updateJobApplicationStatus :: Text
+    , updateJobApplicationManagerNote :: Maybe Text
+    , updateJobApplicationRating :: Maybe Int
+    }
+
+instance FromJSON UpdateJobApplicationPayload where
+    parseJSON = withObject "UpdateJobApplicationPayload" $ \o ->
+        UpdateJobApplicationPayload
+            <$> o .: "status"
+            <*> o .:? "managerNote"
+            <*> o .:? "rating"
 
 reactionEmojiOptions :: [Text]
 reactionEmojiOptions =
@@ -596,6 +670,11 @@ userProfileValue mViewerId (Entity userId user) followerCount followingCount mIs
         , "latitude" .= userLatitude user
         , "longitude" .= userLongitude user
         , "theme" .= userThemeKey user
+        , "accountType" .= userAccountType user
+        , "employerPlan" .= userEmployerPlan user
+        , "employerPlanStartedAt" .= userEmployerPlanStartedAt user
+        , "realEstatePlan" .= userRealEstatePlan user
+        , "realEstatePlanStartedAt" .= userRealEstatePlanStartedAt user
         , "followerCount" .= followerCount
         , "followingCount" .= followingCount
         , "isFollowing" .= case mViewerId of
@@ -622,6 +701,7 @@ notificationValue actorMap (Entity notificationId notification) =
         , "kind" .= notificationKind notification
         , "postId" .= fmap keyToInt (notificationPost notification)
         , "commentId" .= fmap keyToInt (notificationComment notification)
+        , "jobId" .= fmap keyToInt (notificationJob notification)
         , "isRead" .= notificationIsRead notification
         , "createdAt" .= notificationCreatedAt notification
         , "message" .= notificationMessage actorMap notification
@@ -641,6 +721,9 @@ notificationMessage actorMap notification =
                 "comment" -> "commented on your post"
                 "reply" -> "replied to your comment"
                 "watch-comment" -> "new activity on a post you watch"
+                "job-application" -> "applied to your job post"
+                "job-application-status" -> "updated your job application status"
+                "job-application-withdrawn" -> "withdrew a job application"
                 _ -> "sent a notification"
     in actorLabel <> " " <> suffix
 
@@ -676,23 +759,45 @@ companyValue userMap categoryMap (Entity companyId company) =
         ]
 
 jobValue :: Map.Map UserId User -> Int -> Entity Job -> Value
-jobValue userMap jobAutoCloseDays (Entity jobId job) =
+jobValue = jobValueWithMeta Map.empty Map.empty Map.empty Map.empty
+
+jobValueWithMeta :: Map.Map JobId [Text] -> Map.Map JobId [Text] -> Map.Map JobId Int -> Map.Map JobId Bool -> Map.Map UserId User -> Int -> Entity Job -> Value
+jobValueWithMeta skillMap benefitMap applicationCountMap viewerAppliedMap userMap jobAutoCloseDays (Entity jobId job) =
     let today = utctDay (jobUpdatedAt job)
         isClosedByDeadline = maybe False (< today) (jobDeadline job)
         isClosedByAge =
             jobAutoCloseDays > 0
                 && addDays (fromIntegral jobAutoCloseDays) (utctDay (jobCreatedAt job)) < today
         effectiveIsClosed = jobIsClosed job || isClosedByDeadline || isClosedByAge
+        skills = Map.findWithDefault [] jobId skillMap
+        benefits = Map.findWithDefault [] jobId benefitMap
+        applicationCount = Map.findWithDefault 0 jobId applicationCountMap
+        viewerHasApplied = Map.findWithDefault False jobId viewerAppliedMap
     in object
         [ "id" .= keyToInt jobId
         , "title" .= jobTitle job
         , "company" .= jobCompany job
+        , "companyId" .= fmap keyToInt (jobCompanyRef job)
         , "salary" .= jobSalary job
+        , "salaryMin" .= jobSalaryMin job
+        , "salaryMax" .= jobSalaryMax job
+        , "salaryCurrency" .= jobSalaryCurrency job
+        , "salaryPeriod" .= jobSalaryPeriod job
         , "workingHours" .= jobWorkingHours job
         , "deadline" .= jobDeadline job
         , "isClosed" .= effectiveIsClosed
+        , "closedAt" .= jobClosedAt job
         , "experience" .= jobExperience job
+        , "seniority" .= jobSeniority job
         , "employmentType" .= jobEmploymentType job
+        , "workplaceType" .= jobWorkplaceType job
+        , "applyUrl" .= jobApplyUrl job
+        , "applyEmail" .= jobApplyEmail job
+        , "publishedAt" .= jobPublishedAt job
+        , "skills" .= skills
+        , "benefits" .= benefits
+        , "applicationCount" .= applicationCount
+        , "viewerHasApplied" .= viewerHasApplied
         , "countryCode" .= jobCountryCode job
         , "state" .= jobState job
         , "latitude" .= jobLatitude job

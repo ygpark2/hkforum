@@ -4,6 +4,9 @@
 
   let username = '';
   let password = '';
+  let accountType = 'personal';
+  let employerPlan = 'starter';
+  let realEstatePlan = 'starter';
   let loading = false;
   let error = '';
 
@@ -16,7 +19,13 @@
       await apiFetch('/api/v1/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim(), password })
+        body: JSON.stringify({
+          username: username.trim(),
+          password,
+          accountType,
+          employerPlan: accountType === 'employer' ? employerPlan : null,
+          realEstatePlan: accountType === 'real_estate' ? realEstatePlan : null
+        })
       });
       window.location.href = '/home';
     } catch (err) {
@@ -44,6 +53,38 @@
         <label for="register-password" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Password</label>
         <input id="register-password" type="password" bind:value={password} class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900" />
       </div>
+      <div>
+        <label for="register-account-type" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Account type</label>
+        <select id="register-account-type" bind:value={accountType} class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+          <option value="personal">Personal</option>
+          <option value="employer">Employer</option>
+          <option value="real_estate">Real estate agent</option>
+        </select>
+      </div>
+      {#if accountType === 'employer'}
+        <div>
+          <label for="register-employer-plan" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Employer plan</label>
+          <select id="register-employer-plan" bind:value={employerPlan} class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+            <option value="starter">월 10만원 · 공고 3개</option>
+            <option value="growth">월 30만원 · 공고 10개</option>
+            <option value="scale">월 50만원 · 공고 20개</option>
+            <option value="enterprise">20개 초과 · 협의</option>
+          </select>
+          <p class="mt-2 text-xs text-slate-500">결제 연동 전까지는 선택한 플랜 권한을 즉시 부여합니다.</p>
+        </div>
+      {/if}
+      {#if accountType === 'real_estate'}
+        <div>
+          <label for="register-real-estate-plan" class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Real estate plan</label>
+          <select id="register-real-estate-plan" bind:value={realEstatePlan} class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+            <option value="starter">월 10만원 · 매물 10개</option>
+            <option value="growth">월 30만원 · 매물 30개</option>
+            <option value="scale">월 50만원 · 매물 70개</option>
+            <option value="enterprise">70개 초과 · 협의</option>
+          </select>
+          <p class="mt-2 text-xs text-slate-500">결제 연동 전까지는 선택한 플랜 권한을 즉시 부여합니다.</p>
+        </div>
+      {/if}
       {#if error}
         <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
       {/if}

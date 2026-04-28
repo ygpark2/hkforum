@@ -98,6 +98,7 @@ postApiUserFollowR targetUserId = do
                     , notificationKind = "follow"
                     , notificationPost = Nothing
                     , notificationComment = Nothing
+                    , notificationJob = Nothing
                     , notificationIsRead = False
                     , notificationCreatedAt = now
                     }

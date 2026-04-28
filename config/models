@@ -10,6 +10,11 @@ User
     latitude Double Maybe
     longitude Double Maybe
     theme Text Maybe
+    accountType Text default='personal'
+    employerPlan Text Maybe
+    employerPlanStartedAt UTCTime Maybe
+    realEstatePlan Text Maybe
+    realEstatePlanStartedAt UTCTime Maybe
     UniqueUser ident
     deriving Typeable
 Country
@@ -45,12 +50,23 @@ Board
 Job
     title Text
     company Text
+    companyRef CompanyId Maybe
     salary Text Maybe
+    salaryMin Int Maybe
+    salaryMax Int Maybe
+    salaryCurrency Text Maybe
+    salaryPeriod Text Maybe
     workingHours Text Maybe
     deadline Day Maybe
     isClosed Bool default=False
+    closedAt UTCTime Maybe
     experience Text Maybe
-    employmentType Text Maybe
+    seniority Text Maybe
+    employmentType Text default='full_time'
+    workplaceType Text Maybe
+    applyUrl Text Maybe
+    applyEmail Text Maybe
+    publishedAt UTCTime Maybe
     countryCode Text Maybe
     state Text Maybe
     latitude Double Maybe
@@ -59,6 +75,32 @@ Job
     author UserId
     createdAt UTCTime
     updatedAt UTCTime
+    deriving Typeable
+
+JobSkill
+    job JobId
+    name Text
+    sortOrder Int default=0
+    UniqueJobSkill job name
+    deriving Typeable
+
+JobBenefit
+    job JobId
+    name Text
+    sortOrder Int default=0
+    UniqueJobBenefit job name
+    deriving Typeable
+
+JobApplication
+    job JobId
+    applicant UserId
+    note Text Maybe
+    managerNote Text Maybe
+    rating Int Maybe
+    status Text default='submitted'
+    createdAt UTCTime
+    updatedAt UTCTime
+    UniqueJobApplication job applicant
     deriving Typeable
 
 CompanyGroup
@@ -86,6 +128,97 @@ Company
     author UserId
     createdAt UTCTime
     updatedAt UTCTime
+    deriving Typeable
+
+RealEstateListing
+    title Text
+    listingType Text
+    propertyType Text
+    status Text default='published'
+    countryCode Text Maybe
+    state Text Maybe
+    city Text Maybe
+    suburb Text Maybe
+    addressText Text Maybe
+    latitude Double Maybe
+    longitude Double Maybe
+    currency Text Maybe
+    price Int Maybe
+    pricePeriod Text Maybe
+    bondAmount Int Maybe
+    depositAmount Int Maybe
+    bedrooms Int Maybe
+    bathrooms Int Maybe
+    parkingSpaces Int Maybe
+    floorAreaSqm Double Maybe
+    landAreaSqm Double Maybe
+    availableFrom Day Maybe
+    leaseTerm Text Maybe
+    petsAllowed Bool Maybe
+    furnished Bool Maybe
+    billsIncluded Bool Maybe
+    content Text
+    contactName Text Maybe
+    contactEmail Text Maybe
+    contactPhone Text Maybe
+    companyRef CompanyId Maybe
+    author UserId
+    publishedAt UTCTime Maybe
+    expiresAt UTCTime Maybe
+    createdAt UTCTime
+    updatedAt UTCTime
+    deriving Typeable
+
+RealEstateFeature
+    listing RealEstateListingId
+    name Text
+    sortOrder Int default=0
+    UniqueRealEstateFeature listing name
+    deriving Typeable
+
+RealEstateImage
+    listing RealEstateListingId
+    fileKey Text
+    caption Text Maybe
+    sortOrder Int default=0
+    createdAt UTCTime
+    deriving Typeable
+
+RealEstateReport
+    listing RealEstateListingId
+    reporter UserId Maybe
+    name Text Maybe
+    email Text Maybe
+    reason Text
+    details Text Maybe
+    status Text default='new'
+    createdAt UTCTime
+    updatedAt UTCTime
+    deriving Typeable
+
+RealEstateInquiry
+    listing RealEstateListingId
+    sender UserId Maybe
+    name Text
+    email Text
+    phone Text Maybe
+    message Text
+    status Text default='new'
+    createdAt UTCTime
+    updatedAt UTCTime
+    deriving Typeable
+
+RealEstateAgentProfile
+    user UserId
+    agencyName Text
+    licenseNumber Text Maybe
+    website Text Maybe
+    phone Text Maybe
+    email Text Maybe
+    verified Bool default=False
+    createdAt UTCTime
+    updatedAt UTCTime
+    UniqueRealEstateAgentProfile user
     deriving Typeable
 
 ChatMessage
@@ -212,6 +345,7 @@ Notification
     kind Text
     post PostId Maybe
     comment CommentId Maybe
+    job JobId Maybe
     isRead Bool default=False
     createdAt UTCTime
     deriving Typeable

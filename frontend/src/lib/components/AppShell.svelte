@@ -15,6 +15,7 @@
   $: pathname = $page.url.pathname;
   $: isAuthPage = pathname === '/login' || pathname === '/register';
   $: isAdminPage = pathname === '/admin' || pathname.startsWith('/admin/');
+  $: isEmployerPage = pathname === '/employer' || pathname.startsWith('/employer/');
   $: siteTemplate = $bootstrap.site?.template || 'base';
   $: isEuTemplate = siteTemplate === 'eu';
   $: isAnzTemplate = siteTemplate === 'anz';
@@ -24,8 +25,10 @@
     { href: '/admin', label: 'Overview' },
     { href: '/admin/boards', label: 'Boards' },
     { href: '/admin/companies', label: 'Companies' },
+    { href: '/admin/real-estate', label: 'Real Estate' },
     { href: '/admin/company-categories', label: 'Categories' },
     { href: '/admin/users', label: 'Users' },
+    { href: '/employer', label: 'Recruiting' },
     { href: '/admin/settings', label: 'Settings' },
     { href: '/admin/ads', label: 'Ads' },
     { href: '/admin/moderation', label: 'Moderation' },
@@ -263,6 +266,12 @@
                     {#if $bootstrap.site?.showJobsNav}
                       <a href="/jobs" class={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition ${isActive(pathname, '/jobs') ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`}>Jobs</a>
                     {/if}
+                    {#if $bootstrap.site?.showRealEstateNav}
+                      <a href="/real-estate" class={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition ${isActive(pathname, '/real-estate') ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`}>Real Estate</a>
+                    {/if}
+                    {#if $bootstrap.viewer?.accountType === 'employer' || $bootstrap.viewer?.role === 'admin'}
+                      <a href="/employer" class={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition ${isActive(pathname, '/employer') ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`}>Recruiting</a>
+                    {/if}
                     <a href="/chats" class={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition ${isActive(pathname, '/chats') ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`}>Chats</a>
                     {#if $bootstrap.auth?.isAuthenticated}
                       <a href="/notifications" class={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition ${isActive(pathname, '/notifications') ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`}>Notifications</a>
@@ -376,6 +385,12 @@
                   {/if}
                   {#if $bootstrap.site?.showJobsNav}
                     <a href="/jobs" class={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition ${isActive(pathname, '/jobs') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}>Jobs</a>
+                  {/if}
+                  {#if $bootstrap.site?.showRealEstateNav}
+                    <a href="/real-estate" class={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition ${isActive(pathname, '/real-estate') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}>Real Estate</a>
+                  {/if}
+                  {#if $bootstrap.viewer?.accountType === 'employer' || $bootstrap.viewer?.role === 'admin'}
+                    <a href="/employer" class={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition ${isActive(pathname, '/employer') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}>Recruiting</a>
                   {/if}
                   <a href="/chats" class={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition ${isActive(pathname, '/chats') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}>Chats</a>
                   {#if $bootstrap.auth?.isAuthenticated}
@@ -528,6 +543,12 @@
                   {/if}
                   {#if $bootstrap.site?.showJobsNav}
                     <a href="/jobs" class={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium transition ${isActive(pathname, '/jobs') ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-700 hover:bg-white hover:text-slate-900'}`}>Jobs</a>
+                  {/if}
+                  {#if $bootstrap.site?.showRealEstateNav}
+                    <a href="/real-estate" class={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium transition ${isActive(pathname, '/real-estate') ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-700 hover:bg-white hover:text-slate-900'}`}>Real Estate</a>
+                  {/if}
+                  {#if $bootstrap.viewer?.accountType === 'employer' || $bootstrap.viewer?.role === 'admin'}
+                    <a href="/employer" class={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium transition ${isActive(pathname, '/employer') ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-700 hover:bg-white hover:text-slate-900'}`}>Recruiting</a>
                   {/if}
                   <a href="/chats" class={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[16px] font-medium transition ${isActive(pathname, '/chats') ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-700 hover:bg-white hover:text-slate-900'}`}>Chats</a>
                   {#if $bootstrap.auth?.isAuthenticated}

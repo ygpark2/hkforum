@@ -320,7 +320,7 @@ postApiAdminUsersR = do
     case mExisting of
         Just _ -> jsonError status400 "user_exists" "User already exists."
         Nothing -> do
-            user <- liftIO $ setPassword password (User ident Nothing role name description Nothing Nothing False Nothing Nothing Nothing)
+            user <- liftIO $ setPassword password (User ident Nothing role name description Nothing Nothing False Nothing Nothing Nothing "personal" Nothing Nothing Nothing Nothing)
             void $ runDB $ insert user
             returnJson $ object ["message" .= ("User created." :: Text)]
 

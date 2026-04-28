@@ -17,19 +17,15 @@ module Application
 import Control.Monad.Logger                 (LoggingT, liftLoc, runLoggingT)
 import Company.Categories                   (CompanyMinorCategory, companyMinorCategoryCode,
                                              companyMinorCategoryMajorCode,
-                                             companyMinorCategoryMajorName, companyMinorCategoryName,
+                                             companyMinorCategoryName,
                                              companyMinorCategorySortOrder,
                                              loadAllCompanyMinorCategories)
-import Location.Regions                     (CountrySeed (..), CountryStateSeed (..),
-                                             countrySeedsForSuffixes,
-                                             countryStateSeedsForSuffixes)
 import Database.Persist.Postgresql          (createPostgresqlPool)
 import Database.Persist.Sql                 (Single (..), rawExecute, rawSql,
                                              runSqlPool)
 import Database.Persist.Sqlite              (SqliteConf (..), createSqlitePool)
 import Import hiding ((.), (++))
 import qualified Prelude as P
-import Yesod.Auth.HashDB                    (setPassword)
 import Language.Haskell.TH.Syntax           (qLocation)
 import Network.Wai.Handler.Warp             (Settings, defaultSettings,
                                              defaultShouldDisplayException,
@@ -108,36 +104,20 @@ makeFoundation appSettings = do
                     createPostgresqlPool (Import.encodeUtf8 $ appPostgresConnStr postgresConf) (appPostgresPoolSize postgresConf)
 
     companyMinorCategories <- loadAllCompanyMinorCategories
-    let locationSeedSuffixes = appLocationRegionSeedSuffixes appSettings
-    countries <-
-        case countrySeedsForSuffixes locationSeedSuffixes of
-            Left err -> error (unpack err)
-            Right values -> pure values
-    states <-
-        case countryStateSeedsForSuffixes locationSeedSuffixes of
-            Left err -> error (unpack err)
-            Right values -> pure values
-
     -- Perform database migration using our application's logging settings.
     runLoggingT
         ( runSqlPool
-            (prepareCompanyGroupSchemaForCodeNotNull (appDatabaseConf appSettings) companyMinorCategories >> runMigration migrateAll >> seedDefaults companyMinorCategories countries states)
+            ( prepareCompanyGroupSchemaForCodeNotNull (appDatabaseConf appSettings) companyMinorCategories
+                >> runMigration migrateAll
+                >> migrateLegacySiteTemplate
+                >> ensureOperationalIndexes
+            )
             pool
         )
         logFunc
 
     -- Return the foundation
     return $ mkFoundation pool
-
-seedDefaults :: [CompanyMinorCategory] -> [CountrySeed] -> [CountryStateSeed] -> SqlPersistT (LoggingT IO) ()
-seedDefaults companyMinorCategories countries states = do
-    void $ insertBy $ Board "general" (Just "General discussion") 0 0
-    migrateLegacySiteTemplate
-    adminId <- seedAdmin
-    seedCountries countries
-    seedCountryStates states
-    seedSystemCompanyGroups companyMinorCategories adminId
-    ensureAllCompanyGroupsHaveCodes
 
 migrateLegacySiteTemplate :: SqlPersistT (LoggingT IO) ()
 migrateLegacySiteTemplate =
@@ -148,42 +128,31 @@ migrateLegacySiteTemplate =
         [ SiteSettingValue =. "base"
         ]
 
-seedCountries :: [CountrySeed] -> SqlPersistT (LoggingT IO) ()
-seedCountries countries =
-    forM_ countries $ \country ->
-        void $
-            upsertBy
-            (UniqueCountryCode (countrySeedCode country))
-            (Country
-                (countrySeedCode country)
-                (countrySeedName country)
-                (countrySeedLocalName country)
-                (countrySeedSortOrder country)
-            )
-            [ CountryName =. countrySeedName country
-            , CountryLocalName =. countrySeedLocalName country
-            , CountrySortOrder =. countrySeedSortOrder country
-            ]
-
-seedCountryStates :: [CountryStateSeed] -> SqlPersistT (LoggingT IO) ()
-seedCountryStates states =
-    forM_ states $ \stateSeed ->
-        void $
-            upsertBy
-            (UniqueCountryStateCode (countryStateSeedCountryCode stateSeed) (countryStateSeedCode stateSeed))
-            (CountryState
-                (countryStateSeedCountryCode stateSeed)
-                (countryStateSeedCode stateSeed)
-                (countryStateSeedName stateSeed)
-                (countryStateSeedLocalName stateSeed)
-                (countryStateSeedType stateSeed)
-                (countryStateSeedSortOrder stateSeed)
-            )
-            [ CountryStateName =. countryStateSeedName stateSeed
-            , CountryStateLocalName =. countryStateSeedLocalName stateSeed
-            , CountryStateStateType =. countryStateSeedType stateSeed
-            , CountryStateSortOrder =. countryStateSeedSortOrder stateSeed
-            ]
+ensureOperationalIndexes :: SqlPersistT (LoggingT IO) ()
+ensureOperationalIndexes = do
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_job_created_at ON job (created_at)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_job_deadline ON job (deadline)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_job_company_ref ON job (company_ref)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_job_employment_type ON job (employment_type)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_job_workplace_type ON job (workplace_type)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_job_seniority ON job (seniority)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_job_skill_name ON job_skill (name)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_job_application_job_status ON job_application (job, status)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_job_application_applicant ON job_application (applicant)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_job_application_created_at ON job_application (created_at)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_real_estate_listing_created_at ON real_estate_listing (created_at)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_real_estate_listing_type ON real_estate_listing (listing_type)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_real_estate_property_type ON real_estate_listing (property_type)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_real_estate_status ON real_estate_listing (status)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_real_estate_country_state ON real_estate_listing (country_code, state)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_real_estate_price ON real_estate_listing (price)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_real_estate_bedrooms ON real_estate_listing (bedrooms)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_real_estate_feature_name ON real_estate_feature (name)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_real_estate_inquiry_listing_status ON real_estate_inquiry (listing, status)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_real_estate_report_listing_status ON real_estate_report (listing, status)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_real_estate_report_created_at ON real_estate_report (created_at)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_real_estate_agent_profile_user ON real_estate_agent_profile (user)" []
+    rawExecute "CREATE INDEX IF NOT EXISTS idx_company_name ON company (name)" []
 
 prepareCompanyGroupSchemaForCodeNotNull :: AppDatabaseConf -> [CompanyMinorCategory] -> SqlPersistT (LoggingT IO) ()
 prepareCompanyGroupSchemaForCodeNotNull (AppDatabaseSqlite _) companyMinorCategories = do
@@ -227,46 +196,6 @@ prepareCompanyGroupSchemaForCodeNotNull (AppDatabasePostgres _) companyMinorCate
                 "CompanyGroup code is required before NOT NULL migration. Missing codes for: "
                     <> unpack (T.intercalate ", " (map unSingle (missingRows :: [Single Text])))
 
-seedAdmin :: SqlPersistT (LoggingT IO) UserId
-seedAdmin = do
-    mUser <- getBy $ UniqueUser "ygpark2"
-    case mUser of
-        Just (Entity userId _) -> do
-            update userId [UserRole =. "admin"]
-            pure userId
-        Nothing -> do
-            user <- liftIO $ setPassword "1234" (User "ygpark2" Nothing "admin" Nothing Nothing Nothing Nothing False Nothing Nothing Nothing)
-            insert user
-
-seedSystemCompanyGroups :: [CompanyMinorCategory] -> UserId -> SqlPersistT (LoggingT IO) ()
-seedSystemCompanyGroups companyMinorCategories adminId = do
-    now <- liftIO getCurrentTime
-    backfillLegacySystemCompanyGroupCodes companyMinorCategories
-    forM_ companyMinorCategories $ \minor ->
-        upsertSystemCompanyGroup adminId now minor
-
-backfillLegacySystemCompanyGroupCodes :: [CompanyMinorCategory] -> SqlPersistT (LoggingT IO) ()
-backfillLegacySystemCompanyGroupCodes companyMinorCategories =
-    forM_ companyMinorCategories $ \minor -> do
-        let name = companyMinorCategoryName minor
-            code = companyMinorCategoryCode minor
-        existingRows <- selectList [CompanyGroupName ==. name, CompanyGroupCode ==. ""] []
-        forM_ existingRows $ \(Entity companyGroupId _) ->
-            update companyGroupId
-                [ CompanyGroupCode =. code
-                , CompanyGroupMajorCode =. Just (companyMinorCategoryMajorCode minor)
-                , CompanyGroupSortOrder =. companyMinorCategorySortOrder minor
-                , CompanyGroupIsSystem =. True
-                ]
-
-ensureAllCompanyGroupsHaveCodes :: SqlPersistT (LoggingT IO) ()
-ensureAllCompanyGroupsHaveCodes = do
-    badRows <- selectList [CompanyGroupCode ==. ""] [Asc CompanyGroupName]
-    unless (null badRows) $
-        error $
-            "CompanyGroup code is required. Missing codes for: "
-                <> unpack (T.intercalate ", " (map (companyGroupName P.. entityVal) badRows))
-
 rawBackfillLegacySystemCompanyGroupCodes :: [CompanyMinorCategory] -> SqlPersistT (LoggingT IO) ()
 rawBackfillLegacySystemCompanyGroupCodes companyMinorCategories =
     forM_ companyMinorCategories $ \minor ->
@@ -277,36 +206,6 @@ rawBackfillLegacySystemCompanyGroupCodes companyMinorCategories =
             , toPersistValue (fromIntegral (companyMinorCategorySortOrder minor) :: Int64)
             , toPersistValue (companyMinorCategoryName minor)
             ]
-
-upsertSystemCompanyGroup :: UserId -> UTCTime -> CompanyMinorCategory -> SqlPersistT (LoggingT IO) ()
-upsertSystemCompanyGroup adminId now minor = do
-    let code = companyMinorCategoryCode minor
-        name = companyMinorCategoryName minor
-        description = Just ("대분류: " <> companyMinorCategoryMajorName minor)
-        applySystemCategoryUpdate companyGroupId =
-            update companyGroupId
-                [ CompanyGroupName =. name
-                , CompanyGroupDescription =. description
-                , CompanyGroupCode =. code
-                , CompanyGroupMajorCode =. Just (companyMinorCategoryMajorCode minor)
-                , CompanyGroupSortOrder =. companyMinorCategorySortOrder minor
-                , CompanyGroupIsSystem =. True
-                ]
-    mExisting <- getBy $ UniqueCompanyGroupCode code
-    case mExisting of
-        Just (Entity companyGroupId _) -> do
-            applySystemCategoryUpdate companyGroupId
-        Nothing ->
-            void $ insert $
-                CompanyGroup
-                    name
-                    description
-                    adminId
-                    now
-                    code
-                    (Just (companyMinorCategoryMajorCode minor))
-                    (companyMinorCategorySortOrder minor)
-                    True
 
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and

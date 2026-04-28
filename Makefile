@@ -59,3 +59,19 @@ clean:
 .PHONY: restart
 restart:
 	$(MAKE) rebuild && $(MAKE) start
+
+SEED_DB ?= sqlite
+SEED_SQL_OUT ?=
+SEED_ARG ?=
+
+.PHONY: seed-data
+seed-data:
+	./scripts/load-seeds.sh $(SEED_DB) $(SEED_ARG)
+
+.PHONY: render-seed-sql
+render-seed-sql:
+	@if [ -n "$(SEED_SQL_OUT)" ]; then \
+		./scripts/render-seeds.py $(SEED_DB) > "$(SEED_SQL_OUT)"; \
+	else \
+		./scripts/render-seeds.py $(SEED_DB); \
+	fi

@@ -15,6 +15,7 @@
 /api/v1/me/profile ApiMeProfileR PATCH
 /api/v1/me/preferences ApiMePreferencesR PATCH
 /api/v1/me/bookmarks ApiMeBookmarksR GET
+/api/v1/me/job-applications ApiMeJobApplicationsR GET
 /api/v1/me/blocked-users ApiMeBlockedUsersR GET
 /api/v1/meta/regions ApiMetaRegionsR GET
 /api/v1/boards ApiBoardsR GET
@@ -39,9 +40,27 @@
 /api/v1/chats/#ChatRoomId/messages ApiChatMessagesR GET POST
 /api/v1/companies ApiCompaniesR GET POST
 /api/v1/companies/#CompanyId ApiCompanyR PATCH DELETE
+/api/v1/employer/dashboard ApiEmployerDashboardR GET
+/api/v1/job-skills ApiJobSkillsR GET
 /api/v1/jobs ApiJobsR GET POST
-/api/v1/jobs/#JobId ApiJobR PATCH DELETE
+/api/v1/jobs/#JobId ApiJobR GET PATCH DELETE
 /api/v1/jobs/#JobId/close ApiJobCloseR POST
+/api/v1/jobs/#JobId/apply ApiJobApplyR POST DELETE
+/api/v1/jobs/#JobId/applications ApiJobApplicationsR GET
+/api/v1/jobs/#JobId/applications/#JobApplicationId ApiJobApplicationR PATCH
+/api/v1/real-estate-dashboard ApiRealEstateDashboardR GET
+/api/v1/real-estate-agent-profile ApiRealEstateAgentProfileR GET PUT
+/api/v1/real-estate-report/#RealEstateReportId ApiRealEstateReportR PATCH
+/api/v1/real-estate ApiRealEstateListingsR GET POST
+/api/v1/real-estate/#RealEstateListingId ApiRealEstateListingR GET PATCH DELETE
+/api/v1/real-estate/#RealEstateListingId/approve ApiRealEstateApproveR POST
+/api/v1/real-estate/#RealEstateListingId/reject ApiRealEstateRejectR POST
+/api/v1/real-estate/#RealEstateListingId/republish ApiRealEstateRepublishR POST
+/api/v1/real-estate/#RealEstateListingId/images ApiRealEstateImagesR POST
+/api/v1/real-estate/#RealEstateListingId/images/#RealEstateImageId ApiRealEstateImageR PATCH DELETE
+/api/v1/real-estate/#RealEstateListingId/inquiries ApiRealEstateInquiriesR GET POST
+/api/v1/real-estate/#RealEstateListingId/inquiries/#RealEstateInquiryId ApiRealEstateInquiryR PATCH
+/api/v1/real-estate/#RealEstateListingId/reports ApiRealEstateReportsR POST
 /api/v1/uploads ApiUploadsR POST
 /api/v1/map/markers ApiMapMarkersR GET
 /api/v1/admin/bootstrap ApiAdminBootstrapR GET

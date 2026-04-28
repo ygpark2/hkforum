@@ -87,7 +87,7 @@ postApiUploadsR = do
                     , uploadCreatedAt = now
                     }
                 url <- storageUrl storage key
-                returnJson $ object ["url" .= url]
+                returnJson $ object ["key" .= key, "url" .= url]
                 )
                 `catchAny` \err ->
                     sendResponseStatus
