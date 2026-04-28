@@ -36,9 +36,13 @@
 - Tailwind build: `make tailwind` (uses `config/front/package.json`)
 
 ## Seed Data
-- On startup, migrations run and seed defaults:
-  - Inserts a `general` board and `thread_preview_chars` site setting.
-  - Ensures admin user `ygpark2` exists (default password `1234`) and is role `admin`.
+- On startup, migrations run but default seed data is not inserted automatically.
+- Use the external seed tool to load base data such as:
+  - admin user `admin` (password `admin`)
+  - `general` board
+  - country/state data
+  - system company categories
+  - sample company/job rows
 
 ## Notes For Changes
 - Add or change routes in `config/routes`, then implement handlers in `src/Handler/**`.

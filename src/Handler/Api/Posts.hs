@@ -189,6 +189,7 @@ postApiPostCommentsR postId = do
                     , notificationKind = "reply"
                     , notificationPost = Just postId
                     , notificationComment = Just commentId
+                    , notificationJob = Nothing
                     , notificationIsRead = False
                     , notificationCreatedAt = now
                     }
@@ -200,6 +201,7 @@ postApiPostCommentsR postId = do
                     , notificationKind = "comment"
                     , notificationPost = Just postId
                     , notificationComment = Just commentId
+                    , notificationJob = Nothing
                     , notificationIsRead = False
                     , notificationCreatedAt = now
                     }
@@ -219,6 +221,7 @@ postApiPostCommentsR postId = do
             , notificationKind = "watch-comment"
             , notificationPost = Just postId
             , notificationComment = Just commentId
+            , notificationJob = Nothing
             , notificationIsRead = False
             , notificationCreatedAt = now
             }
@@ -284,6 +287,7 @@ postApiPostLikeR postId = do
                     , notificationKind = "post-like"
                     , notificationPost = Just postId
                     , notificationComment = Nothing
+                    , notificationJob = Nothing
                     , notificationIsRead = False
                     , notificationCreatedAt = now
                     }
@@ -320,6 +324,7 @@ postApiPostBookmarkR postId = do
                     , notificationKind = "post-bookmark"
                     , notificationPost = Just postId
                     , notificationComment = Nothing
+                    , notificationJob = Nothing
                     , notificationIsRead = False
                     , notificationCreatedAt = now
                     }

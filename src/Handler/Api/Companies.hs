@@ -21,6 +21,7 @@ getApiCompaniesR = do
     mViewer <- maybeApiAuth
     mMajor <- lookupGetParam "major"
     mCategory <- lookupGetParam "category"
+    mQuery <- fmap T.strip <$> lookupGetParam "q"
     let mCategoryId = mCategory >>= fromPathPiece
         categoryFilters = maybe [] (\cid -> [CompanyCategory ==. cid]) mCategoryId
     categories <- runDB $ selectList [] []
@@ -50,7 +51,13 @@ getApiCompaniesR = do
                            ]
     companies <- case activeRegionFilter mViewer of
         RegionFilterUnavailable -> pure []
-        _ -> runDB $ selectList finalFilters [Desc CompanyCreatedAt, OffsetBy offset, LimitTo (size + 1)]
+        _ -> do
+            rows <- runDB $ selectList finalFilters [Desc CompanyCreatedAt, OffsetBy offset, LimitTo (size + 1)]
+            pure $
+                case mQuery of
+                    Just query | not (T.null query) ->
+                        filter (T.isInfixOf (T.toLower query) . T.toLower . companyName . entityVal) rows
+                    _ -> rows
     let hasNext = P.length companies > size
         pageRows = P.take size companies
         authorIds = L.nub $ map (companyAuthor . entityVal) pageRows

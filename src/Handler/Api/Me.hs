@@ -122,6 +122,25 @@ getApiMeBookmarksR = do
             , "hasNext" .= hasNext
             ]
 
+getApiMeJobApplicationsR :: Handler Value
+getApiMeJobApplicationsR = do
+    viewerId <- requireApiAuthId
+    (page, size, offset) <- paginationParams
+    rows <- runDB $ selectList [JobApplicationApplicant ==. viewerId] [Desc JobApplicationCreatedAt, OffsetBy offset, LimitTo (size + 1)]
+    let hasNext = P.length rows > size
+        pageRows = P.take size rows
+        jobIds = L.nub $ map (jobApplicationJob . entityVal) pageRows
+    jobs <- if P.null jobIds then pure [] else runDB $ selectList [JobId <-. jobIds] []
+    let jobMap = Map.fromList $ map (\ent@(Entity jobId _) -> (jobId, ent)) jobs
+        items = mapMaybe (meJobApplicationValue jobMap) pageRows
+    returnJson $
+        object
+            [ "items" .= items
+            , "page" .= page
+            , "size" .= size
+            , "hasNext" .= hasNext
+            ]
+
 getApiMeBlockedUsersR :: Handler Value
 getApiMeBlockedUsersR = do
     viewerId <- requireApiAuthId
@@ -153,3 +172,24 @@ securityEventValue event =
 
 daysToSeconds :: Int -> NominalDiffTime
 daysToSeconds d = fromInteger (toInteger d) * 86400
+
+meJobApplicationValue :: Map.Map JobId (Entity Job) -> Entity JobApplication -> Maybe Value
+meJobApplicationValue jobMap (Entity applicationId application) = do
+    Entity jobId job <- Map.lookup (jobApplicationJob application) jobMap
+    pure $
+        object
+            [ "id" .= keyToInt applicationId
+            , "status" .= jobApplicationStatus application
+            , "note" .= jobApplicationNote application
+            , "createdAt" .= jobApplicationCreatedAt application
+            , "updatedAt" .= jobApplicationUpdatedAt application
+            , "job" .= object
+                [ "id" .= keyToInt jobId
+                , "title" .= jobTitle job
+                , "company" .= jobCompany job
+                , "isClosed" .= jobIsClosed job
+                , "deadline" .= jobDeadline job
+                , "employmentType" .= jobEmploymentType job
+                , "workplaceType" .= jobWorkplaceType job
+                ]
+            ]

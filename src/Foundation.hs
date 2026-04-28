@@ -161,7 +161,7 @@ instance YesodAuth App where
             Just (Entity userId _) -> return $ Authenticated userId
             Nothing ->
                 Authenticated <$> insert
-                    (User ident Nothing "user" Nothing Nothing Nothing Nothing False Nothing Nothing Nothing)
+                    (User ident Nothing "user" Nothing Nothing Nothing Nothing False Nothing Nothing Nothing "personal" Nothing Nothing Nothing Nothing)
 
 instance YesodAuthPersist App where
     type AuthEntity App = User

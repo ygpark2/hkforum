@@ -37,6 +37,7 @@ getApiBootstrapR = do
         allowUserBlocking = siteSettingBool "allow_user_blocking" True settingMap
         showCompaniesNav = siteSettingBool "companies_enabled" True settingMap
         showJobsNav = siteSettingBool "jobs_enabled" True settingMap
+        showRealEstateNav = siteSettingBool "real_estate_enabled" True settingMap
         mapsEnabled = siteSettingBool "maps_enabled" True settingMap
         defaultMapLatitude = siteSettingDouble "default_map_latitude" 37.5665 settingMap
         defaultMapLongitude = siteSettingDouble "default_map_longitude" 126.9780 settingMap
@@ -124,6 +125,7 @@ getApiBootstrapR = do
                 , "allowUserBlocking" .= allowUserBlocking
                 , "showCompaniesNav" .= showCompaniesNav
                 , "showJobsNav" .= showJobsNav
+                , "showRealEstateNav" .= showRealEstateNav
                 , "mapsEnabled" .= mapsEnabled
                 , "defaultMapLatitude" .= defaultMapLatitude
                 , "defaultMapLongitude" .= defaultMapLongitude
@@ -159,6 +161,11 @@ getApiBootstrapR = do
             , "latitude" .= userLatitude viewer
             , "longitude" .= userLongitude viewer
             , "theme" .= userThemeKey viewer
+            , "accountType" .= userAccountType viewer
+            , "employerPlan" .= userEmployerPlan viewer
+            , "employerPlanStartedAt" .= userEmployerPlanStartedAt viewer
+            , "realEstatePlan" .= userRealEstatePlan viewer
+            , "realEstatePlanStartedAt" .= userRealEstatePlanStartedAt viewer
             , "authProvider" .= authProviderForUser viewer
             ]
 
