@@ -197,7 +197,7 @@ getApiBootstrapR = do
 
     providerValues settings =
         map
-            (\(key, labelText) -> object ["key" .= key, "label" .= labelText, "url" .= ("/auth/page/" <> key)])
+            (\(key, labelText) -> object ["key" .= key, "label" .= labelText, "url" .= ("/api/v1/oauth/page/" <> key)])
             ( [ ("google" :: Text, "Google" :: Text) | isJust (appGoogleClientId settings) && isJust (appGoogleClientSecret settings) ]
                 <> [ ("kakao" :: Text, "Kakao" :: Text) | isJust (appKakaoClientId settings) && isJust (appKakaoClientSecret settings) ]
                 <> [ ("naver" :: Text, "Naver" :: Text) | isJust (appNaverClientId settings) && isJust (appNaverClientSecret settings) ]

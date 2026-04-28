@@ -1,5 +1,5 @@
 /static StaticR Static appStatic
-/auth   AuthR   Auth   getAuth
+/api/v1/oauth   AuthR   Auth   getAuth
 
 / RootR GET
 /favicon.ico FaviconR GET
